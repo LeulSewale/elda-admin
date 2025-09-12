@@ -1,7 +1,7 @@
 export const metadata = {
-  title: "Requests | Tele Tender Admin",
-  description: "View and manage company verification requests in the Tele Tender Admin Dashboard.",
-  keywords: ["requests", "dashboard", "tender", "admin"],
+  title: "Requests | ELDA Management System",
+  description: "View and manage company verification requests in the ELDA Management System.",
+  keywords: ["requests", "dashboard", "ELDA", "admin"],
 }
 
 import  RequestsPageClient  from "./RequestsPageClient"

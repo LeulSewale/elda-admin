@@ -1,7 +1,7 @@
 export const metadata = {
-  title: "Tele Tender Admin",
-  description: "Professional tender management system for admins and companies.",
-  keywords: ["tender", "admin", "dashboard", "bids", "companies"],
+  title: "ELDA Management System",
+  description: "Professional ELDA management system for admins and companies.",
+  keywords: ["employees","tickets", "admin", "dashboard", "requests", "documents"],
 }
 
 import { HomePageClient } from "./HomePageClient"
