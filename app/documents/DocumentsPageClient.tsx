@@ -43,7 +43,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover
 import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog"
 import { DialogFooter, DialogHeader } from "@/components/ui/dialog"
 import Link from "next/link"
-
+import { UploadDocumentModal } from "@/components/modals/create-document-modal"
 
 /**
  * ADVANCED PERFORMANCE OPTIMIZATIONS FOR REQUESTS FETCHING
@@ -411,6 +411,7 @@ export default function DocumentsPageClient() {
             <p className="text-sm text-gray-400">View and manage document management</p>
           </div>
           <Button
+            onClick={() => setModalOpen(true)}
             className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -430,83 +431,7 @@ export default function DocumentsPageClient() {
             />
           </div>
         </div>
-        {/* Details/Action Modal */}
-        <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {action === null && "Company Details"}
-                {action === "approve" && "Approve Company"}
-                {action === "reject" && "Reject Company"}
-              </DialogTitle>
-            </DialogHeader>
-            {selectedCompany && action === null && (
-              <div className="space-y-4 text-sm">
-                <div className="space-y-2">
-                  <div><b>Name:</b> {selectedCompany.name}</div>
-                  <div><b>Email:</b> {selectedCompany.email}</div>
-                  <div><b>Phone:</b> {selectedCompany.phone}</div>
-                  <div><b>Status:</b> {selectedCompany.status}</div>
-                  <div><b>Created At:</b> {new Date(selectedCompany.createdAt).toLocaleString()}</div>
-                  <div><b>Description:</b> {selectedCompany.description || "-"}</div>
-                </div>
-                
-                {/* Documents Section */}
-                {selectedCompany.documents && selectedCompany.documents.length > 0 && (
-                  <div className="space-y-2">
-                    <div><b>Documents ({selectedCompany.documents.length}):</b></div>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {selectedCompany.documents.map((doc: any, index: number) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <File className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                            <span className="text-sm text-gray-700 truncate">{doc.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            <button
-                              // onClick={() => downloadDocument(doc.url, doc.name)}
-                              className="p-1 hover:bg-gray-200 rounded transition-colors"
-                              title="Download document"
-                            >
-                              <Download className="w-4 h-4 text-green-600 hover:text-green-700" />
-                            </button>
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1 hover:bg-gray-200 rounded transition-colors"
-                              title="View document"
-                            >
-                              <ExternalLink className="w-4 h-4 text-blue-600 hover:text-blue-700" />
-                            </a>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            {action && (
-              <div className="mt-4">
-                <p>Are you sure you want to <b>{action === "approve" ? "approve" : "reject"}</b> the company <b>{selectedCompany?.name}</b>?</p>
-              </div>
-            )}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setModalOpen(false)} disabled={updateStatusMutation.isPending}>Cancel</Button>
-              {action && selectedCompany && (
-                <Button
-                  onClick={() => updateStatusMutation.mutate({ _id: selectedCompany._id, status: action === "approve" ? "active" : "rejected" })}
-                  className={action === "approve" ? "bg-green-600 hover:bg-green-700 text-white" : "bg-red-600 hover:bg-red-700 text-white"}
-                  disabled={updateStatusMutation.isPending}
-                >
-                  {updateStatusMutation.isPending ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : null}
-                  {action === "approve" ? "Approve" : "Reject"}
-                </Button>
-              )}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+       <UploadDocumentModal open={modalOpen} onOpenChange={setModalOpen} />
       </div>
     </DashboardLayout>
   );

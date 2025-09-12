@@ -24,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { GlobalModal } from "@/components/modals/global-modal"
 import { TicketCardOutline } from "@/components/cards/TicketCard"
 import { dummyTickets } from "@/lib/dummy-data"
+import { CreateTicketModal } from "@/components/modals/create-ticket-modal"
 
 // Style constants
 const statCardStyle =
@@ -72,7 +73,7 @@ const TicketDetails = ({ ticket, onClose }: { ticket: Ticket | null, onClose: ()
 }
 
 export default function MyTicketsClientPage() {
-  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [openModal, setOpenModal] = useState(false)
   const [formTitle, setFormTitle] = useState("")
   const [formDescription, setFormDescription] = useState("")
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
@@ -111,7 +112,7 @@ export default function MyTicketsClientPage() {
         title: "Ticket created successfully",
         description: `"${newTicket.title}" has been added to open tickets.`,
       })
-      setCreateModalOpen(false)
+      setOpenModal(false)
       setFormTitle("")
       setFormDescription("")
     },
@@ -165,6 +166,7 @@ export default function MyTicketsClientPage() {
               
          </div>
           <Button
+          onClick={() => setOpenModal(true)}
             className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -231,61 +233,6 @@ export default function MyTicketsClientPage() {
         </div>
       </div>
 
-      {/* Global Create Ticket Modal */}
-      <GlobalModal
-        open={createModalOpen}
-        onOpenChange={setCreateModalOpen}
-        title="Create New Ticket"
-        actions={
-          <>
-            <Button
-              variant="outline"
-              onClick={() => setCreateModalOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={!formTitle.trim() || createTicketMutation.isPending}
-              className="bg-[#A4D65E] hover:bg-[#8fc350]"
-            >
-              {createTicketMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                'Create Ticket'
-              )}
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Title <span className="text-red-500">*</span>
-            </label>
-            <Input
-              placeholder="Enter ticket title"
-              value={formTitle}
-              onChange={(e) => setFormTitle(e.target.value)}
-              className="w-full"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <Textarea
-              placeholder="Enter ticket description"
-              value={formDescription}
-              onChange={(e) => setFormDescription(e.target.value)}
-              className="w-full min-h-[120px]"
-            />
-          </div>
-        </div>
-      </GlobalModal>
       
       {/* View Ticket Details Modal */}
       <GlobalModal
@@ -295,6 +242,13 @@ export default function MyTicketsClientPage() {
       >
         {selectedTicket && <TicketDetails ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />}
       </GlobalModal>
+      <CreateTicketModal 
+        open={openModal}
+        onOpenChange={setOpenModal}
+        onSubmit={(data) => {
+          // createTicketMutation.mutate(data)
+        }}
+      />
     </DashboardLayout>
   )
 }

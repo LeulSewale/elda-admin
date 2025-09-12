@@ -8,41 +8,15 @@ import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@radix-ui/react-tooltip"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState, useEffect, useCallback } from "react"
-import { useRouter, usePathname, useSearchParams } from "next/navigation"
-import { toast } from "@/hooks/use-toast"
 import { 
   Eye, 
   Plus, 
-  Filter, 
-  Download, 
-  RefreshCw, 
-  MoreHorizontal,
-  FileText,
-  CheckCircle,
-  AlertTriangle,
-  Clock,
-  Loader2,
-  ChevronDown,
-  File,
-  ExternalLink,
-  X,
-  Check,
-  Trash2,
-  Edit,
-  Star
+ 
 } from "lucide-react"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useAuth } from "@/hooks/use-auth"
-import { requestsApi } from "@/lib/api/requests"
-import { Request, RequestStatus } from "@/lib/types/requests"
-import { format } from "date-fns"
-import { StatusBadge } from "@/components/requests/status-badge"
-import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover"
-import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog"
-import { DialogFooter, DialogHeader } from "@/components/ui/dialog"
-import Link from "next/link"
+import { dummyRequests } from "@/lib/dummy-data"
+
+import { CreateRequestModal } from "@/components/modals/create-request-modal"
 
 
 /**
@@ -124,111 +98,20 @@ export default function RequestsPageClient() {
   const queryClient = useQueryClient();
   const { isVisible, lastActivity } = useTabVisibility();
   const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
   const [action, setAction] = useState<"approve" | "reject" | null>(null);
   const [lastRefresh, setLastRefresh] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
 
-  const sampleData = [
-    {
-      no: 1,
-      id:'REQ-0001',
-      title: "Website Redesign",
-      phone: "+251911223344",
-      email: "design@company.com",
-      createdAt: "2023-01-01",
-      status: "pending",
-    },
-    {
-      no: 2,
-      id:'REQ-0002',
-      title: "Mobile App Development",
-      phone: "+251922334455",
-      email: "appdev@company.com",
-      createdAt: "2023-01-02",
-      status: "completed",
-    },
-    {
-      no: 3,
-      id:'REQ-0003',
-      title: "SEO Optimization",
-      phone: "+251933445566",
-      email: "seo@company.com",
-      createdAt: "2023-01-03",
-      status: "rejected",
-    },
-    {
-      no: 4,
-      id:'REQ-0004',
-      title: "Cloud Migration",
-      phone: "+251944556677",
-      email: "cloud@company.com",
-      createdAt: "2023-01-04",
-      status: "completed",
-    },
-    {
-      no: 5,
-      id:'REQ-0005',
-      title: "E-commerce Setup",
-      phone: "+251955667788",
-      email: "ecommerce@company.com",
-      createdAt: "2023-01-05",
-      status: "pending",
-    },
-    {
-      no: 6,
-      id:'REQ-0006',
-      title: "Cybersecurity Audit",
-      phone: "+251966778899",
-      email: "security@company.com",
-      createdAt: "2023-01-06",
-      status: "completed",
-    },
-    {
-      no: 7,
-      id:'REQ-0007',
-      title: "Database Optimization",
-      phone: "+251977889900",
-      email: "dbadmin@company.com",
-      createdAt: "2023-01-07",
-      status: "pending",
-    },
-    {
-      no: 8,
-      id:'REQ-0008',
-      title: "Digital Marketing Campaign",
-      phone: "+251988990011",
-      email: "marketing@company.com",
-      createdAt: "2023-01-08",
-      status: "rejected",
-    },
-    {
-      no: 9,
-      id:'REQ-0009',
-      title: "Software Maintenance",
-      phone: "+251999001122",
-      email: "support@company.com",
-      createdAt: "2023-01-09",
-      status: "completed",
-    },
-    {
-      no: 10,
-      id:'REQ-0010',
-      title: "IT Infrastructure Upgrade",
-      phone: "+251900112233",
-      email: "itupgrade@company.com",
-      createdAt: "2023-01-10",
-      status: "pending",
-    },
-  ];
+  
   
   // Fetch pending companies with ADVANCED PERFORMANCE OPTIMIZATIONS
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["pending-companies"],
     queryFn: async () => {
       // const res = await companiesApi.getCompanies({ status: "pending" });
-      return sampleData;
+      return dummyRequests;
     },
     // 🚀 ADVANCED CACHING CONFIGURATION
     staleTime: 15 * 60 * 1000, // 15 minutes - data considered fresh for 15 minutes
@@ -243,46 +126,46 @@ export default function RequestsPageClient() {
   });
 
   // Approve/Reject mutation with OPTIMISTIC UPDATES
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ _id, status }: { _id: string; status: string }) => {
-      return companiesApi.updateCompany(_id, { status });
-    },
-    onMutate: async ({ _id, status }) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["pending-companies"] });
+  // const updateStatusMutation = useMutation({
+  //   mutationFn: async ({ _id, status }: { _id: string; status: string }) => {
+  //     return companiesApi.updateCompany(_id, { status });
+  //   },
+  //   onMutate: async ({ _id, status }) => {
+  //     // Cancel any outgoing refetches
+  //     await queryClient.cancelQueries({ queryKey: ["pending-companies"] });
 
-      // Snapshot the previous value
-      const previousData = queryClient.getQueryData(["pending-companies"]);
+  //     // Snapshot the previous value
+  //     const previousData = queryClient.getQueryData(["pending-companies"]);
 
-      // Optimistically update to the new value
-      queryClient.setQueryData(["pending-companies"], (old: any) => {
-        if (!old) return old;
-        return old.map((company: any) =>
-          company._id === _id ? { ...company, status } : company
-        );
-      });
+  //     // Optimistically update to the new value
+  //     queryClient.setQueryData(["pending-companies"], (old: any) => {
+  //       if (!old) return old;
+  //       return old.map((company: any) =>
+  //         company._id === _id ? { ...company, status } : company
+  //       );
+  //     });
 
-      // Return a context object with the snapshotted value
-      return { previousData };
-    },
-    onError: (err: any, variables, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
-      if (context?.previousData) {
-        queryClient.setQueryData(["pending-companies"], context.previousData);
-      }
-      toast({ title: "Error", description: err?.response?.data?.message || "Failed to update status.", variant: "destructive" });
-    },
-    onSettled: () => {
-      // Always refetch after error or success to ensure data consistency
-      queryClient.invalidateQueries({ queryKey: ["pending-companies"] });
-    },
-    onSuccess: () => {
-      toast({ title: "Success", description: `Company status updated.`, variant: "default" });
-      setModalOpen(false);
-      setSelectedCompany(null);
-      setAction(null);
-    },
-  });
+  //     // Return a context object with the snapshotted value
+  //     return { previousData };
+  //   },
+  //   onError: (err: any, variables, context) => {
+  //     // If the mutation fails, use the context returned from onMutate to roll back
+  //     if (context?.previousData) {
+  //       queryClient.setQueryData(["pending-companies"], context.previousData);
+  //     }
+  //     toast({ title: "Error", description: err?.response?.data?.message || "Failed to update status.", variant: "destructive" });
+  //   },
+  //   onSettled: () => {
+  //     // Always refetch after error or success to ensure data consistency
+  //     queryClient.invalidateQueries({ queryKey: ["pending-companies"] });
+  //   },
+  //   onSuccess: () => {
+  //     toast({ title: "Success", description: `Company status updated.`, variant: "default" });
+  //     setModalOpen(false);
+  //     setSelectedCompany(null);
+  //     setAction(null);
+  //   },
+  // });
 
   // 🔄 SMART REFRESH FUNCTION WITH TAB ACTIVITY AWARENESS
   const handleRefresh = useCallback(async () => {
@@ -414,12 +297,13 @@ export default function RequestsPageClient() {
              <h1 className="text-xl font-semibold">Requests</h1>
             <p className="text-sm text-gray-400">View and manage request management</p>
           </div>
-          {/* <Button
+          <Button
+          onClick={() => setOpenModal(true)}
             className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Upload Document
-          </Button> */}
+            Create Request
+          </Button>
           </div>
           <hr></hr>
           <div className="overflow-x-auto">
@@ -432,83 +316,11 @@ export default function RequestsPageClient() {
             />
           </div>
         </div>
-        {/* Details/Action Modal */}
-        <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {action === null && "Company Details"}
-                {action === "approve" && "Approve Company"}
-                {action === "reject" && "Reject Company"}
-              </DialogTitle>
-            </DialogHeader>
-            {selectedCompany && action === null && (
-              <div className="space-y-4 text-sm">
-                <div className="space-y-2">
-                  <div><b>Name:</b> {selectedCompany.name}</div>
-                  <div><b>Email:</b> {selectedCompany.email}</div>
-                  <div><b>Phone:</b> {selectedCompany.phone}</div>
-                  <div><b>Status:</b> {selectedCompany.status}</div>
-                  <div><b>Created At:</b> {new Date(selectedCompany.createdAt).toLocaleString()}</div>
-                  <div><b>Description:</b> {selectedCompany.description || "-"}</div>
-                </div>
-                
-                {/* Documents Section */}
-                {selectedCompany.documents && selectedCompany.documents.length > 0 && (
-                  <div className="space-y-2">
-                    <div><b>Documents ({selectedCompany.documents.length}):</b></div>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {selectedCompany.documents.map((doc: any, index: number) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <File className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                            <span className="text-sm text-gray-700 truncate">{doc.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            <button
-                              // onClick={() => downloadDocument(doc.url, doc.name)}
-                              className="p-1 hover:bg-gray-200 rounded transition-colors"
-                              title="Download document"
-                            >
-                              <Download className="w-4 h-4 text-green-600 hover:text-green-700" />
-                            </button>
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1 hover:bg-gray-200 rounded transition-colors"
-                              title="View document"
-                            >
-                              <ExternalLink className="w-4 h-4 text-blue-600 hover:text-blue-700" />
-                            </a>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            {action && (
-              <div className="mt-4">
-                <p>Are you sure you want to <b>{action === "approve" ? "approve" : "reject"}</b> the company <b>{selectedCompany?.name}</b>?</p>
-              </div>
-            )}
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setModalOpen(false)} disabled={updateStatusMutation.isPending}>Cancel</Button>
-              {action && selectedCompany && (
-                <Button
-                  onClick={() => updateStatusMutation.mutate({ _id: selectedCompany._id, status: action === "approve" ? "active" : "rejected" })}
-                  className={action === "approve" ? "bg-green-600 hover:bg-green-700 text-white" : "bg-red-600 hover:bg-red-700 text-white"}
-                  disabled={updateStatusMutation.isPending}
-                >
-                  {updateStatusMutation.isPending ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : null}
-                  {action === "approve" ? "Approve" : "Reject"}
-                </Button>
-              )}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <CreateRequestModal
+                  open={openModal}
+                  onOpenChange={(open) => setOpenModal(open)}
+                  // onSubmit={handleCreateRequest}
+                />
       </div>
     </DashboardLayout>
   );
