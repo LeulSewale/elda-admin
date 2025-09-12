@@ -59,7 +59,7 @@
                   style={{ background: 'white', borderRadius: '1.5rem', border: '2px solid #A4D65E', padding: '0.5rem' }}
                 />
               </div>
-              <h1 className="text-6xl font-bold text-[#A4D65E]">TELE TENDER</h1>
+              <h1 className="text-6xl font-bold text-[#A4D65E]">ELDA</h1>
             </div>
           </div>
   
@@ -77,7 +77,7 @@
                     style={{ background: 'white', borderRadius: '1rem', border: '2px solid #A4D65E', padding: '0.4rem' }}
                   />
                 </div>
-                <CardTitle className="text-2xl text-[#A4D65E] font-extrabold tracking-tight">TELE TENDER</CardTitle>
+                <CardTitle className="text-2xl text-[#A4D65E] font-extrabold tracking-tight">ELDA</CardTitle>
                 <div className="mt-2 text-gray-500 text-sm font-medium">Admin/Company Login</div>
               </CardHeader>
               <div className="border-b border-gray-200 mx-6 mb-4" />
