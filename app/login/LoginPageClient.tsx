@@ -6,7 +6,7 @@
   import { Input } from "@/components/ui/input"
   import { Label } from "@/components/ui/label"
   import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-  import logo from "../../public/tele_tender.png"
+  import logo from "../../public/ELDA.png"
   import { useAuth } from "@/hooks/use-auth"
   import { toast } from "@/hooks/use-toast"
   import Link from "next/link"
@@ -56,10 +56,10 @@
                   width={96}
                   height={96}
                   className="object-contain drop-shadow-lg"
-                  style={{ background: 'white', borderRadius: '1.5rem', border: '2px solid #A4D65E', padding: '0.5rem' }}
+                  style={{ background: 'white', borderRadius: '1.5rem', border: '2px solid #4082ea', padding: '0.5rem' }}
                 />
               </div>
-              <h1 className="text-6xl font-bold text-[#A4D65E]">ELDA</h1>
+              <h1 className="text-6xl font-bold text-[#4082ea]">ELDA SYSTEM</h1>
             </div>
           </div>
   
@@ -74,10 +74,10 @@
                     width={64}
                     height={64}
                     className="object-contain drop-shadow-lg"
-                    style={{ background: 'white', borderRadius: '1rem', border: '2px solid #A4D65E', padding: '0.4rem' }}
+                    style={{ background: 'white', borderRadius: '1rem', border: '2px solid #4082ea', padding: '0.4rem' }}
                   />
                 </div>
-                <CardTitle className="text-2xl text-[#A4D65E] font-extrabold tracking-tight">ELDA</CardTitle>
+                <CardTitle className="text-2xl text-[#4082ea] font-extrabold tracking-tight">ELDA SYSTEM</CardTitle>
                 <div className="mt-2 text-gray-500 text-sm font-medium">Admin/Company Login</div>
               </CardHeader>
               <div className="border-b border-gray-200 mx-6 mb-4" />
@@ -141,7 +141,7 @@
                 {/* Sign up link */}
                 <div className="text-center text-sm text-gray-600">
                   Don&apos;t have an account?{" "}
-                  <Link href="/signup" className="text-[#A4D65E] hover:underline font-semibold">
+                  <Link href="#" className="text-[#A4D65E] hover:underline font-semibold">
                     Sign Up
                   </Link>
                 </div>

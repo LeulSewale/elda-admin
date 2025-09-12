@@ -56,8 +56,18 @@ import { useTabVisibility } from "@/hooks/use-tab-visibility"
  *    - Efficient stat card rendering
  */
 
-const statCardStyle = "relative flex flex-col justify-between gap-4 p-6 rounded-xl shadow-md bg-gradient-to-br from-[#e7eeff] via-[#f0f5ff] to-white border-0 transition-transform duration-200 hover:scale-[1.03] group"
-const iconStyle = "w-14 h-14 p-3 rounded-xl bg-[#4082ea]/20 text-[#4082ea] shadow group-hover:bg-[#4082ea]/30 transition-all duration-200"
+            // styles: subtle gradient, thin border, gentle hover, proper focus ring
+            const statCardStyle =
+            "relative flex flex-col justify-between gap-4 rounded-2xl p-5 sm:p-6 " +
+            "bg-gradient-to-br from-[#f1f6ff] via-white to-white " +
+            "border border-slate-200/80 shadow-sm hover:shadow-md " +
+            "transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4082ea]/30 " +
+            "dark:bg-zinc-900/70 dark:border-zinc-800";
+            
+            const iconTileStyle =
+            "grid size-10 place-items-center rounded-lg bg-[#4082ea]/10 text-[#4082ea] " +
+            "ring-1 ring-[#4082ea]/20 shadow-sm transition-colors group-hover:bg-[#4082ea]/15";
+            const iconStyle = "w-14 h-14 p-3 rounded-xl bg-[#4082ea]/20 text-[#4082ea] shadow group-hover:bg-[#4082ea]/30 transition-all duration-200"
 
 export default function DashboardPageClient() {
   const { role, user } = useAuth();
@@ -223,24 +233,24 @@ export default function DashboardPageClient() {
         label: "Unread Orders",
         value: bidsQuery.data ?? 0,
         loading: bidsQuery.isLoading,
-        icon: <ListOrderedIcon className={iconStyle} />,
+        icon: <ListOrderedIcon />,
       },
       {
         label: "Unsent Document",
         value: tendersQuery.data ?? 0,
         loading: tendersQuery.isLoading,
-        icon: <FileText className={iconStyle} />,
+        icon: <FileText  />,
       }, {
         label: "Total Users",
         value: bidsQuery.data ?? 0,
         loading: bidsQuery.isLoading,
-        icon: <User className={iconStyle} />,
+        icon: <User  />,
       },
       {
         label: "Expiring Documents",
         value: tendersQuery.data ?? 0,
         loading: tendersQuery.isLoading,
-        icon: <FileText className={iconStyle} />,
+        icon: <FileText  />,
       }
     );
     return cards;
@@ -346,21 +356,44 @@ export default function DashboardPageClient() {
         {/* Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {statCards.map((card) => (
-            <Card key={card.label} className={statCardStyle}>
-              <div className="flex items-center justify-between w-full">
-                <span className="text-lg font-semibold text-gray-700 flex items-center gap-2">
-                  {card.icon}
-                  {card.label}
-                </span>
-              </div>
-              <div className="flex-1 flex items-end justify-end">
-                {card.loading ? (
-                  <div className="h-10 w-24 bg-gray-100 animate-pulse rounded" />
-                ) : (
-                  <div className="text-4xl font-extrabold text-[#4082ea] drop-shadow-lg">{card.value}</div>
-                )}
-              </div>
-            </Card>
+
+<Card key={card.label} className={statCardStyle}>
+{/* soft ambient glow (very subtle) */}
+<div
+  aria-hidden
+  className="pointer-events-none absolute -right-10 -top-10 size-24 rounded-full bg-[#4082ea]/5 blur-2xl"
+/>
+
+{/* top row: icon + label */}
+<div className="flex items-center justify-between w-full">
+  <div className="flex items-center gap-3 min-w-0">
+    <div className={iconTileStyle}>
+      <span className="inline-flex">{card.icon}</span>
+    </div>
+    <span className="truncate text-[15px] font-semibold text-slate-700 dark:text-zinc-100">
+      {card.label}
+    </span>
+  </div>
+</div>
+
+{/* value on bottom-right (unchanged placement, improved typographic tone) */}
+<div className="flex-1 flex items-end justify-end">
+  {card.loading ? (
+    <div className="h-9 w-24 rounded bg-slate-100 animate-pulse dark:bg-zinc-800" />
+  ) : (
+    <div
+      className="text-3xl sm:text-4xl font-extrabold tracking-tight tabular-nums text-[#4082ea] dark:text-sky-400"
+      aria-live="polite"
+    >
+      {card.value}
+    </div>
+  )}
+</div>
+
+{/* subtle hover accent bar */}
+<div className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-transparent via-[#4082ea]/20 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+</Card>
+
           ))}
         </div>
 
