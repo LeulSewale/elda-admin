@@ -120,7 +120,7 @@ function useTabVisibility() {
   return { isVisible, lastActivity };
 }
 
-export default function RequestsPageClient() {
+export default function DocumentsPageClient() {
   const queryClient = useQueryClient();
   const { isVisible, lastActivity } = useTabVisibility();
   const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
@@ -130,105 +130,96 @@ export default function RequestsPageClient() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
 
-  const sampleData = [
+  const documents = [
     {
       no: 1,
-      id:'REQ-0001',
-      title: "Website Redesign",
-      phone: "+251911223344",
-      email: "design@company.com",
-      createdAt: "2023-01-01",
-      status: "pending",
+      id: "DOC-001",
+      title: "Project Proposal",
+      type: "PDF",
+      date: "2025-09-01",
+      status: "Unread",
     },
     {
       no: 2,
-      id:'REQ-0002',
-      title: "Mobile App Development",
-      phone: "+251922334455",
-      email: "appdev@company.com",
-      createdAt: "2023-01-02",
-      status: "completed",
+      id: "DOC-002",
+      title: "Meeting Minutes",
+      type: "DOCX",
+      date: "2025-09-02",
+      status: "Read",
     },
     {
       no: 3,
-      id:'REQ-0003',
-      title: "SEO Optimization",
-      phone: "+251933445566",
-      email: "seo@company.com",
-      createdAt: "2023-01-03",
-      status: "rejected",
+      id: "DOC-003",
+      title: "Budget Report",
+      type: "XLSX",
+      date: "2025-09-03",
+      status: "Unread",
     },
     {
       no: 4,
-      id:'REQ-0004',
-      title: "Cloud Migration",
-      phone: "+251944556677",
-      email: "cloud@company.com",
-      createdAt: "2023-01-04",
-      status: "completed",
+      id: "DOC-004",
+      title: "Design Mockups",
+      type: "PNG",
+      date: "2025-09-04",
+      status: "Read",
     },
     {
       no: 5,
-      id:'REQ-0005',
-      title: "E-commerce Setup",
-      phone: "+251955667788",
-      email: "ecommerce@company.com",
-      createdAt: "2023-01-05",
-      status: "pending",
+      id: "DOC-005",
+      title: "Client Feedback",
+      type: "TXT",
+      date: "2025-09-05",
+      status: "Unread",
     },
     {
       no: 6,
-      id:'REQ-0006',
-      title: "Cybersecurity Audit",
-      phone: "+251966778899",
-      email: "security@company.com",
-      createdAt: "2023-01-06",
-      status: "completed",
+      id: "DOC-006",
+      title: "Contract Agreement",
+      type: "PDF",
+      date: "2025-09-06",
+      status: "Read",
     },
     {
       no: 7,
-      id:'REQ-0007',
-      title: "Database Optimization",
-      phone: "+251977889900",
-      email: "dbadmin@company.com",
-      createdAt: "2023-01-07",
-      status: "pending",
+      id: "DOC-007",
+      title: "System Architecture",
+      type: "DOCX",
+      date: "2025-09-07",
+      status: "Unread",
     },
     {
       no: 8,
-      id:'REQ-0008',
-      title: "Digital Marketing Campaign",
-      phone: "+251988990011",
-      email: "marketing@company.com",
-      createdAt: "2023-01-08",
-      status: "rejected",
+      id: "DOC-008",
+      title: "User Manual",
+      type: "PDF",
+      date: "2025-09-08",
+      status: "Read",
     },
     {
       no: 9,
-      id:'REQ-0009',
-      title: "Software Maintenance",
-      phone: "+251999001122",
-      email: "support@company.com",
-      createdAt: "2023-01-09",
-      status: "completed",
+      id: "DOC-009",
+      title: "Training Material",
+      type: "PPTX",
+      date: "2025-09-09",
+      status: "Unread",
     },
     {
       no: 10,
-      id:'REQ-0010',
-      title: "IT Infrastructure Upgrade",
-      phone: "+251900112233",
-      email: "itupgrade@company.com",
-      createdAt: "2023-01-10",
-      status: "pending",
+      id: "DOC-010",
+      title: "Final Invoice",
+      type: "PDF",
+      date: "2025-09-10",
+      status: "Read",
     },
   ];
+  
   
   // Fetch pending companies with ADVANCED PERFORMANCE OPTIMIZATIONS
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["pending-companies"],
     queryFn: async () => {
       // const res = await companiesApi.getCompanies({ status: "pending" });
-      return sampleData;
+      return documents;
     },
     // 🚀 ADVANCED CACHING CONFIGURATION
     staleTime: 15 * 60 * 1000, // 15 minutes - data considered fresh for 15 minutes
@@ -342,93 +333,100 @@ export default function RequestsPageClient() {
     { accessorKey: "no", header: "No", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
     { accessorKey: "id", header: "ID", cell: ({ row }: any) => <span className="font-medium">{row.original.id}</span> },
     { accessorKey: "title", header: "Title", cell: ({ row }: any) => <div className="font-medium">{row.original.title}</div> },
-    { accessorKey: "phone", header: "Contact", cell: ({ row }: any) => <div className="text-gray-600">{row.original.phone}</div> },
-    { accessorKey: "serviceType", header: "Service Type", cell: ({ row }: any) => <div className="text-gray-600">{row.original.email}</div> },
+    { accessorKey: "type", header: "Type", cell: ({ row }: any) => <div className="text-gray-600">{row.original.type}</div> },
     { accessorKey: "status", header: "Status", cell: ({ row }: any) => {
       const status = row.original.status;
       const statusColors: Record<string, string> = {
-        pending: "bg-yellow-100 text-yellow-800",
-        completed: "bg-green-100 text-green-800",
-        rejected: "bg-red-100 text-red-800",
+        Unread: "bg-yellow-100 text-yellow-800",
+        Read: "bg-green-100 text-green-800",
       };
       return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
     } },
-    { accessorKey: "createdAt",
-       header: "Created At", 
-       cell: ({ row }: any) => (
+    {
+      accessorKey: "date",
+      header: "Date",
+      cell: ({ row }: any) => (
         <div className="text-gray-600">
-          {new Date(row.original.createdAt).toLocaleDateString("en-US", {
+          {new Date(row.original.date).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
             year: "numeric",
           })}
         </div>
       ),
-     },   
+    },
     
-     {
-          id: "actions",
-          header: "Actions",
-          cell: ({ row }: any) => {
-            const user = row.original
-            return (
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  // onClick={() => {
-                  //   setSelectedUser(user)
-                  //   setDetailModalOpen(true)
-                  // }}
-                  className="hover:bg-blue-50 hover:text-blue-600"
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-                {/* <Button
-                  variant="ghost"
-                  size="icon"
-                  // onClick={() => {
-                  //   setSelectedUser(user)
-                  //   setDeleteModalOpen(true)
-                  // }}
-                  className="hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button> */}
-              </div>
-            )
-          },
-          enableSorting: false,
-        },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }: any) => {
+        const user = row.original
+        return (
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              // onClick={() => {
+              //   setSelectedUser(user)
+              //   setDetailModalOpen(true)
+              // }}
+              className="hover:bg-blue-50 hover:text-blue-600"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+            {/* <Button
+              variant="ghost"
+              size="icon"
+              // onClick={() => {
+              //   setSelectedUser(user)
+              //   setDeleteModalOpen(true)
+              // }}
+              className="hover:bg-red-50 hover:text-red-600"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button> */}
+          </div>
+        )
+      },
+      enableSorting: false,
+    },
   ];
 
 
 
+  // Function to handle CSV export
+  const handleExportCSV = () => {
+    // Add your CSV export logic here
+    console.log('Exporting to CSV...');
+    // Example: exportToCSV(tableData, 'documents_export.csv');
+  };
+
   return (
-    <DashboardLayout title="Request Management" isFetching={isFetching}>
-      <div className="p-0"> 
-        
+    <DashboardLayout title="Document Management" isFetching={isFetching}>
+      <div className="p-0">       
         <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
-          <div className="flex justify-between items-center px-2 py-2">
+           <div className="flex justify-between items-center px-2 py-2">
           <div>
-             <h1 className="text-xl font-semibold">Requests</h1>
-            <p className="text-sm text-gray-400">View and manage request management</p>
+             <h1 className="text-xl font-semibold">Documents</h1>
+            <p className="text-sm text-gray-400">View and manage document management</p>
           </div>
-          {/* <Button
+          <Button
             className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             Upload Document
-          </Button> */}
-          </div>
-          <hr></hr>
+          </Button>
+        </div>
+        <hr></hr>
           <div className="overflow-x-auto">
             <DataTable
               columns={columns}
               data={tableData}
-              quickFilterKey="status"
               searchKey="title"
-              searchPlaceholder="Search request by title..."
+              quickFilterKey="status"
+              searchPlaceholder="Search document by title..."
+              onExportCSV={handleExportCSV}
+              showExportButton={true}
             />
           </div>
         </div>

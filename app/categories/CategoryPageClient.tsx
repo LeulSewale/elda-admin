@@ -8,8 +8,7 @@ import type { Category } from "@/lib/types"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Edit, Trash2, Plus, RotateCcw, Loader2 } from "lucide-react"
 import { useState, useMemo } from "react"
-// import { categoriesApi } from "@/lib/api/categories"
-import { dummyCategories, simulateApiDelay } from "@/lib/dummy-data"
+import { categoriesApi } from "@/lib/api/categories"
 import { CreateEditCategoryModal } from "@/components/modals/create-edit-category-modal";
 import { useToast } from "@/hooks/use-toast"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -63,7 +62,7 @@ export default function CategoryPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  // DUMMY DATA: React Query for fetching categories with dummy data
+  // React Query for fetching categories with optimization
   const {
     data: categories = [],
     isLoading: loading,
@@ -73,8 +72,8 @@ export default function CategoryPage() {
   } = useQuery({
     queryKey: ['categories'],
     queryFn: async () => {
-      await simulateApiDelay();
-      return dummyCategories;
+      const res = await categoriesApi.getCategories();
+      return res.data.data;
     },
     // ✅ OPTIMIZED: Proper caching configuration
     staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh for 5 minutes
@@ -87,12 +86,9 @@ export default function CategoryPage() {
   // Memoized computed values
   const categoriesCount = useMemo(() => categories.length, [categories]);
 
-  // DUMMY DATA: Mutations for CRUD operations
+  // Mutations for CRUD operations
   const deleteCategoryMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await simulateApiDelay();
-      return { success: true };
-    },
+    mutationFn: (id: string) => categoriesApi.deleteCategory(id),
     onSuccess: (_, deletedId) => {
       // ✅ OPTIMIZED: Direct cache update instead of full invalidation
       queryClient.setQueryData(['categories'], (oldData: Category[] | undefined) => {
@@ -109,17 +105,15 @@ export default function CategoryPage() {
     onError: (err: any) => {
       toast({
         title: "Delete failed",
-        description: "Failed to delete category.",
+        description: err?.response?.data?.message || err?.message || "Failed to delete category.",
         variant: "destructive",
       });
     },
   });
 
   const editCategoryMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      await simulateApiDelay();
-      return { success: true };
-    },
+    mutationFn: ({ id, data }: { id: string; data: any }) => 
+      categoriesApi.updateCategory(id, data),
     onSuccess: (_, { id, data }) => {
       // ✅ OPTIMIZED: Direct cache update instead of full invalidation
       queryClient.setQueryData(['categories'], (oldData: Category[] | undefined) => {
@@ -140,23 +134,14 @@ export default function CategoryPage() {
     onError: (err: any) => {
       toast({
         title: "Update failed",
-        description: "Failed to update category.",
+        description: err?.response?.data?.message || err?.message || "Failed to update category.",
         variant: "destructive",
       });
     },
   });
 
   const createCategoryMutation = useMutation({
-    mutationFn: async (data: any) => {
-      await simulateApiDelay();
-      const newCategory = {
-        id: `cat_${Date.now()}`,
-        name: data.name,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      return { data: newCategory };
-    },
+    mutationFn: (data: any) => categoriesApi.createCategory(data),
     onSuccess: (response) => {
       // ✅ OPTIMIZED: Direct cache update instead of full invalidation
       queryClient.setQueryData(['categories'], (oldData: Category[] | undefined) => {
@@ -173,7 +158,7 @@ export default function CategoryPage() {
     onError: (err: any) => {
       toast({
         title: "Create failed",
-        description: "Failed to create category.",
+        description: err?.response?.data?.message || err?.message || "Failed to create category.",
         variant: "destructive",
       });
     },
@@ -303,7 +288,7 @@ export default function CategoryPage() {
           </Button>
         </div>
         {error ? (
-          <div className="text-red-500">Failed to load categories.</div>
+          <div className="text-red-500">{(error as any)?.message || "Failed to load categories."}</div>
         ) : (
           <div className="relative">
             {(loading || fetching) && (

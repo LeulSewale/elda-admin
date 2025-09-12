@@ -8,8 +8,7 @@ import type { Bid } from "@/lib/types"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Gavel, Eye, Download, ExternalLink, FileText, File, User, Phone, Mail, Building2, Calendar } from "lucide-react"
 import { useEffect, useState, useMemo, useCallback } from "react"
-// import { bidsApi } from "@/lib/api/bids"
-import { dummyBids, createPaginatedResponse, createApiResponse } from "@/lib/dummy-data"
+import { bidsApi } from "@/lib/api/bids"
 import { Skeleton } from "@/components/ui/skeleton"
 import { RotateCcw } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
@@ -125,21 +124,30 @@ export default function BidsPageClient() {
   // ✅ OPTIMIZED: Query with proper caching configuration
   const { data, isLoading, isFetching, error, refetch } = useQuery<{ data: Bid[]; pagination: PaginationType } | undefined>({
     queryKey: ["bids", role, user?._id, pageIndex, pageSize],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 500)) // Simulate API delay
+    queryFn: () => {
       if (role === "admin") {
-        return dummyBids
+        return bidsApi.getBids({ page: pageIndex + 1, limit: pageSize }).then(res => res.data);
       } else if (role === "company" && user?._id) {
-        return dummyBids.filter(bid => bid.user._id === user._id)
+        return bidsApi.getBidsByCompany({ companyId: user._id, page: pageIndex + 1, limit: pageSize }).then(res => res.data);
       }
-      return []
+      return Promise.resolve({ 
+        data: [], 
+        pagination: { 
+          page: 1, 
+          limit: pageSize, 
+          total: 0, 
+          totalPages: 1, 
+          hasNextPage: false, 
+          hasPrevPage: false 
+        } 
+      });
     },
-    enabled: !!role && (role === "admin" || (role === "company" && !!user?._id)) && isVisible,
-    staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
-    gcTime: 10 * 60 * 1000,   // 10 minutes - keep in cache
-    refetchOnWindowFocus: false, // Prevent refetch on window focus
-    refetchOnMount: false,      // Prevent refetch on component mount
-    refetchOnReconnect: true,   // Only refetch on network reconnect
+    // ✅ OPTIMIZED: Better caching configuration for bids data
+    staleTime: 15 * 60 * 1000, // 15 minutes - bids data changes less frequently
+    gcTime: 30 * 60 * 1000,    // 30 minutes - keep in cache longer
+    refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    refetchOnMount: false,       // Don't refetch on component mount if data exists
+    refetchOnReconnect: true,    // Only refetch on network reconnect
     refetchInterval: false,      // Disable automatic refetching
     retry: 2,                    // Retry failed requests up to 2 times
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
@@ -225,17 +233,16 @@ export default function BidsPageClient() {
       const nextPageIndex = pageIndex + 1;
       queryClient.prefetchQuery({
         queryKey: ["bids", role, user?._id, nextPageIndex, pageSize],
-        queryFn: async () => {
-          await new Promise(resolve => setTimeout(resolve, 500)) // Simulate API delay
+        queryFn: () => {
           if (role === "admin") {
-            return dummyBids
+            return bidsApi.getBids({ page: nextPageIndex + 1, limit: pageSize }).then(res => res.data);
           } else if (role === "company" && user?._id) {
-            return dummyBids.filter(bid => bid.user._id === user._id)
+            return bidsApi.getBidsByCompany({ companyId: user._id, page: nextPageIndex + 1, limit: pageSize }).then(res => res.data);
           }
-          return []
+          return Promise.resolve({ data: [], pagination: { page: 1, limit: pageSize, total: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false } });
         },
-        staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
-        gcTime: 10 * 60 * 1000,   // 10 minutes - keep in cache
+        staleTime: 15 * 60 * 1000,
+        gcTime: 30 * 60 * 1000,
       });
     }
   }, [pageIndex, pageSize, pagination.hasNextPage, role, user?._id, queryClient, isLoading]);
@@ -255,11 +262,11 @@ export default function BidsPageClient() {
   const [pendingBid, setPendingBid] = useState<any | null>(null);
   const [pendingRejectionReason, setPendingRejectionReason] = useState<string>("");
 
-  // ✅ OPTIMIZED: Status update mutation with dummy data
-  const statusMutation = useMutation({
-    mutationFn: async ({ bidId, status }: { bidId: string, status: string }) => {
-      await new Promise(resolve => setTimeout(resolve, 800)) // Simulate API delay
-      return createApiResponse({ id: bidId, status }, 'Bid status updated successfully')
+  // ✅ OPTIMIZED: Status update mutation with targeted cache updates
+  const updateStatusMutation = useMutation({
+    mutationFn: async (payload: { bidId: string; status: "accepted" | "rejected" | "awarded"; rejectionReason?: string }) => {
+      const { bidId, status, rejectionReason } = payload;
+      return bidsApi.updateBidStatus(bidId, { status, rejectionReason });
     },
     onSuccess: async (_, { bidId, status, rejectionReason }) => {
       // ✅ OPTIMIZED: Direct cache update instead of full invalidation
@@ -551,10 +558,10 @@ export default function BidsPageClient() {
           rejectionReason={pendingRejectionReason}
           setRejectionReason={setPendingRejectionReason}
           showReason={pendingStatus === 'rejected'}
-          isPending={statusMutation.isPending}
+          isPending={updateStatusMutation.isPending}
           onConfirm={() => {
             if (!pendingBid || !pendingStatus) return;
-            statusMutation.mutate({
+            updateStatusMutation.mutate({
               bidId: pendingBid.id || pendingBid._id,
               status: pendingStatus,
               rejectionReason: pendingStatus === 'rejected' ? pendingRejectionReason : undefined,

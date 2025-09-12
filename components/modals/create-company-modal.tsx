@@ -5,8 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useForm as useReactHookForm, Controller } from "react-hook-form"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-// import { companiesApi } from "@/lib/api/companies";
-import { simulateApiDelay } from "@/lib/dummy-data";
+import { companiesApi } from "@/lib/api/companies";
 import React, { useState } from "react";
 import { Pencil, Eye, EyeOff, Upload, X, File } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";

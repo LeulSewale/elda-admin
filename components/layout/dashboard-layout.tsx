@@ -40,12 +40,11 @@ export function DashboardLayout({ children, title, isFetching }: DashboardLayout
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Main content area with proper left margin for desktop sidebar */}
       <div className={`transition-all duration-300 ${collapsed ? "lg:pl-16" : "lg:pl-64"}`}>
         <Header title={title} />
         {typeof isFetching !== 'undefined' && <ProgressBar isFetching={isFetching} />}
         <main className="py-3">
-          <div className="w-full px-4 sm:px-6 lg:px-8">{children}</div>
+          <div className="w-full px-4 sm:px-6 lg:px-4">{children}</div>
         </main>
       </div>
     </div>

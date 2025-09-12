@@ -20,7 +20,6 @@ import {
   LogOut,
   Flag,
   Package,
-  Bell,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -33,24 +32,20 @@ import { SettingsModal } from "@/components/modals/settings-modal"
 
 const navigation = [
   {
-    name: "General",
+    name: "MAIN MENU",
     items: [
-      { name: "Dashboard", href: "/dashboard", icon: BarChart3, roles: ["admin", "company"] },
-      { name: "Request Manaement", href: "/request", icon: Users, roles: ["admin"] },
-      { name: "Users Manaement", href: "/users", icon: Users, roles: ["admin"] },
-      { name: "Documents", href: "/tenders", icon: FileText, roles: ["admin", "company"] },
-      { name: "Companies", href: "/companies", icon: Building2, roles: ["admin"] },
-      { name: "Categories", href: "/categories", icon: ChartBarStacked, roles: ["admin"] },
-      { name: "Packages", href: "/packages", icon: Package, roles: ["admin"] },
-      { name: "Tickets", href: "/bids", icon: Gavel, roles: ["admin", "company"] },
-      { name: "Requests", href: "/requests", icon: MessageSquare, roles: ["admin"] },
+      { name: "Dashboard", href: "/dashboard", icon: BarChart3, roles: ["admin", "user"] },
+      { name: "Requests", href: "/requests", icon: Users, roles: ["admin","user"] },
+      { name: "Users", href: "/users", icon: FileText, roles: ["admin", "user"] },
+      { name: "Tickets", href: "/tickets", icon: Building2, roles: ["admin","user"] },     
     ],
   },
   {
-    name: "Information",  
+    name: "ADMINISTRATION",
     items: [
-      { name: "Notifications", href: "/notifications", icon: Bell, roles: ["admin", "company"] },
-      { name: "Analytics", href: "/analytics", icon: BarChart3, roles: ["admin"] },
+      { name: "Documents", href: "/documents", icon: BarChart3, roles: ["admin","user"] },
+      { name: "Employees", href: "/employees", icon: BarChart3, roles: ["admin"] },
+
     ],
   },
  
@@ -70,7 +65,7 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname()
   const { role, isLoading, logout } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
-  if (isLoading) return null; // or a spinner
+  if (isLoading) return null;
 
   return (
     <div
@@ -91,14 +86,14 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
               style={{ background: 'white', borderRadius: '0.5rem', border: '2px solid #A4D65E', padding: '0.2rem' }}
             />
           </div>
-          {!collapsed && <span className="text-xl font-bold text-gray-900">Tele Tender</span>}
+          {!collapsed && <span className="text-xl font-bold text-gray-900">ELDA</span>}
         </Link>
       </div>
 
       <nav className="flex-1 space-y-8 px-4 py-6 overflow-y-auto">
         <TooltipProvider>
           {navigation
-            // DUMMY DATA: Show all sections for UI-only development
+            .filter(section => section.name !== "Information" || role === "admin")
             .map((section) => (
               <div key={section.name}>
                 {!collapsed && (
@@ -108,17 +103,18 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
                 )}
                 <div className="space-y-1">
                   {section.items
-                    // DUMMY DATA: Show all navigation items for UI-only development
+                    .filter(item => !item.roles || item.roles.includes(role))
                     .map((item) => {
-                      const isActive = pathname === item.href
+                      const computedHref = item.name === "Tickets" ? (role === "admin" ? "/tickets/admin" : "/tickets") : item.href
+                      const isActive = pathname === computedHref
                       const linkContent = (
                         <Link
-                          href={item.href}
+                          href={computedHref}
                           className={cn(
                             "group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
                             collapsed ? "justify-center" : "",
                             isActive
-                              ? "bg-[#A4D65E] text-white shadow-sm"
+                              ? "bg-[#e7eeff] text-[#4082ea] shadow-sm"
                               : "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
                           )}
                         >
@@ -126,7 +122,7 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
                             className={cn(
                               "h-5 w-5 flex-shrink-0 transition-colors",
                               collapsed ? "mr-0" : "mr-3",
-                              isActive ? "text-white" : "text-gray-500 group-hover:text-gray-700",
+                              isActive ? "text-[#4082ea]" : "text-gray-500 group-hover:text-gray-700",
                             )}
                           />
                           {!collapsed && item.name}

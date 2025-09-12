@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, createContext, useContext } from 'react'
+import { notificationsApi } from '@/lib/api/notifications'
 
 interface NotificationsContextType {
   unreadCount: number
@@ -14,12 +15,11 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
 
   const refreshUnreadCount = async () => {
     try {
-      // DUMMY DATA: Simulate unread notifications count for UI-only development
-      const dummyUnreadCount = Math.floor(Math.random() * 10) + 1 // Random number between 1-10
-      setUnreadCount(dummyUnreadCount)
+      const response = await notificationsApi.getUnreadCount()
+      const unreadNotifications = response.data.data?.notifications || []
+      setUnreadCount(unreadNotifications.length)
     } catch (err: any) {
       console.error("Failed to fetch unread count:", err)
-      setUnreadCount(0)
     }
   }
 

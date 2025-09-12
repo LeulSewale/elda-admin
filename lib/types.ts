@@ -9,10 +9,10 @@ export interface BaseDocument {
 }
 
 // ✅ Reusable enums
-export type StatusType = "Active" | "Suspended" | "Locked" | "Pending" | "Inactive";
+export type StatusType = "Active" | "Suspended" | "Locked";
 export type RequestType = "Company Verification" | "Tender Request"
 export type RequestStatus = "Pending" | "Approved" | "Rejected"
-export type UserRole = "admin" | "company" | "client";
+export type UserRole = "admin" | "lawyer" | "user";
 
 // ✅ Document type
 export interface Document {
@@ -41,6 +41,7 @@ export interface User extends BaseDocument {
   profileImage:Logo
   status: StatusType
   role: UserRole
+  company?: string // For lawyer and user roles
   address: Address
   description: string
   createdBy: string

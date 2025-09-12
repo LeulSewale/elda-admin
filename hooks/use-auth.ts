@@ -1,13 +1,12 @@
 "use client"
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-// import { authApi } from "@/lib/api/auth"
+import { authApi } from "@/lib/api/auth"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import { useEffect, useMemo, useState } from "react"
 import type { AxiosError } from "axios"
-// import { getAccessToken } from "@/lib/token"
-import { dummyUsers } from "@/lib/dummy-data"
+import { getAccessToken } from "@/lib/token"
 
 interface UseAuthOptions {
   redirectOnFail?: boolean
@@ -29,11 +28,10 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
   } = useQuery({
     queryKey: ["auth", "me"],
     queryFn: async () => {
-      // DUMMY DATA: Return first admin user for UI development
-      await new Promise(resolve => setTimeout(resolve, 500)) // Simulate API delay
-      return dummyUsers[0] // Return first user as logged in user
+      const res = await authApi.me()
+      return res.data.data
     },
-    enabled: true, // Always fetch profile on load (cookie-based session)
+    enabled: true,
     retry: false,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -52,20 +50,24 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
   }, [isError, error, redirectOnFail, router]);
 
   const loginMutation = useMutation({
-    mutationFn: async (credentials: { phoneNumber: string; password: string }) => {
-      // DUMMY DATA: Simulate login API call
-      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API delay
-      return { data: { data: dummyUsers[0] } } // Return dummy user
-    },
+    mutationFn: authApi.login,
     onMutate: () => {
       setIsAuthenticating(true)
     },
     onSuccess: async () => {
       try {
-        await new Promise((res) => setTimeout(res, 50)) // Wait for cookie
+        await new Promise((res) => setTimeout(res, 50))
         const { data } = await refetchProfile()
-        console.log("data", data)
-        // Allow all roles to access
+        // Check role
+        if (data?.role !== 'admin' && data?.role !== 'company') {
+          toast({
+            title: "Login Error",
+            description: "Your account does not have access. Only admin or company roles are allowed.",
+            variant: "destructive",
+          })
+          setIsAuthenticating(false)
+          return
+        }
         toast({
           title: "Login Successful",
           description: "Welcome back!",
@@ -94,11 +96,7 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
   })
 
   const logoutMutation = useMutation({
-    mutationFn: async () => {
-      // DUMMY DATA: Simulate logout API call
-      await new Promise(resolve => setTimeout(resolve, 500))
-      return { success: true }
-    },
+    mutationFn: authApi.logout,
     onSuccess: () => {
       queryClient.clear()
       router.replace("/login")
@@ -122,7 +120,7 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
     logout: logoutMutation.mutate,
     isLoggingIn: loginMutation.isPending,
     isLoggingOut: logoutMutation.isPending,
-    isAuthenticating, // ✅ Final state
+    isAuthenticating,
     role: user?.role,
     hasRole: (role: string) => user?.role === role,
     bootstrapping

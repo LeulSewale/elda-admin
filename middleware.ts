@@ -5,22 +5,21 @@ import type { NextRequest } from "next/server"
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // ✅ Allow all routes without auth restrictions
+  // ✅ Allow these public routes without auth
   const publicPaths = ["/", "/login", "/signup", "/about", "/contact"]
 
   const isPublic = publicPaths.some((path) => pathname.startsWith(path))
 
   const token = request.cookies.get("access_token")?.value
 
-  // Remove authentication restrictions - allow access to all pages
-  // if (!token && !isPublic) {
-  //   // 🔁 Redirect unauthenticated user to login
-  //   const loginUrl = new URL("/login", request.url)
-  //   loginUrl.searchParams.set("from", pathname) // Optional: preserve original route
-  //   return NextResponse.redirect(loginUrl)
-  // }
+  if (!token && !isPublic) {
+    // 🔁 Redirect unauthenticated user to login
+    const loginUrl = new URL("/login", request.url)
+    loginUrl.searchParams.set("from", pathname) // Optional: preserve original route
+    return NextResponse.redirect(loginUrl)
+  }
 
-  // ✅ Allow all requests regardless of authentication status
+  // ✅ Allow request if authenticated or public
   return NextResponse.next()
 }
 

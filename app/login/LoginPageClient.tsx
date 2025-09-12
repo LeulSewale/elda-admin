@@ -21,11 +21,11 @@
         password: "",
       },
     })
+    
   
     const onSubmit = (values: { phoneNumber: string; password: string }) => {
       login(values, {
         onSuccess: () => {
-          // Handled in useAuth
         },
         onError: (error) => {
           let message = "Login failed"

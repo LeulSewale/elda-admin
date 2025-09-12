@@ -11,23 +11,31 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, ChevronLeft, ChevronRight, ArrowUp, ArrowDown } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ListFilter, RefreshCw, Eye, Pencil, Trash2, FileDown } from "lucide-react"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  searchKey?: string
+  data: TData[],
+ 
+  searchKey: string
   searchPlaceholder?: string
+  // Quick filter buttons (e.g., for status)
+  quickFilterKey?: keyof TData | string
+  quickFilterLabel?: string
+  quickFilterLimit?: number
+  // Export functionality
+  onExportCSV?: () => void
+  showExportButton?: boolean
   // Server-side pagination support
   pageIndex?: number
   pageSize?: number
   pageCount?: number
-  onPaginationChange?: (updater: { pageIndex: number; pageSize: number }) => void
+  onPaginationChange?: (updater: { pageIndex: number; pageSize: number } | ((prev: { pageIndex: number; pageSize: number }) => { pageIndex: number; pageSize: number })) => void
   manualPagination?: boolean
   // Custom row styling
   getRowClassName?: (row: TData, index: number) => string
@@ -35,9 +43,15 @@ interface DataTableProps<TData, TValue> {
 
 export function DataTable<TData, TValue>({
   columns,
+ 
   data,
   searchKey,
   searchPlaceholder = "Search...",
+  quickFilterKey,
+  quickFilterLabel = "Status",
+  quickFilterLimit = 5,
+  onExportCSV,
+  showExportButton = false,
   pageIndex,
   pageSize,
   pageCount,
@@ -84,12 +98,12 @@ export function DataTable<TData, TValue>({
     onPaginationChange: manualPagination
       ? (updater) => {
           if (onPaginationChange) {
-            // updater is a function or object
             if (typeof updater === 'function') {
               const next = updater({
                 pageIndex: pageIndex ?? 0,
                 pageSize: pageSize ?? 10,
               })
+
               onPaginationChange(next)
             } else {
               onPaginationChange(updater)
@@ -111,21 +125,117 @@ export function DataTable<TData, TValue>({
         },
   })
 
+  // Quick filter support (derive unique values from data based on quickFilterKey)
+  const quickFilterValues = useMemo(() => {
+    if (!quickFilterKey) return [] as string[];
+    try {
+      const rawValues = (data as any[]).map((row) => row?.[quickFilterKey as any]);
+      const unique = Array.from(
+        new Set(
+          rawValues
+            .filter((v) => v !== undefined && v !== null && v !== "")
+            .map((v) => String(v))
+        )
+      );
+      return unique;
+    } catch {
+      return [] as string[];
+    }
+  }, [data, quickFilterKey]);
+
+  const quickCol = quickFilterKey ? table.getColumn(String(quickFilterKey)) : undefined;
+  const currentQuickValue = (quickCol?.getFilterValue() as string | undefined) ?? undefined;
+
+  const setQuickFilter = (value?: string) => {
+    if (!quickCol) return;
+    if (!value) quickCol.setFilterValue(undefined);
+    else quickCol.setFilterValue(value);
+  };
+
+  // Function to handle CSV export
+  const handleExportCSV = () => {
+    if (onExportCSV) {
+      onExportCSV();
+    } else {
+      // Default CSV export behavior if no handler is provided
+      console.log('Exporting to CSV...');
+      // Example: exportToCSV(data, 'export.csv');
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      {searchKey && (
-        <div className="flex items-center space-x-2">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder={searchPlaceholder}
-              value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
-              onChange={(event) => table.getColumn(searchKey)?.setFilterValue(event.target.value)}
-              className="pl-10"
-            />
+    <div className="space-y-0">
+      <div className="px-2 py-3">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            {quickFilterKey && quickFilterValues.length > 0 && (
+              <div className="inline-flex items-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`h-10 rounded-none rounded-l-md px-3 ${!currentQuickValue ? 'bg-[#EEF5FF] text-[#1E66F5] border-[#BBD3FF]' : ''}`}
+                  onClick={() => setQuickFilter(undefined)}
+                  aria-pressed={!currentQuickValue}
+                >
+                  View all
+                </Button>
+                {quickFilterValues.slice(0, quickFilterLimit).map((val, idx, arr) => (
+                  <Button
+                    key={val}
+                    variant="outline"
+                    size="sm"
+                    className={`h-10 rounded-none -ml-px px-3 ${idx === arr.length - 1 ? 'rounded-r-md' : ''} ${currentQuickValue === val ? 'bg-[#EEF5FF] text-[#1E66F5] border-[#BBD3FF]' : ''}`}
+                    onClick={() => setQuickFilter(val)}
+                    title={`${quickFilterLabel}: ${val}`}
+                    aria-pressed={currentQuickValue === val}
+                  >
+                    {val}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Right group: actions */}
+          <div className="flex items-center gap-2">
+            <div className="relative w-72">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder={searchPlaceholder}
+                value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
+                onChange={(event) => table.getColumn(searchKey)?.setFilterValue(event.target.value)}
+                className="pl-10 h-10 text-sm border-[#e7eeff] focus-visible:ring-1 focus-visible:ring-[#e7eeff]"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
+            >
+              <ListFilter className="h-4 w-4 mr-2" />
+              Filter
+            </Button>
+            {showExportButton && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-10 border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
+                onClick={handleExportCSV}
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Export CSV
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
+              onClick={() => table.reset()}
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-      )}
+      </div>
 
       <div className="rounded-md border bg-white overflow-x-auto">
         <Table>
@@ -179,7 +289,7 @@ export function DataTable<TData, TValue>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={`py-3 px-3 text-[13px] font-semibold ${cell.column.id === 'actions' ? 'pointer-events-auto relative z-10' : ''}`}
+                      className={`py-4 px-4 text-[13px] font-semibold ${cell.column.id === 'actions' ? 'pointer-events-auto relative z-10' : ''}`}
                       onClick={cell.column.id === 'actions' ? (e) => { e.stopPropagation(); } : undefined}
                       data-cell-id={cell.column.id}
                     >

@@ -5,8 +5,7 @@ import { useForm as useReactHookForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import React from "react";
 import { useToast } from "@/hooks/use-toast";
-// import { categoriesApi } from "@/lib/api/categories";
-import { simulateApiDelay } from "@/lib/dummy-data";
+import { categoriesApi } from "@/lib/api/categories";
 
 interface CreateEditCategoryModalProps {
   open: boolean;
@@ -41,14 +40,7 @@ export function CreateEditCategoryModal({ open, onOpenChange, onSuccess, initial
       return;
     }
     try {
-      // DUMMY DATA: Simulate API call
-      await simulateApiDelay();
-      const newCategory = {
-        id: `cat_${Date.now()}`,
-        name: value.name,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
+      const response = await categoriesApi.createCategory({ name: value.name });
       toast({
         title: "Category Created",
         description: `The category '${value.name}' was created successfully!`,
@@ -56,11 +48,11 @@ export function CreateEditCategoryModal({ open, onOpenChange, onSuccess, initial
       });
       onOpenChange(false);
       form.reset();
-      onSuccess(newCategory);
+      onSuccess(response.data);
     } catch (err: any) {
       toast({
         title: "Error",
-        description: "Failed to create category.",
+        description: err?.response?.data?.message || "Failed to create category.",
         variant: "destructive",
       });
     }

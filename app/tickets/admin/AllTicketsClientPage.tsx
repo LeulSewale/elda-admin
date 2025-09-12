@@ -120,7 +120,7 @@ function useTabVisibility() {
   return { isVisible, lastActivity };
 }
 
-export default function RequestsPageClient() {
+export default function AllTicketsClientPage() {
   const queryClient = useQueryClient();
   const { isVisible, lastActivity } = useTabVisibility();
   const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
@@ -130,105 +130,28 @@ export default function RequestsPageClient() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
 
-  const sampleData = [
-    {
-      no: 1,
-      id:'REQ-0001',
-      title: "Website Redesign",
-      phone: "+251911223344",
-      email: "design@company.com",
-      createdAt: "2023-01-01",
-      status: "pending",
-    },
-    {
-      no: 2,
-      id:'REQ-0002',
-      title: "Mobile App Development",
-      phone: "+251922334455",
-      email: "appdev@company.com",
-      createdAt: "2023-01-02",
-      status: "completed",
-    },
-    {
-      no: 3,
-      id:'REQ-0003',
-      title: "SEO Optimization",
-      phone: "+251933445566",
-      email: "seo@company.com",
-      createdAt: "2023-01-03",
-      status: "rejected",
-    },
-    {
-      no: 4,
-      id:'REQ-0004',
-      title: "Cloud Migration",
-      phone: "+251944556677",
-      email: "cloud@company.com",
-      createdAt: "2023-01-04",
-      status: "completed",
-    },
-    {
-      no: 5,
-      id:'REQ-0005',
-      title: "E-commerce Setup",
-      phone: "+251955667788",
-      email: "ecommerce@company.com",
-      createdAt: "2023-01-05",
-      status: "pending",
-    },
-    {
-      no: 6,
-      id:'REQ-0006',
-      title: "Cybersecurity Audit",
-      phone: "+251966778899",
-      email: "security@company.com",
-      createdAt: "2023-01-06",
-      status: "completed",
-    },
-    {
-      no: 7,
-      id:'REQ-0007',
-      title: "Database Optimization",
-      phone: "+251977889900",
-      email: "dbadmin@company.com",
-      createdAt: "2023-01-07",
-      status: "pending",
-    },
-    {
-      no: 8,
-      id:'REQ-0008',
-      title: "Digital Marketing Campaign",
-      phone: "+251988990011",
-      email: "marketing@company.com",
-      createdAt: "2023-01-08",
-      status: "rejected",
-    },
-    {
-      no: 9,
-      id:'REQ-0009',
-      title: "Software Maintenance",
-      phone: "+251999001122",
-      email: "support@company.com",
-      createdAt: "2023-01-09",
-      status: "completed",
-    },
-    {
-      no: 10,
-      id:'REQ-0010',
-      title: "IT Infrastructure Upgrade",
-      phone: "+251900112233",
-      email: "itupgrade@company.com",
-      createdAt: "2023-01-10",
-      status: "pending",
-    },
+  const tickets = [
+    { id: 'Tick-001', no: 1, user: 'Abebe Bekele', date: '2025-09-12', status: 'pending', description: 'Request for software installation' },
+    { id: 'Tick-002', no: 2, user: 'Alemayehu Tesfaye', date: '2025-09-11', status: 'completed', description: 'Issue with network connectivity' },
+    { id: 'Tick-003', no: 3, user: 'Mekdes Abate', date: '2025-09-10', status: 'pending', description: 'Password reset request' },
+    { id: 'Tick-004', no: 4, user: 'Sisay Gebremedhin', date: '2025-09-09', status: 'completed', description: 'Request for new laptop' },
+    { id: 'Tick-005', no: 5, user: 'Hana Alemu', date: '2025-09-08', status: 'pending', description: 'Software bug report' },
+    { id: 'Tick-006', no: 6, user: 'Tesfaye Desta', date: '2025-09-07', status: 'completed', description: 'Network printer issue' },
+    { id: 'Tick-007', no: 7, user: 'Selamawit Haile', date: '2025-09-06', status: 'pending', description: 'Request for access to shared drive' },
+    { id: 'Tick-008', no: 8, user: 'Fikru Tadesse', date: '2025-09-05', status: 'completed', description: 'Email account setup' },
+    { id: 'Tick-009', no: 9, user: 'Mahiye Kassa', date: '2025-09-04', status: 'pending', description: 'Request for training material' },
+    { id: 'Tick-010', no: 10, user: 'Betelhem Getachew', date: '2025-09-03', status: 'completed', description: 'Report system crash' },
   ];
+  
+  
+  
   
   // Fetch pending companies with ADVANCED PERFORMANCE OPTIMIZATIONS
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["pending-companies"],
     queryFn: async () => {
       // const res = await companiesApi.getCompanies({ status: "pending" });
-      return sampleData;
+      return tickets;
     },
     // 🚀 ADVANCED CACHING CONFIGURATION
     staleTime: 15 * 60 * 1000, // 15 minutes - data considered fresh for 15 minutes
@@ -341,23 +264,21 @@ export default function RequestsPageClient() {
   const columns = [
     { accessorKey: "no", header: "No", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
     { accessorKey: "id", header: "ID", cell: ({ row }: any) => <span className="font-medium">{row.original.id}</span> },
-    { accessorKey: "title", header: "Title", cell: ({ row }: any) => <div className="font-medium">{row.original.title}</div> },
-    { accessorKey: "phone", header: "Contact", cell: ({ row }: any) => <div className="text-gray-600">{row.original.phone}</div> },
-    { accessorKey: "serviceType", header: "Service Type", cell: ({ row }: any) => <div className="text-gray-600">{row.original.email}</div> },
-    { accessorKey: "status", header: "Status", cell: ({ row }: any) => {
+    { accessorKey: "user", header: "User", cell: ({ row }: any) => <div className="font-medium">{row.original.user}</div> },
+    { accessorKey: "description", header: "Description", cell: ({ row }: any) => <div className="font-medium">{row.original.description}</div> },
+   { accessorKey: "status", header: "Status", cell: ({ row }: any) => {
       const status = row.original.status;
       const statusColors: Record<string, string> = {
         pending: "bg-yellow-100 text-yellow-800",
         completed: "bg-green-100 text-green-800",
-        rejected: "bg-red-100 text-red-800",
       };
       return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
     } },
-    { accessorKey: "createdAt",
-       header: "Created At", 
+    { accessorKey: "date",
+       header: "Date", 
        cell: ({ row }: any) => (
         <div className="text-gray-600">
-          {new Date(row.original.createdAt).toLocaleDateString("en-US", {
+          {new Date(row.original.date).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
             year: "numeric",
@@ -405,21 +326,21 @@ export default function RequestsPageClient() {
 
 
   return (
-    <DashboardLayout title="Request Management" isFetching={isFetching}>
+    <DashboardLayout title="Tickets Management" isFetching={isFetching}>
       <div className="p-0"> 
         
         <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
           <div className="flex justify-between items-center px-2 py-2">
           <div>
-             <h1 className="text-xl font-semibold">Requests</h1>
-            <p className="text-sm text-gray-400">View and manage request management</p>
+             <h1 className="text-xl font-semibold">Tickets</h1>
+            <p className="text-sm text-gray-400">View and manage tickets management</p>
           </div>
-          {/* <Button
+          <Button
             className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Upload Document
-          </Button> */}
+            Create Ticket
+          </Button>
           </div>
           <hr></hr>
           <div className="overflow-x-auto">
@@ -427,8 +348,8 @@ export default function RequestsPageClient() {
               columns={columns}
               data={tableData}
               quickFilterKey="status"
-              searchKey="title"
-              searchPlaceholder="Search request by title..."
+              searchKey="user"
+              searchPlaceholder="Search request by user..."
             />
           </div>
         </div>

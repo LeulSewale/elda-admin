@@ -2,8 +2,7 @@
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { DataTable } from "@/components/data-table/data-table"
-// import { usersApi } from "@/lib/api/users"
-import { dummyUsers, simulateApiDelay } from "@/lib/dummy-data"
+import { usersApi } from "@/lib/api/users"
 import type { User } from "@/lib/types"
 import { useEffect, useState, useCallback } from "react"
 import { Badge } from "@/components/ui/badge"
@@ -66,7 +65,90 @@ export function UsersPageClient() {
   const queryClient = useQueryClient();
   const { isVisible, lastActivity } = useTabVisibility();
 
-  // DUMMY DATA: React Query for fetching users with dummy data
+  const dummyUsers = [
+    {
+      no: 1,
+      name: "Habtamu Esubalew",
+      phone: "+251911223344",
+      email: "habtamu.esubalew@example.com",
+      status: "active",
+      joinedAt: "2025-01-10",
+    },
+    {
+      no: 2,
+      name: "Mekdes Alemu",
+      phone: "+251922334455",
+      email: "mekdes.alemu@example.com",
+      status: "Inactive",
+      joinedAt: "2025-02-05",
+    },
+    {
+      no: 3,
+      name: "Abebe Bekele",
+      phone: "+251933445566",
+      email: "abebe.bekele@example.com",
+      status: "active",
+      joinedAt: "2025-02-18",
+    },
+    {
+      no: 4,
+      name: "Meron Fikadu",
+      phone: "+251944556677",
+      email: "meron.fikadu@example.com",
+      status: "Inactive",
+      joinedAt: "2025-03-01",
+    },
+    {
+      no: 5,
+      name: "Samuel Tadesse",
+      phone: "+251955667788",
+      email: "samuel.tadesse@example.com",
+      status: "active",
+      joinedAt: "2025-03-10",
+    },
+    {
+      no: 6,
+      name: "Tsion Tesfaye",
+      phone: "+251966778899",
+      email: "tsion.tesfaye@example.com",
+      status: "active",
+      joinedAt: "2025-03-22",
+    },
+    {
+      no: 7,
+      name: "Nahom Gebremariam",
+      phone: "+251977889900",
+      email: "nahom.gebremariam@example.com",
+      status: "Inactive",
+      joinedAt: "2025-04-05",
+    },
+    {
+      no: 8,
+      name: "Hana Wondimu",
+      phone: "+251988990011",
+      email: "hana.wondimu@example.com",
+      status: "active",
+      joinedAt: "2025-04-18",
+    },
+    {
+      no: 9,
+      name: "Kebede Worku",
+      phone: "+251999001122",
+      email: "kebede.worku@example.com",
+      status: "Inactive",
+      joinedAt: "2025-05-01",
+    },
+    {
+      no: 10,
+      name: "Selamawit Degu",
+      phone: "+251910112233",
+      email: "selamawit.degu@example.com",
+      status: "active",
+      joinedAt: "2025-05-12",
+    },
+  ];
+  
+
   const {
     data: users,
     isLoading,
@@ -76,7 +158,7 @@ export function UsersPageClient() {
   } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      await simulateApiDelay();
+      // const res = await usersApi.getUsers();
       return dummyUsers;
     },
     staleTime: 15 * 60 * 1000, // 15 minutes
@@ -119,11 +201,10 @@ export function UsersPageClient() {
     }
   }, [lastRefresh, lastActivity, refetch, isRefreshing]);
 
-  // DUMMY DATA: Lock user mutation with optimistic updates
+  // Lock user mutation with optimistic updates
   const lockUserMutation = useMutation({
     mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
-      await simulateApiDelay();
-      return { success: true };
+      return usersApi.lockUser(userId, { status });
     },
     onMutate: async ({ userId, status }) => {
       await queryClient.cancelQueries({ queryKey: ["users"] });
@@ -164,12 +245,7 @@ export function UsersPageClient() {
     },
   });
 
-  // Log when tab becomes active after long inactivity
-  useEffect(() => {
-    if (isVisible && Date.now() - lastActivity > 5 * 60 * 1000) {
-      console.log('Tab became active after long inactivity, data may be stale');
-    }
-  }, [isVisible, lastActivity]);
+
 
   const columns = [
     {
@@ -179,9 +255,9 @@ export function UsersPageClient() {
       enableSorting: false,
     },
     {
-      accessorKey: "fullName",
+      accessorKey: "name",
       header: "Name",
-      cell: ({ row }: any) => <span>{row.original.fullName}</span>,
+      cell: ({ row }: any) => <span>{row.original.name}</span>,
     },
     {
       accessorKey: "email",
@@ -191,7 +267,7 @@ export function UsersPageClient() {
     {
       accessorKey: "phoneNumber",
       header: "Phone",
-      cell: ({ row }: any) => <span>{row.original.phoneNumber}</span>,
+      cell: ({ row }: any) => <span>{row.original.phone}</span>,
     },
     {
       accessorKey: "status",
@@ -200,87 +276,24 @@ export function UsersPageClient() {
         const status = row.getValue("status")
         if (status === 'active') {
           return <Badge className="bg-[#A4D65E] text-white">Active</Badge>
-        } else if (status === 'suspended') {
-          return <Badge className="bg-[#FACC15] text-white">Suspended</Badge>
-        } else {
-          return <Badge className="bg-[#EF4444] text-white">Locked</Badge>
-        }
+        } else if (status === 'Inactive') {
+          return <Badge className="bg-[#FACC15] text-white">InActive</Badge>
+        } 
       },
     },
-   
-    {
-      accessorKey: "entitlement.packageName",
-      header: "Package",
-      cell: ({ row }: any) => {
-        const entitlement = row.original.entitlement;
-        if (!entitlement) {
-          return <span className="text-gray-400">No package</span>;
-        }
-        return (
-          <div className="flex flex-col gap-1">
-            <span className="font-medium">{entitlement.packageName}</span>
-            <span className="text-xs text-gray-500">ID: {entitlement.packageId}</span>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "entitlement.isActive",
-      header: "Package Status",
-      cell: ({ row }: any) => {
-        const entitlement = row.original.entitlement;
-        if (!entitlement) {
-          return <span className="text-gray-400">-</span>;
-        }
-        return (
-          <Badge 
-            variant={entitlement.isActive ? "default" : "secondary"}
-            className={`font-medium ${
-              entitlement.isActive 
-                ? "bg-green-100 text-green-800 border-green-200" 
-                : "bg-red-100 text-red-800 border-red-200"
-            }`}
-          >
-            {entitlement.isActive ? "🟢 Active" : "🔴 Inactive"}
-          </Badge>
-        );
-      },
-    },
-    {
-      accessorKey: "entitlement.endsAt",
-      header: "Package Expires",
-      cell: ({ row }: any) => {
-        const entitlement = row.original.entitlement;
-        if (!entitlement || !entitlement.endsAt) {
-          return <span className="text-gray-400">-</span>;
-        }
-        const endDate = new Date(entitlement.endsAt);
-        const now = new Date();
-        const isExpired = endDate < now;
-        const daysLeft = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        
-        return (
-          <div className="flex flex-col">
-            <span className={isExpired ? "text-red-600" : "text-gray-700"}>
-              {endDate.toLocaleDateString()}
-            </span>
-            {!isExpired && (
-              <span className="text-xs text-gray-500">
-                {daysLeft} day{daysLeft !== 1 ? 's' : ''} left
-              </span>
-            )}
-            {isExpired && (
-              <span className="text-xs text-red-500">Expired</span>
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "createdAt",
-      header: "Joined At",
-      cell: ({ row }: any) => <span>{new Date(row.original.createdAt).toLocaleDateString()}</span>,
-    },
+         
+    { accessorKey: "joinedAt",
+      header: "joined At", 
+      cell: ({ row }: any) => (
+       <div className="text-gray-600">
+         {new Date(row.original.joinedAt).toLocaleDateString("en-US", {
+           month: "short",
+           day: "numeric",
+           year: "numeric",
+         })}
+       </div>
+     ),
+    },   
     {
       id: "actions",
       header: "Actions",
@@ -329,40 +342,24 @@ export function UsersPageClient() {
   return (
     <DashboardLayout title="Users" isFetching={isFetching}>
       <div className="p-0">
-        {/* Header and Refresh Button */}
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold">Users</h1>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleRefresh}
-              className={`ml-2 border border-gray-200 hover:border-gray-300 transition-all duration-200 shadow-sm bg-white hover:bg-gray-50 ${
-                (isFetching || isRefreshing) ? 'cursor-wait' : ''
-              }`}
-              aria-label="Refresh users"
-              disabled={isFetching || isRefreshing}
-              title={
-                isRefreshing 
-                  ? 'Refreshing...' 
-                  : isFetching 
-                    ? 'Syncing data...' 
-                    : 'Refresh users data'
-              }
-            >
-              <RotateCcw
-                className={`w-6 h-6 stroke-[2.5] transition-transform duration-300 ${
-                  (isFetching || isRefreshing) 
-                    ? 'animate-spin text-green-500' 
-                    : 'text-gray-700 hover:text-gray-900'
-                }`}
-              />
-            </Button>
+      <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
+        <div className="flex justify-between items-center px-2 py-2">
+          <div>
+             <h1 className="text-xl font-semibold">Users</h1>
+            <p className="text-sm text-gray-400">View and manage users management</p>
           </div>
+          {/* <Button
+            className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Upload Document
+          </Button> */}
         </div>
+        <hr></hr>
+       
 
         {error ? (
-          <div className="text-center py-10 text-red-500">Failed to load users.</div>
+          <div className="text-center py-10 text-red-500">{(error as any)?.message || "Failed to load users."}</div>
         ) : (
           <div className="relative">
             {isFetching && !isLoading && (
@@ -370,7 +367,12 @@ export function UsersPageClient() {
                 <Loader2 className="animate-spin w-8 h-8 text-gray-400" />
               </div>
             )}
-            <DataTable columns={columns} data={users || []} searchKey="fullName" searchPlaceholder="Search users by name" />
+            <DataTable 
+            columns={columns}
+             data={users || []} 
+             searchKey="name" 
+             quickFilterKey="status"
+             searchPlaceholder="Search users by name" />
           </div>
         )}
       </div>
@@ -393,6 +395,7 @@ export function UsersPageClient() {
         description="Are you sure you want to lock this user's account? This will prevent them from accessing the system. This action can be reversed by changing their status back to active."
         isLoading={deleteLoading || lockUserMutation.isPending}
       />
+      </div>
     </DashboardLayout>
   )
 } 

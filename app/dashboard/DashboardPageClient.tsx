@@ -10,10 +10,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 // import { companiesApi } from "@/lib/api/companies"
 // import { bidsApi } from "@/lib/api/bids"
 // import { tendersApi } from "@/lib/api/tenders"
-import { dummyUsers, dummyTenders, dummyBids, createPaginatedResponse } from "@/lib/dummy-data"
+import { dummyDocuments, dummyRequests, dummyUsers } from "@/lib/dummy-data"
 import { useAuth } from "@/hooks/use-auth"
 import Link from "next/link"
-import { Users, Building2, Gavel, FileText, RotateCcw } from "lucide-react"
+import { Users, Building2, Gavel, FileText, RotateCcw, Eye, User, ListOrderedIcon } from "lucide-react"
 import { useMemo, useCallback, useState, useEffect } from "react"
 import { useTabVisibility } from "@/hooks/use-tab-visibility"
 
@@ -56,8 +56,8 @@ import { useTabVisibility } from "@/hooks/use-tab-visibility"
  *    - Efficient stat card rendering
  */
 
-const statCardStyle = "relative flex flex-col justify-between gap-4 p-6 rounded-2xl shadow-md bg-gradient-to-br from-[#e8f7d4] via-[#f6ffe8] to-white border-0 transition-transform duration-200 hover:scale-[1.03] group"
-const iconStyle = "w-14 h-14 p-3 rounded-xl bg-[#A4D65E]/20 text-[#A4D65E] shadow group-hover:bg-[#A4D65E]/30 transition-all duration-200"
+const statCardStyle = "relative flex flex-col justify-between gap-4 p-6 rounded-xl shadow-md bg-gradient-to-br from-[#e7eeff] via-[#f0f5ff] to-white border-0 transition-transform duration-200 hover:scale-[1.03] group"
+const iconStyle = "w-14 h-14 p-3 rounded-xl bg-[#4082ea]/20 text-[#4082ea] shadow group-hover:bg-[#4082ea]/30 transition-all duration-200"
 
 export default function DashboardPageClient() {
   const { role, user } = useAuth();
@@ -88,7 +88,7 @@ export default function DashboardPageClient() {
     queryKey: ["dashboard-companies-count"],
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 300)) // Simulate API delay
-      return dummyUsers.filter(u => u.role === 'company').length;
+      return dummyUsers.filter((u: any) => u.role === 'company').length;
     },
     enabled: role === "admin" && isVisible,
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -106,13 +106,13 @@ export default function DashboardPageClient() {
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 300)) // Simulate API delay
       if (role === "admin") {
-        return dummyBids.length;
-      } else if (role === "company" && companyId) {
-        return dummyBids.filter(bid => bid.user._id === companyId).length;
+        return dummyRequests.length;
+      } else if (role === "user" && companyId) {
+        return dummyRequests.filter((bid: any) => bid.user._id === companyId).length;
       }
       return 0;
     },
-    enabled: !!role && (role === "admin" || (role === "company" && !!companyId)) && isVisible,
+    enabled: !!role && (role === "admin" || (role === "user" && !!companyId)) && isVisible,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 20 * 60 * 1000, // 20 minutes
     refetchOnWindowFocus: false,
@@ -128,10 +128,10 @@ export default function DashboardPageClient() {
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 300)) // Simulate API delay
       if (role === "admin") {
-        return dummyTenders.length;
+        return dummyDocuments.length;
       } else if (role === "company" && companyId) {
-        return dummyTenders.filter(tender => 
-          typeof tender.company === 'object' && tender.company._id === companyId
+        return dummyDocuments.filter((document: any) => 
+          typeof document.company === 'object' && document.company._id === companyId
         ).length;
       }
       return 0;
@@ -153,13 +153,13 @@ export default function DashboardPageClient() {
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 400)) // Simulate API delay
       if (role === "admin") {
-        return dummyBids.slice(0, 10);
-      } else if (role === "company" && companyId) {
-        return dummyBids.filter(bid => bid.user._id === companyId).slice(0, 10);
+        return dummyRequests.slice(0, 10);
+      } else if (role === "user" && companyId) {
+        return dummyRequests.filter((bid: any) => bid.user._id === companyId).slice(0, 10);
       }
       return [];
     },
-    enabled: !!role && (role === "admin" || (role === "company" && !!companyId)) && isVisible,
+    enabled: !!role && (role === "admin" || (role === "user" && !!companyId)) && isVisible,
     staleTime: 5 * 60 * 1000, // 5 minutes (more frequent for recent data)
     gcTime: 15 * 60 * 1000, // 15 minutes
     refetchOnWindowFocus: false,
@@ -217,28 +217,13 @@ export default function DashboardPageClient() {
   // Stat cards config
   const statCards = useMemo(() => {
     const cards = [];
-    if (role === "admin") {
-      cards.push({
-        label: "Users",
-        value: usersQuery.data ?? 0,
-        loading: usersQuery.isLoading,
-        icon: <Users className={iconStyle} />,
-      });
-    }
-    if (role === "admin") {
-      cards.push({
-        label: "Companies",
-        value: companiesQuery.data ?? 0,
-        loading: companiesQuery.isLoading,
-        icon: <Building2 className={iconStyle} />,
-      });
-    }
+    
     cards.push(
       {
         label: "Unread Orders",
         value: bidsQuery.data ?? 0,
         loading: bidsQuery.isLoading,
-        icon: <Gavel className={iconStyle} />,
+        icon: <ListOrderedIcon className={iconStyle} />,
       },
       {
         label: "Unsent Document",
@@ -249,7 +234,7 @@ export default function DashboardPageClient() {
         label: "Total Users",
         value: bidsQuery.data ?? 0,
         loading: bidsQuery.isLoading,
-        icon: <Gavel className={iconStyle} />,
+        icon: <User className={iconStyle} />,
       },
       {
         label: "Expiring Documents",
@@ -263,95 +248,80 @@ export default function DashboardPageClient() {
 
   // Flatten recent bids data for table and search
   const tableData = useMemo(() => {
-    const bids = recentBidsQuery.data || [];
+    const requests = recentBidsQuery.data || [];
     // Ensure maximum 10 bids are displayed
-    const limitedBids = bids.slice(0, 10);
+    const limitedRecent = requests.slice(0, 10);
     
-    return limitedBids.map((bid: any) => ({
-      ...bid,
-      tenderTitle: bid.tender?.title || "",
-      companyName: bid.tender?.company?.fullName || "",
-      userFullName: bid.user?.fullName || "",
-      isAwarded: bid.isAwarded,
-      cpoPaid: bid.cpo?.isPaid,
-      transactionId: bid.cpo?.transactionId,
-      submittedAt: bid.submittedAt,
-      status: bid.status,
-    }));
+    return limitedRecent;
   }, [recentBidsQuery.data]);
 
   // Table columns for recent bids
   const columns = [
-    {
-      accessorKey: "id",
-      header: "No",
-      cell: ({ row }: any) => <span className="font-medium">{row.index + 1}</span>,
-    },
-    {
-      accessorKey: "tenderTitle",
-      header: "Title",
-      cell: ({ row }: any) => <div className="font-medium">{row.original.tenderTitle || "-"}</div>,
-    },
-    {
-      accessorKey: "companyName",
-      header: "Contact",
-      cell: ({ row }: any) => <div className="text-gray-600">{row.original.companyName || "-"}</div>,
-    },
-    {
-      accessorKey: "userFullName",
-      header: "Service Type",
-      cell: ({ row }: any) => <div className="text-gray-600">{row.original.userFullName || "-"}</div>,
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }: any) => {
-        const status = row.original.status;
-        const statusColors: Record<string, string> = {
-          under_review: "bg-yellow-100 text-yellow-800",
-          awarded: "bg-green-100 text-green-800",
-          rejected: "bg-red-100 text-red-800",
-        };
-        return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{status.replace(/_/g, " ")}</Badge>;
-      },
-    },
-    // {
-    //   accessorKey: "isAwarded",
-    //   header: "Awarded",
-    //   cell: ({ row }: any) =>
-    //     row.original.isAwarded ? (
-    //       <Badge className="bg-green-100 text-green-800">Yes</Badge>
-    //     ) : (
-    //       <Badge className="bg-gray-200 text-gray-800">No</Badge>
-    //     ),
-    // },
-    // {
-    //   accessorKey: "cpoPaid",
-    //   header: "CPO Paid",
-    //   cell: ({ row }: any) =>
-    //     row.original.cpoPaid ? (
-    //       <Badge className="bg-green-100 text-green-800">Yes</Badge>
-    //     ) : (
-    //       <Badge className="bg-yellow-100 text-yellow-800">No</Badge>
-    //     ),
-    // },
-    // {
-    //   accessorKey: "transactionId",
-    //   header: "Transaction ID",
-    //   cell: ({ row }: any) =>
-    //     row.original.cpoPaid ? (
-    //       <span className="text-xs text-gray-700">{row.original.transactionId}</span>
-    //     ) : "-",
-    // },
-    {
-      accessorKey: "submittedAt",
-      header: "Submitted At",
-      cell: ({ row }: any) => <div className="text-gray-600">{new Date(row.original.submittedAt).toLocaleString()}</div>,
-    },
+    { accessorKey: "no", header: "No", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
+    { accessorKey: "id", header: "ID", cell: ({ row }: any) => <span className="font-medium">{row.original.id}</span> },
+    { accessorKey: "title", header: "Title", cell: ({ row }: any) => <div className="font-medium">{row.original.title}</div> },
+    { accessorKey: "phone", header: "Contact", cell: ({ row }: any) => <div className="text-gray-600">{row.original.phone}</div> },
+    { accessorKey: "serviceType", header: "Service Type", cell: ({ row }: any) => <div className="text-gray-600">{row.original.email}</div> },
+    { accessorKey: "status", header: "Status", cell: ({ row }: any) => {
+      const status = row.original.status;
+      const statusColors: Record<string, string> = {
+        pending: "bg-yellow-100 text-yellow-800",
+        completed: "bg-green-100 text-green-800",
+        rejected: "bg-red-100 text-red-800",
+      };
+      return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
+    } },
+    { accessorKey: "createdAt",
+       header: "Created At", 
+       cell: ({ row }: any) => (
+        <div className="text-gray-600">
+          {new Date(row.original.createdAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </div>
+      ),
+     },   
+    
+     {
+          id: "actions",
+          header: "Actions",
+          cell: ({ row }: any) => {
+            const user = row.original
+            return (
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  // onClick={() => {
+                  //   setSelectedUser(user)
+                  //   setDetailModalOpen(true)
+                  // }}
+                  className="hover:bg-blue-50 hover:text-blue-600"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                {/* <Button
+                  variant="ghost"
+                  size="icon"
+                  // onClick={() => {
+                  //   setSelectedUser(user)
+                  //   setDeleteModalOpen(true)
+                  // }}
+                  className="hover:bg-red-50 hover:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button> */}
+              </div>
+            )
+          },
+          enableSorting: false,
+        },
   ];
 
   return (
-    <DashboardLayout title="Dashboard">
+    <DashboardLayout title="Dashboard" isFetching={isRefreshing}>
       <div className="p-0">
         {/* Header with Refresh Button */}
         <div className="flex justify-between items-center mb-6">
@@ -360,7 +330,7 @@ export default function DashboardPageClient() {
             onClick={handleRefresh} 
             variant="outline" 
             size="sm"
-            className="border-[#A4D65E] text-[#A4D65E] hover:bg-[#A4D65E]/10 flex items-center gap-2 transition-all duration-200"
+            className="border-[#4082ea] text-[#4082ea] hover:bg-[#4082ea]/10 flex items-center gap-2 transition-all duration-200"
             disabled={isRefreshing}
             title={
               isRefreshing 
@@ -387,36 +357,47 @@ export default function DashboardPageClient() {
                 {card.loading ? (
                   <div className="h-10 w-24 bg-gray-100 animate-pulse rounded" />
                 ) : (
-                  <div className="text-4xl font-extrabold text-[#A4D65E] drop-shadow-lg">{card.value}</div>
+                  <div className="text-4xl font-extrabold text-[#4082ea] drop-shadow-lg">{card.value}</div>
                 )}
               </div>
             </Card>
           ))}
         </div>
 
-        {/* Visual Separator */}
+        {/* Visual Separator
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200 mb-2"></div>
+            <div className="w-full border-t border-gray-200 mb-4"></div>
           </div>
           
-        </div>
+        </div> */}
 
         {/* Recent Bids Table */}
         <div className="p-0">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-xl font-semibold text-gray-800">Recent Requests</h3>
-            {/* <Button asChild variant="outline" className="border-[#A4D65E] text-[#A4D65E] hover:bg-[#A4D65E]/10 transition-all duration-200">
-              <Link href="/requests">See All</Link>
-            </Button> */}
+        <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
+          <div className="flex justify-between items-center px-2 py-2">
+          <div>
+             <h1 className="text-xl font-semibold">Requests</h1>
+            <p className="text-sm text-gray-400">View and manage request management</p>
           </div>
-          <DataTable
-            columns={columns}
-            data={tableData}
-            searchKey="tenderTitle"
-            searchPlaceholder="Search by tender title..."
-            manualPagination={false}
-          />
+          {/* <Button
+            className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Upload Document
+          </Button> */}
+          </div>
+          <hr></hr>
+          <div className="overflow-x-auto">
+            <DataTable
+              columns={columns}
+              data={tableData}
+              quickFilterKey="status"
+              searchKey="title"
+              searchPlaceholder="Search request by title..."
+            />
+          </div>
+        </div>
         </div>
       </div>
     </DashboardLayout>
