@@ -6,20 +6,16 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
-  BarChart3,
-  Building2,
+  LayoutDashboard ,
+  Ticket ,
   FileText,
-  Gavel,
+  BookText ,
   Menu,
-  Users,
-  ChartBarStacked,
-  MessageSquare,
-  ChevronLeft,
-  ChevronRight,
+  Users, 
   Settings,
   LogOut,
   Flag,
-  Package,
+  User ,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -34,17 +30,17 @@ const navigation = [
   {
     name: "MAIN MENU",
     items: [
-      { name: "Dashboard", href: "/dashboard", icon: BarChart3, roles: ["admin", "user"] },
-      { name: "Requests", href: "/requests", icon: Users, roles: ["admin","user"] },
-      { name: "Users", href: "/users", icon: FileText, roles: ["admin", "user"] },
-      { name: "Tickets", href: "/tickets", icon: Building2, roles: ["admin","user"] },     
+      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard , roles: ["admin", "user"] },
+      { name: "Request Management", href: "/requests", icon: FileText, roles: ["admin","user"] },
+      { name: "User Management", href: "/users", icon: User, roles: ["admin", "user"] },
+      { name: "Ticket Management", href: "/tickets", icon: Ticket , roles: ["admin","user"] },     
     ],
   },
   {
     name: "ADMINISTRATION",
     items: [
-      { name: "Documents", href: "/documents", icon: BarChart3, roles: ["admin","user"] },
-      { name: "Employees", href: "/employees", icon: BarChart3, roles: ["admin"] },
+      { name: "Document Management", href: "/documents", icon: BookText , roles: ["admin","user"] },
+      { name: "Employee Management", href: "/employees", icon: Users , roles: ["admin"] },
 
     ],
   },
@@ -177,7 +173,7 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
            <TooltipTrigger asChild>
              <Button
                variant="destructive"
-               className={cn("flex items-center gap-2 w-full justify-start bg-red-600 hover:bg-red-700 text-white border-0", collapsed && "justify-center px-0")}
+               className={cn("flex items-center gap-2 w-full justify-start bg-red-500 hover:bg-red-600 text-white border-0", collapsed && "justify-center px-0")}
                onClick={() => logout()}
              >
                <LogOut className="w-5 h-5" />

@@ -12,6 +12,7 @@ import { notificationsApi } from "@/lib/api/notifications"
 import { Notification } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { useNotifications } from "@/hooks/use-notifications"
+import { dummyNotifications } from "@/lib/dummy-data"
 
 interface NotificationsModalProps {
   open: boolean
@@ -52,7 +53,7 @@ export function NotificationsDropdown({
   onOpenChange,
   children,
 }: { open: boolean; onOpenChange: (open: boolean) => void; children: React.ReactNode }) {
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [notifications, setNotifications] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -82,11 +83,15 @@ export function NotificationsDropdown({
       }
       setError(null)
       
-      const response = await notificationsApi.getUserNotifications(page, pagination.limit, readFilter)
-      console.log("Notifications", response)
+      // const response = await notificationsApi.getUserNotifications(page, pagination.limit, readFilter)
       
-      const newNotifications = response.data.data?.notifications || []
-      const paginationData = response.data.data?.pagination || {}
+      // const newNotifications = response.data.data?.notifications || []
+      const newNotifications = dummyNotifications
+      
+      const paginationData = {
+        hasNextPage: false,
+        total: dummyNotifications.length
+      }
       
       if (append) {
         setNotifications(prev => [...prev, ...newNotifications])
@@ -272,7 +277,7 @@ export function NotificationsDropdown({
               <Check className="w-4 h-4 mr-1" />
               Mark All Read
             </Button> */}
-            <Button variant="outline" size="sm" onClick={clearAll} disabled={loading}>
+            <Button variant="outline" size="sm"  disabled={loading}>
               <Trash2 className="w-4 h-4 mr-1" />
               Clear All
             </Button>
@@ -304,7 +309,7 @@ export function NotificationsDropdown({
             <div className="text-center py-8 text-red-500">
               <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>{error}</p>
-              <Button variant="outline" size="sm" onClick={() => fetchNotifications()} className="mt-2">
+              <Button variant="outline" size="sm"  className="mt-2"> 
                 Retry
               </Button>
             </div>
@@ -349,7 +354,7 @@ export function NotificationsDropdown({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => markAsRead(notification._id!)}
+                          // onClick={() => markAsRead(notification._id!)}
                           className="h-8 w-8 p-0"
                         >
                           <Check className="w-4 h-4" />
@@ -358,7 +363,7 @@ export function NotificationsDropdown({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => deleteNotification(notification._id!)}
+                        // onClick={() => deleteNotification(notification._id!)}
                         className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
                       >
                         <X className="w-4 h-4" />

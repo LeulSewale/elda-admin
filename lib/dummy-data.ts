@@ -422,3 +422,67 @@ export const dummyRequests= [
   ];
   
   
+  export const dummyNotifications = [
+    {
+      title: "New Tender Available",
+      body: "A new tender has been posted by the Ethiopian Roads Authority. Check the details and submit your bid before the deadline.",
+      read: false,
+      createdAt: "2025-09-12T08:30:00Z",
+    },
+    {
+      title: "Bid Submission Successful",
+      body: "Your bid for Tender #TND-0043 has been submitted successfully and is under review.",
+      read: true,
+      createdAt: "2025-09-11T15:45:00Z",
+    },
+    {
+      title: "Tender Deadline Reminder",
+      body: "The deadline for Tender #TND-0041 is approaching in 24 hours. Make sure to complete your submission on time.",
+      read: false,
+      createdAt: "2025-09-10T09:00:00Z",
+    },
+    {
+      title: "Payment Received",
+      body: "Your payment for the subscription package has been successfully processed.",
+      read: true,
+      createdAt: "2025-09-09T11:15:00Z",
+    },
+    {
+      title: "Profile Update Successful",
+      body: "Your account profile was successfully updated. No further action is required.",
+      read: true,
+      createdAt: "2025-09-08T14:20:00Z",
+    },
+    {
+      title: "Bid Approved",
+      body: "Congratulations! Your bid for Tender #TND-0040 has been approved by the tender committee.",
+      read: false,
+      createdAt: "2025-09-07T10:10:00Z",
+    },
+    {
+      title: "Bid Rejected",
+      body: "Unfortunately, your bid for Tender #TND-0038 has been rejected. Please review the tender requirements for future opportunities.",
+      read: true,
+      createdAt: "2025-09-06T12:30:00Z",
+    },
+    {
+      title: "New Message from Admin",
+      body: "You have received a new message from the Tender Management System administrator. Please check your inbox.",
+      read: false,
+      createdAt: "2025-09-05T17:00:00Z",
+    },
+    {
+      title: "Subscription Expiring Soon",
+      body: "Your subscription package will expire in 3 days. Renew now to avoid losing access to premium features.",
+      read: false,
+      createdAt: "2025-09-04T08:45:00Z",
+    },
+    {
+      title: "System Maintenance Notice",
+      body: "The Tender Management System will be undergoing maintenance on 2025-09-15 from 12:00 AM to 4:00 AM EAT.",
+      read: true,
+      createdAt: "2025-09-03T13:25:00Z",
+    },
+  ];
+  
+  

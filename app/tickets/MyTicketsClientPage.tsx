@@ -217,7 +217,7 @@ export default function MyTicketsClientPage() {
               <p className="text-sm mt-1">Try adjusting filters or search terms.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="p-2 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {visibleTickets.map((t) => (
                 <TicketCardOutline
                   key={t.id}
