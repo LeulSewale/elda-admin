@@ -30,16 +30,17 @@ const navigation = [
   {
     name: "MAIN MENU",
     items: [
-      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard , roles: ["admin", "user"] },
-      { name: "Request Management", href: "/requests", icon: FileText, roles: ["admin","user"] },
-      { name: "User Management", href: "/users", icon: User, roles: ["admin", "user"] },
-      { name: "Ticket Management", href: "/tickets", icon: Ticket , roles: ["admin","user"] },     
+      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard , roles: ["admin", "user","lawyer"] },
+      { name: "Request Management", href: "/requests", icon: FileText, roles: ["admin","user","lawyer"] },
+      { name: "User Management", href: "/users", icon: User, roles: ["admin"] },
+      { name: "Ticket Management", href: "/tickets", icon: Ticket , roles: ["admin","user"] },  
+      { name: "Document Management", href: "/documents", icon: BookText , roles: ["user"] },   
     ],
   },
   {
     name: "ADMINISTRATION",
     items: [
-      { name: "Document Management", href: "/documents", icon: BookText , roles: ["admin","user"] },
+      { name: "Document Management", href: "/documents", icon: BookText , roles: ["admin"] },
       { name: "Employee Management", href: "/employees", icon: Users , roles: ["admin"] },
 
     ],
@@ -89,10 +90,9 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
       <nav className="flex-1 space-y-8 px-4 py-6 overflow-y-auto">
         <TooltipProvider>
           {navigation
-            .filter(section => section.name !== "Information" || role === "admin")
             .map((section) => (
               <div key={section.name}>
-                {!collapsed && (
+                {!collapsed && (role === "admin" || section.name !== "ADMINISTRATION") && (
                   <h3 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
                     {section.name}
                   </h3>

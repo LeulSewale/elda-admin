@@ -17,6 +17,7 @@ import {
 import { dummyRequests } from "@/lib/dummy-data"
 
 import { CreateRequestModal } from "@/components/modals/create-request-modal"
+import { useAuth } from "@/hooks/use-auth"
 
 
 /**
@@ -102,6 +103,7 @@ export default function RequestsPageClient() {
   const [action, setAction] = useState<"approve" | "reject" | null>(null);
   const [lastRefresh, setLastRefresh] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { role } = useAuth();
 
 
   
@@ -297,14 +299,17 @@ export default function RequestsPageClient() {
              <h1 className="text-xl font-semibold">Requests</h1>
             <p className="text-sm text-gray-400">View and manage request management</p>
           </div>
-          <Button
+          {role === "user" && <Button
           onClick={() => setOpenModal(true)}
             className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Request
           </Button>
+
+         }
           </div>
+
           <hr></hr>
           <div className="overflow-x-auto">
             <DataTable

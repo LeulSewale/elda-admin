@@ -59,10 +59,10 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
         await new Promise((res) => setTimeout(res, 50))
         const { data } = await refetchProfile()
         // Check role
-        if (data?.role !== 'admin' && data?.role !== 'company') {
+        if (data?.role !== 'admin' && data?.role !== 'lawyer' && data?.role !== 'user') {
           toast({
             title: "Login Error",
-            description: "Your account does not have access. Only admin or company roles are allowed.",
+            description: "Your account does not have access. Only admin, lawyer or user roles are allowed.",
             variant: "destructive",
           })
           setIsAuthenticating(false)

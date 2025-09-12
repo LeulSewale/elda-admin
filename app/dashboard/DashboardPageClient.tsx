@@ -83,7 +83,7 @@ export default function DashboardPageClient() {
       await new Promise(resolve => setTimeout(resolve, 300)) // Simulate API delay
       return dummyUsers.length;
     },
-    enabled: role === "admin" && isVisible,
+    enabled: isVisible,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 20 * 60 * 1000, // 20 minutes
     refetchOnWindowFocus: false,
@@ -98,9 +98,9 @@ export default function DashboardPageClient() {
     queryKey: ["dashboard-companies-count"],
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 300)) // Simulate API delay
-      return dummyUsers.filter((u: any) => u.role === 'company').length;
+      return dummyUsers.length;
     },
-    enabled: role === "admin" && isVisible,
+    enabled: isVisible,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 20 * 60 * 1000, // 20 minutes
     refetchOnWindowFocus: false,
@@ -115,14 +115,9 @@ export default function DashboardPageClient() {
     queryKey: ["dashboard-bids-count", role, companyId],
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 300)) // Simulate API delay
-      if (role === "admin") {
-        return dummyRequests.length;
-      } else if (role === "user" && companyId) {
-        return dummyRequests.filter((bid: any) => bid.user._id === companyId).length;
-      }
-      return 0;
+      return dummyRequests.length;
     },
-    enabled: !!role && (role === "admin" || (role === "user" && !!companyId)) && isVisible,
+    enabled: isVisible,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 20 * 60 * 1000, // 20 minutes
     refetchOnWindowFocus: false,
@@ -137,16 +132,9 @@ export default function DashboardPageClient() {
     queryKey: ["dashboard-tenders-count", role, companyId],
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 300)) // Simulate API delay
-      if (role === "admin") {
-        return dummyDocuments.length;
-      } else if (role === "company" && companyId) {
-        return dummyDocuments.filter((document: any) => 
-          typeof document.company === 'object' && document.company._id === companyId
-        ).length;
-      }
-      return 0;
+      return dummyDocuments.length;
     },
-    enabled: !!role && (role === "admin" || (role === "company" && !!companyId)) && isVisible,
+    enabled: isVisible,
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 20 * 60 * 1000, // 20 minutes
     refetchOnWindowFocus: false,
@@ -162,14 +150,9 @@ export default function DashboardPageClient() {
     queryKey: ["dashboard-recent-bids", role, companyId],
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 400)) // Simulate API delay
-      if (role === "admin") {
-        return dummyRequests.slice(0, 10);
-      } else if (role === "user" && companyId) {
-        return dummyRequests.filter((bid: any) => bid.user._id === companyId).slice(0, 10);
-      }
-      return [];
+      return dummyRequests.slice(0, 10);
     },
-    enabled: !!role && (role === "admin" || (role === "user" && !!companyId)) && isVisible,
+    enabled: isVisible,
     staleTime: 5 * 60 * 1000, // 5 minutes (more frequent for recent data)
     gcTime: 15 * 60 * 1000, // 15 minutes
     refetchOnWindowFocus: false,
