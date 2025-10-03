@@ -1,7 +1,10 @@
 "use client"
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { companiesApi } from "@/lib/api/companies"
+import { useTickets } from "@/hooks/use-tickets"
+import { ticketsApi } from "@/lib/api/tickets"
+import { CreateTicketModal } from "@/components/modals/create-ticket-modal-new"
+import { AssignTicketModal } from "@/components/modals/assign-ticket-modal"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/data-table/data-table"
 import { Badge } from "@/components/ui/badge"
@@ -29,7 +32,8 @@ import {
   Check,
   Trash2,
   Edit,
-  Star
+  Star,
+  User
 } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -128,83 +132,151 @@ export default function AllTicketsClientPage() {
   const [action, setAction] = useState<"approve" | "reject" | null>(null);
   const [lastRefresh, setLastRefresh] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [createTicketModalOpen, setCreateTicketModalOpen] = useState(false);
+  const [assignTicketModalOpen, setAssignTicketModalOpen] = useState(false);
+  const [selectedTicketForAssignment, setSelectedTicketForAssignment] = useState<any | null>(null);
 
 
-  const tickets = [
-    { id: 'Tick-001', no: 1, user: 'Abebe Bekele', date: '2025-09-12', status: 'pending', description: 'Request for software installation' },
-    { id: 'Tick-002', no: 2, user: 'Alemayehu Tesfaye', date: '2025-09-11', status: 'completed', description: 'Issue with network connectivity' },
-    { id: 'Tick-003', no: 3, user: 'Mekdes Abate', date: '2025-09-10', status: 'pending', description: 'Password reset request' },
-    { id: 'Tick-004', no: 4, user: 'Sisay Gebremedhin', date: '2025-09-09', status: 'completed', description: 'Request for new laptop' },
-    { id: 'Tick-005', no: 5, user: 'Hana Alemu', date: '2025-09-08', status: 'pending', description: 'Software bug report' },
-    { id: 'Tick-006', no: 6, user: 'Tesfaye Desta', date: '2025-09-07', status: 'completed', description: 'Network printer issue' },
-    { id: 'Tick-007', no: 7, user: 'Selamawit Haile', date: '2025-09-06', status: 'pending', description: 'Request for access to shared drive' },
-    { id: 'Tick-008', no: 8, user: 'Fikru Tadesse', date: '2025-09-05', status: 'completed', description: 'Email account setup' },
-    { id: 'Tick-009', no: 9, user: 'Mahiye Kassa', date: '2025-09-04', status: 'pending', description: 'Request for training material' },
-    { id: 'Tick-010', no: 10, user: 'Betelhem Getachew', date: '2025-09-03', status: 'completed', description: 'Report system crash' },
-  ];
   
   
   
   
-  // Fetch pending companies with ADVANCED PERFORMANCE OPTIMIZATIONS
-  const { data, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ["pending-companies"],
-    queryFn: async () => {
-      // const res = await companiesApi.getCompanies({ status: "pending" });
-      return tickets;
-    },
-    // 🚀 ADVANCED CACHING CONFIGURATION
-    staleTime: 15 * 60 * 1000, // 15 minutes - data considered fresh for 15 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes - cache kept in memory for 30 minutes
-    refetchOnWindowFocus: false, // Prevent refetch on window focus
-    refetchOnMount: false, // Prevent refetch on component mount if data exists
-    refetchOnReconnect: true, // Refetch on network reconnect for data consistency
-    refetchInterval: false, // Disable automatic refetching
-    retry: 2, // Retry failed requests up to 2 times
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    enabled: isVisible, // Only fetch when tab is visible
-  });
+  // Fetch tickets with role-based logic
+  const { tickets, isLoading, refetch, isFetching, userRole } = useTickets()
 
-  // Approve/Reject mutation with OPTIMISTIC UPDATES
+  // Update ticket status mutation with OPTIMISTIC UPDATES
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ _id, status }: { _id: string; status: string }) => {
-      return companiesApi.updateCompany(_id, { status });
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      console.debug("[Tickets] Updating ticket status:", { id, status });
+      return ticketsApi.changeStatus(id, status as any);
     },
-    onMutate: async ({ _id, status }) => {
+    onMutate: async ({ id, status }) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["pending-companies"] });
+      await queryClient.cancelQueries({ queryKey: ["tickets", userRole] });
 
       // Snapshot the previous value
-      const previousData = queryClient.getQueryData(["pending-companies"]);
+      const previousData = queryClient.getQueryData(["tickets", userRole]);
 
       // Optimistically update to the new value
-      queryClient.setQueryData(["pending-companies"], (old: any) => {
+      queryClient.setQueryData(["tickets", userRole], (old: any) => {
         if (!old) return old;
-        return old.map((company: any) =>
-          company._id === _id ? { ...company, status } : company
-        );
+        return {
+          ...old,
+          data: old.data.map((ticket: any) =>
+            ticket.id === id ? { ...ticket, status: status as any } : ticket
+          )
+        };
       });
 
       // Return a context object with the snapshotted value
       return { previousData };
     },
     onError: (err: any, variables, context) => {
+      console.error("[Tickets] Update status error:", err);
       // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousData) {
-        queryClient.setQueryData(["pending-companies"], context.previousData);
+        queryClient.setQueryData(["tickets", userRole], context.previousData);
       }
-      toast({ title: "Error", description: err?.response?.data?.message || "Failed to update status.", variant: "destructive" });
+      toast({ title: "Error", description: err?.response?.data?.message || "Failed to update ticket status.", variant: "destructive" });
     },
     onSettled: () => {
       // Always refetch after error or success to ensure data consistency
-      queryClient.invalidateQueries({ queryKey: ["pending-companies"] });
+      queryClient.invalidateQueries({ queryKey: ["tickets", userRole] });
     },
     onSuccess: () => {
-      toast({ title: "Success", description: `Company status updated.`, variant: "default" });
+      toast({ title: "Success", description: `Ticket status updated.`, variant: "default" });
       setModalOpen(false);
       setSelectedCompany(null);
       setAction(null);
     },
+  });
+
+  // Create ticket mutation for users
+  const createTicketMutation = useMutation({
+    mutationFn: async (data: { subject: string; description: string; priority: "low" | "medium" | "high" | "urgent"; tags: string[] }) => {
+      console.debug("[Admin Tickets] Creating ticket with data:", data);
+      const res = await ticketsApi.createTicket({
+        subject: data.subject,
+        description: data.description,
+        priority: data.priority,
+        tags: data.tags
+      });
+      console.debug("[Admin Tickets] Create ticket response:", res.data);
+      return res.data.data;
+    },
+    onSuccess: (newTicket) => {
+      queryClient.setQueryData(["tickets", userRole], (old: any) => {
+        if (!old) return { data: [newTicket], paging: {} };
+        return {
+          ...old,
+          data: [...old.data, newTicket]
+        };
+      })
+      toast({ title: "Success", description: `"${newTicket.subject}" has been created successfully.`, variant: "default" });
+      setCreateTicketModalOpen(false);
+    },
+    onError: (error: any) => {
+      console.error("[Admin Tickets] Create ticket error:", error);
+      toast({ title: "Failed to create ticket", description: error?.response?.data?.message || "An error occurred while creating the ticket.", variant: "destructive" });
+    }
+  });
+
+  // Assign ticket mutation for admins
+  const assignTicketMutation = useMutation({
+    mutationFn: async (data: { assigned_to_user_id: string; status: string; priority: string }) => {
+      console.debug("[Admin Tickets] Assigning ticket:", { ticketId: selectedTicketForAssignment?.id, data });
+      const res = await ticketsApi.assignTicket(
+        selectedTicketForAssignment?.id, 
+        data.assigned_to_user_id, 
+        data.status, 
+        data.priority
+      );
+      console.debug("[Admin Tickets] Assign ticket response:", res.data);
+      return res.data.data;
+    },
+    onSuccess: (updatedTicket) => {
+      queryClient.setQueryData(["tickets", userRole], (old: any) => {
+        if (!old) return old;
+        return {
+          ...old,
+          data: old.data.map((ticket: any) =>
+            ticket.id === updatedTicket.id ? updatedTicket : ticket
+          )
+        };
+      })
+      toast({ title: "Success", description: `Ticket assigned successfully.`, variant: "default" });
+      setAssignTicketModalOpen(false);
+      setSelectedTicketForAssignment(null);
+    },
+    onError: (error: any) => {
+      console.error("[Admin Tickets] Assign ticket error:", error);
+      console.error("[Admin Tickets] Error response:", error?.response?.data);
+      console.error("[Admin Tickets] Error response details:", JSON.stringify(error?.response?.data, null, 2));
+      console.error("[Admin Tickets] Error status:", error?.response?.status);
+      console.error("[Admin Tickets] Error headers:", error?.response?.headers);
+      console.error("[Admin Tickets] User role:", userRole);
+      console.error("[Admin Tickets] Request URL:", error?.config?.url);
+      console.error("[Admin Tickets] Request method:", error?.config?.method);
+      console.error("[Admin Tickets] Request headers:", error?.config?.headers);
+      console.error("[Admin Tickets] Request data:", error?.config?.data);
+      console.error("[Admin Tickets] Full error object:", JSON.stringify(error, null, 2));
+      
+      let errorMessage = "Failed to assign ticket.";
+      
+      if (error?.response?.status === 403) {
+        errorMessage = "Access denied. You don't have permission to assign tickets. This might be due to insufficient permissions or the backend requiring additional authorization.";
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      toast({ 
+        title: "Assignment Failed", 
+        description: errorMessage, 
+        variant: "destructive" 
+      });
+    }
   });
 
   // 🔄 SMART REFRESH FUNCTION WITH TAB ACTIVITY AWARENESS
@@ -250,27 +322,40 @@ export default function AllTicketsClientPage() {
   }, [isVisible, lastActivity]);
 
   // Flatten data for table
-  const tableData = (data || []).map((company: any, i: number) => ({
-    ...company,
+  const tableData = tickets.map((ticket: any, i: number) => ({
+    ...ticket,
     no: i + 1,
-    title: company.title || "",
-    phone: company.phone || "",
-    serviceType: company.serviceType || "",
-    createdAt: company.createdAt,
-    status: company.status,
+    user: ticket.creator_name || "Unknown",
+    description: ticket.description || "",
+    date: ticket.created_at,
+    status: ticket.status,
+    priority: ticket.priority,
+    subject: ticket.subject,
   }));
 
   // Table columns
   const columns = [
     { accessorKey: "no", header: "No", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
     { accessorKey: "id", header: "ID", cell: ({ row }: any) => <span className="font-medium">{row.original.id}</span> },
-    { accessorKey: "user", header: "User", cell: ({ row }: any) => <div className="font-medium">{row.original.user}</div> },
-    { accessorKey: "description", header: "Description", cell: ({ row }: any) => <div className="font-medium">{row.original.description}</div> },
+    { accessorKey: "subject", header: "Subject", cell: ({ row }: any) => <div className="font-medium">{row.original.subject}</div> },
+    { accessorKey: "user", header: "Created By", cell: ({ row }: any) => <div className="font-medium">{row.original.user}</div> },
+    { accessorKey: "priority", header: "Priority", cell: ({ row }: any) => {
+      const priority = row.original.priority;
+      const priorityColors: Record<string, string> = {
+        low: "bg-gray-100 text-gray-800",
+        medium: "bg-yellow-100 text-yellow-800",
+        high: "bg-orange-100 text-orange-800",
+        urgent: "bg-red-100 text-red-800",
+      };
+      return <Badge className={priorityColors[priority] || "bg-gray-100 text-gray-800"}>{priority.charAt(0).toUpperCase() + priority.slice(1)}</Badge>;
+    } },
    { accessorKey: "status", header: "Status", cell: ({ row }: any) => {
       const status = row.original.status;
       const statusColors: Record<string, string> = {
-        pending: "bg-yellow-100 text-yellow-800",
-        completed: "bg-green-100 text-green-800",
+        open: "bg-blue-100 text-blue-800",
+        closed: "bg-green-100 text-green-800",
+        in_progress: "bg-yellow-100 text-yellow-800",
+        pending: "bg-gray-100 text-gray-800",
       };
       return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
     } },
@@ -291,31 +376,63 @@ export default function AllTicketsClientPage() {
           id: "actions",
           header: "Actions",
           cell: ({ row }: any) => {
-            const user = row.original
+            const ticket = row.original
             return (
               <div className="flex items-center space-x-2">
                 <Button
                   variant="ghost"
                   size="icon"
-                  // onClick={() => {
-                  //   setSelectedUser(user)
-                  //   setDetailModalOpen(true)
-                  // }}
+                  onClick={() => {
+                    setSelectedCompany(ticket)
+                    setAction(null)
+                    setModalOpen(true)
+                  }}
                   className="hover:bg-blue-50 hover:text-blue-600"
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
-                {/* <Button
+                {ticket.status === "open" && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedCompany(ticket)
+                      setAction("approve")
+                      setModalOpen(true)
+                    }}
+                    className="hover:bg-green-50 hover:text-green-600"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                  </Button>
+                )}
+                {ticket.status === "open" && (
+                  <Button
                   variant="ghost"
                   size="icon"
-                  // onClick={() => {
-                  //   setSelectedUser(user)
-                  //   setDeleteModalOpen(true)
-                  // }}
+                    onClick={() => {
+                      setSelectedCompany(ticket)
+                      setAction("reject")
+                      setModalOpen(true)
+                    }}
                   className="hover:bg-red-50 hover:text-red-600"
                 >
-                  <Trash2 className="h-4 w-4" />
-                </Button> */}
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+                {userRole === "admin" && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setSelectedTicketForAssignment(ticket)
+                      setAssignTicketModalOpen(true)
+                    }}
+                    className="hover:bg-purple-50 hover:text-purple-600"
+                    title="Assign ticket"
+                  >
+                    <User className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             )
           },
@@ -335,12 +452,15 @@ export default function AllTicketsClientPage() {
              <h1 className="text-xl font-semibold">Tickets</h1>
             <p className="text-sm text-gray-400">View and manage tickets management</p>
           </div>
+          {userRole === "user" && (
           <Button
+              onClick={() => setCreateTicketModalOpen(true)}
             className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Ticket
           </Button>
+          )}
           </div>
           <hr></hr>
           <div className="overflow-x-auto">
@@ -348,8 +468,8 @@ export default function AllTicketsClientPage() {
               columns={columns}
               data={tableData}
               quickFilterKey="status"
-              searchKey="user"
-              searchPlaceholder="Search request by user..."
+              searchKey="subject"
+              searchPlaceholder="Search tickets by subject..."
             />
           </div>
         </div>
@@ -358,52 +478,31 @@ export default function AllTicketsClientPage() {
           <DialogContent className="max-w-lg">
             <DialogHeader>
               <DialogTitle>
-                {action === null && "Company Details"}
-                {action === "approve" && "Approve Company"}
-                {action === "reject" && "Reject Company"}
+                {action === null && "Ticket Details"}
+                {action === "approve" && "Close Ticket"}
+                {action === "reject" && "Reject Ticket"}
               </DialogTitle>
             </DialogHeader>
             {selectedCompany && action === null && (
               <div className="space-y-4 text-sm">
                 <div className="space-y-2">
-                  <div><b>Name:</b> {selectedCompany.name}</div>
-                  <div><b>Email:</b> {selectedCompany.email}</div>
-                  <div><b>Phone:</b> {selectedCompany.phone}</div>
+                  <div><b>Subject:</b> {selectedCompany.subject}</div>
+                  <div><b>Created By:</b> {selectedCompany.user}</div>
+                  <div><b>Priority:</b> {selectedCompany.priority}</div>
                   <div><b>Status:</b> {selectedCompany.status}</div>
-                  <div><b>Created At:</b> {new Date(selectedCompany.createdAt).toLocaleString()}</div>
+                  <div><b>Created At:</b> {new Date(selectedCompany.date).toLocaleString()}</div>
                   <div><b>Description:</b> {selectedCompany.description || "-"}</div>
                 </div>
                 
-                {/* Documents Section */}
-                {selectedCompany.documents && selectedCompany.documents.length > 0 && (
+                {/* Tags Section */}
+                {selectedCompany.tags && selectedCompany.tags.length > 0 && (
                   <div className="space-y-2">
-                    <div><b>Documents ({selectedCompany.documents.length}):</b></div>
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {selectedCompany.documents.map((doc: any, index: number) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                          <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <File className="w-4 h-4 text-gray-500 flex-shrink-0" />
-                            <span className="text-sm text-gray-700 truncate">{doc.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            <button
-                              // onClick={() => downloadDocument(doc.url, doc.name)}
-                              className="p-1 hover:bg-gray-200 rounded transition-colors"
-                              title="Download document"
-                            >
-                              <Download className="w-4 h-4 text-green-600 hover:text-green-700" />
-                            </button>
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-1 hover:bg-gray-200 rounded transition-colors"
-                              title="View document"
-                            >
-                              <ExternalLink className="w-4 h-4 text-blue-600 hover:text-blue-700" />
-                            </a>
-                          </div>
-                        </div>
+                    <div><b>Tags:</b></div>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedCompany.tags.map((tag: string, index: number) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {tag}
+                        </Badge>
                       ))}
                     </div>
                   </div>
@@ -412,24 +511,49 @@ export default function AllTicketsClientPage() {
             )}
             {action && (
               <div className="mt-4">
-                <p>Are you sure you want to <b>{action === "approve" ? "approve" : "reject"}</b> the company <b>{selectedCompany?.name}</b>?</p>
+                <p>Are you sure you want to <b>{action === "approve" ? "close" : "reject"}</b> the ticket <b>"{selectedCompany?.subject}"</b>?</p>
               </div>
             )}
             <DialogFooter>
               <Button variant="outline" onClick={() => setModalOpen(false)} disabled={updateStatusMutation.isPending}>Cancel</Button>
               {action && selectedCompany && (
                 <Button
-                  onClick={() => updateStatusMutation.mutate({ _id: selectedCompany._id, status: action === "approve" ? "active" : "rejected" })}
+                  onClick={() => updateStatusMutation.mutate({ id: selectedCompany.id, status: action === "approve" ? "closed" : "rejected" })}
                   className={action === "approve" ? "bg-green-600 hover:bg-green-700 text-white" : "bg-red-600 hover:bg-red-700 text-white"}
                   disabled={updateStatusMutation.isPending}
                 >
                   {updateStatusMutation.isPending ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : null}
-                  {action === "approve" ? "Approve" : "Reject"}
+                  {action === "approve" ? "Close Ticket" : "Reject"}
                 </Button>
               )}
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        
+        {/* Create Ticket Modal for Users */}
+        {userRole === "user" && (
+          <CreateTicketModal 
+            open={createTicketModalOpen}
+            onOpenChange={setCreateTicketModalOpen}
+            onSubmit={(data) => {
+              createTicketMutation.mutate(data)
+            }}
+            isLoading={createTicketMutation.isPending}
+          />
+        )}
+        
+        {/* Assign Ticket Modal for Admins */}
+        {userRole === "admin" && (
+          <AssignTicketModal 
+            open={assignTicketModalOpen}
+            onOpenChange={setAssignTicketModalOpen}
+            onSubmit={(data) => {
+              assignTicketMutation.mutate(data)
+            }}
+            isLoading={assignTicketMutation.isPending}
+            ticket={selectedTicketForAssignment}
+          />
+        )}
       </div>
     </DashboardLayout>
   );

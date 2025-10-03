@@ -32,17 +32,15 @@ const navigation = [
     items: [
       { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard , roles: ["admin", "user","lawyer"] },
       { name: "Request Management", href: "/requests", icon: FileText, roles: ["admin","user","lawyer"] },
-      { name: "User Management", href: "/users", icon: User, roles: ["admin"] },
-      { name: "Ticket Management", href: "/tickets", icon: Ticket , roles: ["admin","user"] },  
-      { name: "Document Management", href: "/documents", icon: BookText , roles: ["user"] },   
+      { name: "Ticket Management", href: "/tickets", icon: Ticket , roles: ["admin","user","lawyer"] },  
+      { name: "Document Management", href: "/documents", icon: BookText , roles: ["admin","user","lawyer"] },   
     ],
   },
   {
     name: "ADMINISTRATION",
     items: [
-      { name: "Document Management", href: "/documents", icon: BookText , roles: ["admin"] },
+      { name: "User Management", href: "/users", icon: User, roles: ["admin"] },
       { name: "Employee Management", href: "/employees", icon: Users , roles: ["admin"] },
-
     ],
   },
  
@@ -99,9 +97,9 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
                 )}
                 <div className="space-y-1">
                   {section.items
-                    .filter(item => !item.roles || item.roles.includes(role))
+                    .filter(item => !item.roles || !role || item.roles.includes(role))
                     .map((item) => {
-                      const computedHref = item.name === "Tickets" ? (role === "admin" ? "/tickets/admin" : "/tickets") : item.href
+                      const computedHref = item.name === "Tickets" || item.name === "Ticket Management" ? (role === "admin" ? "/tickets/admin" : "/tickets") : item.href
                       const isActive = pathname === computedHref
                       const linkContent = (
                         <Link

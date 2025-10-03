@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        <title>Tender Admin</title>
+        <title>ELDA Admin</title>
         <link rel="icon" href="/favicon.ico" type="image/png" />
       </head>
       <body className={`${inter.className} antialiased`}>

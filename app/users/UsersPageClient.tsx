@@ -3,13 +3,16 @@
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { DataTable } from "@/components/data-table/data-table"
 import { usersApi } from "@/lib/api/users"
+import { api } from "@/lib/axios"
 import type { User } from "@/lib/types"
 import { useEffect, useState, useCallback } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { UserDetailModal } from "@/components/modals/user-detail-modal"
 import { DeleteModal } from "@/components/modals/delete-modal"
-import { Eye, Loader2, Trash2 } from "lucide-react"
+import { CreateUserModal } from "@/components/modals/create-user-modal"
+import { EditUserModal } from "@/components/modals/edit-user-modal"
+import { Eye, Loader2, Trash2, Plus, Edit } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { RotateCcw } from "lucide-react"
@@ -57,96 +60,27 @@ import { useTabVisibility } from "@/hooks/use-tab-visibility"
 export function UsersPageClient() {
   const [detailModalOpen, setDetailModalOpen] = useState(false)
   const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [editUserModalOpen, setEditUserModalOpen] = useState(false)
+  const [createUserModalOpen, setCreateUserModalOpen] = useState(false)
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [editingUser, setEditingUser] = useState<any>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefresh, setLastRefresh] = useState(0)
+  
+  // Debug modal state changes
+  useEffect(() => {
+    console.debug("[Users] Edit modal state changed", { 
+      editUserModalOpen, 
+      selectedUser: selectedUser?.id || selectedUser?._id,
+      hasSelectedUser: !!selectedUser 
+    })
+  }, [editUserModalOpen, selectedUser])
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isVisible, lastActivity } = useTabVisibility();
 
-  const dummyUsers = [
-    {
-      no: 1,
-      name: "Habtamu Esubalew",
-      phone: "+251911223344",
-      email: "habtamu.esubalew@example.com",
-      status: "active",
-      joinedAt: "2025-01-10",
-    },
-    {
-      no: 2,
-      name: "Mekdes Alemu",
-      phone: "+251922334455",
-      email: "mekdes.alemu@example.com",
-      status: "Inactive",
-      joinedAt: "2025-02-05",
-    },
-    {
-      no: 3,
-      name: "Abebe Bekele",
-      phone: "+251933445566",
-      email: "abebe.bekele@example.com",
-      status: "active",
-      joinedAt: "2025-02-18",
-    },
-    {
-      no: 4,
-      name: "Meron Fikadu",
-      phone: "+251944556677",
-      email: "meron.fikadu@example.com",
-      status: "Inactive",
-      joinedAt: "2025-03-01",
-    },
-    {
-      no: 5,
-      name: "Samuel Tadesse",
-      phone: "+251955667788",
-      email: "samuel.tadesse@example.com",
-      status: "active",
-      joinedAt: "2025-03-10",
-    },
-    {
-      no: 6,
-      name: "Tsion Tesfaye",
-      phone: "+251966778899",
-      email: "tsion.tesfaye@example.com",
-      status: "active",
-      joinedAt: "2025-03-22",
-    },
-    {
-      no: 7,
-      name: "Nahom Gebremariam",
-      phone: "+251977889900",
-      email: "nahom.gebremariam@example.com",
-      status: "Inactive",
-      joinedAt: "2025-04-05",
-    },
-    {
-      no: 8,
-      name: "Hana Wondimu",
-      phone: "+251988990011",
-      email: "hana.wondimu@example.com",
-      status: "active",
-      joinedAt: "2025-04-18",
-    },
-    {
-      no: 9,
-      name: "Kebede Worku",
-      phone: "+251999001122",
-      email: "kebede.worku@example.com",
-      status: "Inactive",
-      joinedAt: "2025-05-01",
-    },
-    {
-      no: 10,
-      name: "Selamawit Degu",
-      phone: "+251910112233",
-      email: "selamawit.degu@example.com",
-      status: "active",
-      joinedAt: "2025-05-12",
-    },
-  ];
+  // Server provides: { status, message, data: User[], paging }
   
 
   const {
@@ -158,8 +92,51 @@ export function UsersPageClient() {
   } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      // const res = await usersApi.getUsers();
-      return dummyUsers;
+      const params = { page: 1, limit: 20, q: "", sort: "" };
+      // Debug: request params
+      // eslint-disable-next-line no-console
+      console.debug("[Users] Fetch start", {
+        params,
+        baseURL: api.defaults.baseURL,
+        withCredentials: api.defaults.withCredentials,
+        headers: api.defaults.headers,
+        location: typeof window !== 'undefined' ? window.location.origin : 'server',
+        cookies: typeof document !== 'undefined' ? document.cookie : 'no-document'
+      })
+      try {
+        const res = await usersApi.getUsers(params);
+        // Debug: response
+        // eslint-disable-next-line no-console
+        console.debug("[Users] Fetch success", {
+          status: res.status,
+          url: res.config?.url,
+          method: res.config?.method,
+          hasDataArray: Array.isArray(res.data?.data),
+          count: Array.isArray(res.data?.data) ? res.data.data.length : undefined
+        })
+        return (res.data?.data || []) as any[];
+      } catch (e: any) {
+        // Debug: error details
+        // eslint-disable-next-line no-console
+        console.error("[Users] Fetch error", {
+          error: e,
+          message: e?.message,
+          code: e?.code,
+          status: e?.response?.status,
+          data: e?.response?.data,
+          url: e?.config?.url,
+          method: e?.config?.method,
+          withCredentials: e?.config?.withCredentials,
+          baseURL: e?.config?.baseURL,
+          request: e?.request ? { withCredentials: e?.request?.withCredentials, responseURL: e?.request?.responseURL } : undefined,
+          stack: e?.stack,
+          name: e?.name
+        })
+        
+        // Don't throw error to prevent logout - return empty array instead
+        console.warn("[Users] API failed, returning empty array to prevent logout")
+        return []
+      }
     },
     staleTime: 15 * 60 * 1000, // 15 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
@@ -201,49 +178,116 @@ export function UsersPageClient() {
     }
   }, [lastRefresh, lastActivity, refetch, isRefreshing]);
 
-  // Lock user mutation with optimistic updates
-  const lockUserMutation = useMutation({
-    mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
-      return usersApi.lockUser(userId, { status });
-    },
-    onMutate: async ({ userId, status }) => {
-      await queryClient.cancelQueries({ queryKey: ["users"] });
-      const previousData = queryClient.getQueryData(["users"]);
-      
-      queryClient.setQueryData(["users"], (old: any) => {
-        if (!old) return old;
-        return old.map((user: any) =>
-          user._id === userId || user.id === userId 
-            ? { ...user, status } 
-            : user
-        );
-      });
-      
-      return { previousData };
-    },
-    onError: (err: any, variables, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(["users"], context.previousData);
-      }
-      toast({
-        title: "Lock failed",
-        description: err?.response?.data?.message || err?.message || "Failed to lock user account.",
-        variant: "destructive",
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] });
+  // Create user mutation
+  const createUserMutation = useMutation({
+    mutationFn: async (userData: { name: string; email: string; phone: string; password: string; role: string }) => {
+      console.debug("[Create User] Sending data:", userData);
+      return usersApi.createUser(userData);
     },
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "User account has been locked successfully",
+        description: "User created successfully",
         variant: "default",
       });
-      setDeleteModalOpen(false);
-      setSelectedUser(null);
+      setCreateUserModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (err: any) => {
+      // Try to get error message from various possible locations
+      let errorMessage = "Failed to create user.";
+      
+      if (err?.response?.data?.error) {
+        // If error is an object, try to extract message
+        if (typeof err.response.data.error === 'object') {
+          errorMessage = err.response.data.error.message || err.response.data.error.details || JSON.stringify(err.response.data.error);
+        } else {
+          errorMessage = err.response.data.error;
+        }
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
+      toast({
+        title: "Create failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     },
   });
+
+  // Fetch user by ID for editing
+  const fetchUserQuery = useQuery({
+    queryKey: ["user", selectedUser?.id || selectedUser?._id],
+    queryFn: async () => {
+      if (!selectedUser) return null
+      const userId = selectedUser.id || selectedUser._id
+      if (!userId) return null
+      
+      console.debug("[Users] Fetching user for edit", { userId })
+      const res = await usersApi.getUser(userId)
+      console.debug("[Users] User fetch success", { 
+        status: res.status,
+        data: res.data?.data 
+      })
+      return res.data?.data
+    },
+    enabled: !!selectedUser && editUserModalOpen,
+    staleTime: 0, // Always fetch fresh data for editing
+  })
+
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ userId, payload }: { userId: string; payload: any }) => {
+      console.debug("[Users] Update mutation", { userId, payload })
+      return usersApi.updateUser(userId, payload)
+    },
+    onSuccess: (response) => {
+      console.debug("[Users] Update success", { response: response.data })
+      toast({
+        title: "Updated",
+        description: "User updated successfully",
+      })
+      setEditUserModalOpen(false)
+      setSelectedUser(null)
+      setEditingUser(null)
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+      queryClient.invalidateQueries({ queryKey: ["user"] })
+    },
+    onError: (err: any) => {
+      console.error("[Users] Update error", err)
+      toast({
+        title: "Update failed",
+        description: err?.response?.data?.message || err?.message || "Failed to update user.",
+        variant: "destructive",
+      })
+    },
+  })
+
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: async ({ userId }: { userId: string }) => {
+      return usersApi.deleteUser(userId)
+    },
+    onSuccess: () => {
+      toast({
+        title: "Deleted",
+        description: "User deleted successfully",
+      })
+      setDeleteModalOpen(false)
+      setSelectedUser(null)
+      queryClient.invalidateQueries({ queryKey: ["users"] })
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Delete failed",
+        description: err?.response?.data?.message || err?.message || "Failed to delete user.",
+        variant: "destructive",
+      })
+    },
+  })
 
 
 
@@ -265,32 +309,35 @@ export function UsersPageClient() {
       cell: ({ row }: any) => <span>{row.original.email}</span>,
     },
     {
-      accessorKey: "phoneNumber",
+      accessorKey: "phone",
       header: "Phone",
-      cell: ({ row }: any) => <span>{row.original.phone}</span>,
+      cell: ({ row }: any) => <span>{row.original.phone || "-"}</span>,
     },
     {
-      accessorKey: "status",
+      accessorKey: "role",
+      header: "Role",
+      cell: ({ row }: any) => <span className="capitalize">{row.original.role}</span>,
+    },
+    {
+      accessorKey: "is_active",
       header: "Status",
       cell: ({ row }: any) => {
-        const status = row.getValue("status")
-        if (status === 'active') {
+        const active = !!row.original.is_active
+        if (active) {
           return <Badge className="bg-[#A4D65E] text-white">Active</Badge>
-        } else if (status === 'Inactive') {
-          return <Badge className="bg-[#FACC15] text-white">InActive</Badge>
         } 
+        return <Badge className="bg-[#FACC15] text-white">Inactive</Badge>
       },
     },
-         
-    { accessorKey: "joinedAt",
-      header: "joined At", 
+    { accessorKey: "created_at",
+      header: "Joined At", 
       cell: ({ row }: any) => (
        <div className="text-gray-600">
-         {new Date(row.original.joinedAt).toLocaleDateString("en-US", {
+         {row.original.created_at ? new Date(row.original.created_at).toLocaleDateString("en-US", {
            month: "short",
            day: "numeric",
            year: "numeric",
-         })}
+         }) : "-"}
        </div>
      ),
     },   
@@ -300,26 +347,49 @@ export function UsersPageClient() {
       cell: ({ row }: any) => {
         const user = row.original as User
         return (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2" style={{ pointerEvents: 'auto', zIndex: 20, position: 'relative' }}>
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation()
+                console.debug("[Users] View button clicked", { user })
                 setSelectedUser(user)
                 setDetailModalOpen(true)
               }}
               className="hover:bg-blue-50 hover:text-blue-600"
+              style={{ pointerEvents: 'auto' }}
+              
             >
               <Eye className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => {
+              onClick={(e) => {
+                e.stopPropagation()
+                console.debug("[Users] Edit button clicked", { user })
+                console.debug("[Users] Current modal state before:", { editUserModalOpen })
+                setSelectedUser(user)
+                setEditUserModalOpen(true)
+                console.debug("[Users] Modal state should be true now")
+              }}
+              className="hover:bg-blue-50 hover:text-blue-600"
+              style={{ pointerEvents: 'auto' }}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation()
+                console.debug("[Users] Delete button clicked", { user })
                 setSelectedUser(user)
                 setDeleteModalOpen(true)
               }}
               className="hover:bg-red-50 hover:text-red-600"
+              style={{ pointerEvents: 'auto' }}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -336,11 +406,64 @@ export function UsersPageClient() {
     const userId = selectedUser._id || selectedUser.id;
     if (!userId) return;
     
-    lockUserMutation.mutate({ userId, status: "locked" });
+    deleteUserMutation.mutate({ userId });
+  }
+
+  const handleSaveEdit = (data: Partial<User>) => {
+    if (!selectedUser) return
+    const userId = selectedUser.id || selectedUser._id
+    if (!userId) return
+    
+    // Use fresh data from API if available, fallback to selectedUser
+    const currentUser = fetchUserQuery.data || selectedUser
+    
+    const currentName = currentUser.name || ""
+    const currentEmail = currentUser.email || ""
+    const currentPhone = currentUser.phone || ""
+
+    const nextName = ((data as any).fullName ?? currentName) as string
+    const nextEmail = (data.email ?? currentEmail) as string
+    const nextPhone = ((data as any).phoneNumber ?? currentPhone) as string
+
+    const payload: Record<string, any> = {}
+    if (nextName !== currentName) payload.name = nextName
+    if (nextEmail !== currentEmail) payload.email = nextEmail
+    if (nextPhone !== currentPhone) payload.phone = nextPhone
+
+    // Debug logs
+    console.debug("[Users] Update diff", { 
+      userId, 
+      current: { currentName, currentEmail, currentPhone }, 
+      next: { nextName, nextEmail, nextPhone }, 
+      payload 
+    })
+
+    if (Object.keys(payload).length === 0) {
+      toast({ title: "No changes", description: "Nothing to update." })
+      setEditUserModalOpen(false)
+      return
+    }
+
+    updateUserMutation.mutate({ userId, payload })
   }
 
   return (
     <DashboardLayout title="Users" isFetching={isFetching}>
+      {/* Debug indicator */}
+      {editUserModalOpen && (
+        <div style={{ 
+          position: 'fixed', 
+          top: '10px', 
+          right: '10px', 
+          background: 'red', 
+          color: 'white', 
+          padding: '10px', 
+          zIndex: 9999,
+          borderRadius: '5px'
+        }}>
+          EDIT MODAL IS OPEN!
+        </div>
+      )}
       <div className="p-0">
       <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex justify-between items-center px-2 py-2">
@@ -348,30 +471,44 @@ export function UsersPageClient() {
              <h1 className="text-xl font-semibold">Users</h1>
             <p className="text-sm text-gray-400">View and manage users management</p>
           </div>
-          {/* <Button
+          <Button
             className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
+            onClick={() => setCreateUserModalOpen(true)}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Upload Document
-          </Button> */}
+            Create User
+          </Button>
         </div>
         <hr></hr>
        
 
         {error ? (
-          <div className="text-center py-10 text-red-500">{(error as any)?.message || "Failed to load users."}</div>
+          <div className="text-center py-10">
+            <div className="text-red-500 mb-2">Failed to load users</div>
+            <div className="text-sm text-gray-500">Check console for details</div>
+            <Button 
+              onClick={() => refetch()} 
+              className="mt-4"
+              variant="outline"
+            >
+              Retry
+            </Button>
+          </div>
         ) : (
           <div className="relative">
             {isFetching && !isLoading && (
-              <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
-                <Loader2 className="animate-spin w-8 h-8 text-gray-400" />
+              <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 pointer-events-none">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Loader2 className="animate-spin w-5 h-5" />
+                  Syncing users...
+                </div>
               </div>
             )}
             <DataTable 
             columns={columns}
              data={users || []} 
              searchKey="name" 
-             quickFilterKey="status"
+             quickFilterKey="role"
              searchPlaceholder="Search users by name" />
           </div>
         )}
@@ -384,6 +521,56 @@ export function UsersPageClient() {
         }}
         user={selectedUser}
       />
+      <EditUserModal
+        open={editUserModalOpen}
+        onOpenChange={(open) => {
+          console.debug("[Users] EditUserModal onOpenChange", { open, selectedUser })
+          setEditUserModalOpen(open)
+          if (!open) {
+            setSelectedUser(null)
+            setEditingUser(null)
+          }
+        }}
+        user={fetchUserQuery.data ? {
+          id: fetchUserQuery.data.id,
+          fullName: fetchUserQuery.data.name || "",
+          email: fetchUserQuery.data.email || "",
+          phoneNumber: fetchUserQuery.data.phone || "",
+          status: fetchUserQuery.data.is_active ? "Active" : "Locked",
+          role: fetchUserQuery.data.role,
+          createdAt: fetchUserQuery.data.created_at || "",
+          updatedAt: fetchUserQuery.data.updated_at || "",
+        } as any : null}
+        onSave={handleSaveEdit}
+        isLoading={updateUserMutation.isPending || fetchUserQuery.isLoading}
+      />
+      
+      {/* Simple test modal */}
+      {editUserModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '20px',
+            borderRadius: '8px',
+            minWidth: '400px'
+          }}>
+            <h2>Test Edit Modal</h2>
+            <p>Selected User: {(selectedUser as any)?.name || (selectedUser as any)?.fullName || 'No user'}</p>
+            <button onClick={() => setEditUserModalOpen(false)}>Close</button>
+          </div>
+        </div>
+      )}
       <DeleteModal
         open={deleteModalOpen}
         onOpenChange={(open) => {
@@ -391,9 +578,15 @@ export function UsersPageClient() {
           if (!open) setSelectedUser(null)
         }}
         onConfirm={handleDelete}
-        title="Lock User Account"
-        description="Are you sure you want to lock this user's account? This will prevent them from accessing the system. This action can be reversed by changing their status back to active."
-        isLoading={deleteLoading || lockUserMutation.isPending}
+        title="Delete User"
+        description="Are you sure you want to permanently delete this user? This action cannot be undone."
+        isLoading={deleteLoading || deleteUserMutation.isPending}
+      />
+      <CreateUserModal
+        open={createUserModalOpen}
+        onOpenChange={setCreateUserModalOpen}
+        onCreateUser={(userData) => createUserMutation.mutate(userData)}
+        isLoading={createUserMutation.isPending}
       />
       </div>
     </DashboardLayout>

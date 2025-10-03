@@ -4,34 +4,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 
-type User = {
-  id: string
-  name: string
-  email: string
-  phone: string
-  address: string
-  avatar?: string
-}
-
 type RequestDetail = {
   id: string
-  requestNumber: string
-  serviceType: string
-  requestType: string
-  description: string
+  user_id: string
+  assigned_to_user_id?: string
+  assigned_at?: string
+  status: "pending" | "in_progress" | "completed" | "rejected" | "cancelled"
   priority: "low" | "medium" | "high"
-  status: "pending" | "in_progress" | "completed" | "rejected"
-  requestedDate: Date
-  updatedAt: Date
-  user: User
-  attachments?: Array<{
-    id: string
-    name: string
-    url: string
-    type: string
-    size: number
-  }>
-  notes?: string
+  disability_type: string
+  service_type: string
+  description: string
+  contact_method: string
+  remarks?: string
+  is_confidential: boolean
+  created_at: string
+  updated_at: string
+  created_by_name: string
+  created_by_email: string
+  assigned_to_name?: string
+  assigned_to_email?: string
 }
 
 type RequestDetailDialogProps = {
@@ -57,6 +48,7 @@ const StatusBadge = ({ status }: { status: string }) => {
     in_progress: { label: "In Progress", color: "bg-blue-100 text-blue-800" },
     completed: { label: "Completed", color: "bg-green-100 text-green-800" },
     rejected: { label: "Rejected", color: "bg-red-100 text-red-800" },
+    cancelled: { label: "Cancelled", color: "bg-gray-100 text-gray-800" },
   }
 
   const statusInfo = statusMap[status as keyof typeof statusMap] || { label: status, color: "bg-gray-100 text-gray-800" }
@@ -72,7 +64,7 @@ export function RequestDetailDialog({ open, onOpenChange, request }: RequestDeta
         <DialogHeader className="border-b pb-4">
           <div className="flex justify-between items-center">
             <DialogTitle className="text-xl font-semibold">
-              Request #{request.requestNumber}
+              Request #{request.id}
             </DialogTitle>
             {/* <Button
               variant="ghost"
@@ -94,11 +86,11 @@ export function RequestDetailDialog({ open, onOpenChange, request }: RequestDeta
               
               <div className="flex items-start space-x-3 mb-4">
                 <div className="h-10 w-10 rounded-full bg-[#A4D65E] flex items-center justify-center text-white font-medium">
-                  {request.user.name.charAt(0).toUpperCase()}
+                  {request.created_by_name.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{request.user.name}</p>
-                  <p className="text-sm text-gray-500">{request.user.email}</p>
+                  <p className="font-medium text-gray-900">{request.created_by_name}</p>
+                  <p className="text-sm text-gray-500">{request.created_by_email}</p>
                 </div>
               </div>
 
@@ -107,21 +99,24 @@ export function RequestDetailDialog({ open, onOpenChange, request }: RequestDeta
                   <svg className="h-4 w-4 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  <span>{request.user.email}</span>
+                  <span>{request.created_by_email}</span>
                 </div>
-                <div className="flex items-center">
-                  <svg className="h-4 w-4 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
-                  <span>{request.user.phone}</span>
-                </div>
-                <div className="flex items-start">
-                  <svg className="h-4 w-4 text-gray-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span className="break-words">{request.user.address}</span>
-                </div>
+                {request.assigned_to_name && (
+                  <div className="flex items-center">
+                    <svg className="h-4 w-4 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span>Assigned to: {request.assigned_to_name}</span>
+                  </div>
+                )}
+                {request.assigned_to_email && (
+                  <div className="flex items-center">
+                    <svg className="h-4 w-4 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span>{request.assigned_to_email}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -136,11 +131,11 @@ export function RequestDetailDialog({ open, onOpenChange, request }: RequestDeta
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-gray-500">Service Type</p>
-                    <p className="font-medium">{request.serviceType}</p>
+                    <p className="font-medium capitalize">{request.service_type}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500">Request Type</p>
-                    <p className="font-medium">{request.requestType}</p>
+                    <p className="text-gray-500">Disability Type</p>
+                    <p className="font-medium capitalize">{request.disability_type}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Priority</p>
@@ -151,12 +146,20 @@ export function RequestDetailDialog({ open, onOpenChange, request }: RequestDeta
                     <StatusBadge status={request.status} />
                   </div>
                   <div>
-                    <p className="text-gray-500">Requested Date</p>
-                    <p className="font-medium">{format(new Date(request.requestedDate), "MMM dd, yyyy")}</p>
+                    <p className="text-gray-500">Contact Method</p>
+                    <p className="font-medium capitalize">{request.contact_method}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Confidential</p>
+                    <p className="font-medium">{request.is_confidential ? "Yes" : "No"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Created Date</p>
+                    <p className="font-medium">{format(new Date(request.created_at), "MMM dd, yyyy")}</p>
                   </div>
                   <div>
                     <p className="text-gray-500">Last Updated</p>
-                    <p className="font-medium">{format(new Date(request.updatedAt), "MMM dd, yyyy")}</p>
+                    <p className="font-medium">{format(new Date(request.updated_at), "MMM dd, yyyy")}</p>
                   </div>
                 </div>
               </div>
@@ -169,11 +172,11 @@ export function RequestDetailDialog({ open, onOpenChange, request }: RequestDeta
                 </p>
               </div>
 
-              {/* Notes */}
-              {request.notes && (
+              {/* Remarks */}
+              {request.remarks && (
                 <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
-                  <h3 className="font-medium text-yellow-800 mb-2">Notes</h3>
-                  <p className="text-yellow-700 whitespace-pre-line">{request.notes}</p>
+                  <h3 className="font-medium text-yellow-800 mb-2">Remarks</h3>
+                  <p className="text-yellow-700 whitespace-pre-line">{request.remarks}</p>
                 </div>
               )}
 

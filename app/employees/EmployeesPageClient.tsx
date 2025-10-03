@@ -4,175 +4,85 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { DataTable } from "@/components/data-table/data-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { packagesApi, type Package, type CreatePackageRequest, type UpdatePackageRequest } from "@/lib/api/packages"
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
+import { employeesApi, type Employee, type EmployeesResponse } from "@/lib/api/employees"
 import { useAuth } from "@/hooks/use-auth"
-import { useState, useCallback } from "react"
-import { Plus, Edit, Trash2, RotateCcw, Package as PackageIcon } from "lucide-react"
+import { useState, useCallback, useEffect } from "react"
+import { Plus, Edit, Package as PackageIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useTabVisibility } from "@/hooks/use-tab-visibility"
-import { GlobalModal } from "@/components/modals/global-modal"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { DeleteModal } from "@/components/modals/delete-modal"
+import { CreateEmployeeModal } from "@/components/modals/create-employee-modal"
 
 
 export function EmployeesPageClient() {
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [createEmployeeModalOpen, setCreateEmployeeModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(0);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { role } = useAuth();
+  const { role, user, isAuthenticated } = useAuth();
   const { isVisible, lastActivity } = useTabVisibility();
 
-  // Form states - separate for create and edit
-  const [createFormData, setCreateFormData] = useState<CreatePackageRequest>({
-    title: "",
-    description: "",
-    price: 0,
-    duration: 0,
-  });
-  
-  const [editFormData, setEditFormData] = useState<CreatePackageRequest>({
-    title: "",
-    description: "",
-    price: 0,
-    duration: 0,
+  // Debug authentication state
+  console.debug("[Employees] Auth state:", {
+    role,
+    isAuthenticated,
+    userId: user?.id,
+    userEmail: user?.email,
+    isVisible,
+    timestamp: new Date().toISOString()
   });
 
 
-  const employees = [
-    {
-      no: 1,
-      name: "Abebe Bekele",
-      position: "Software Engineer",
-      phone: "+251911223344",
-      email: "abebe.bekele@example.com",
-      salary: 25000,
-      district: "Bole",
-      type: "Permanent",
-      joinedAt: "2023-02-15"
-    },
-    {
-      no: 2,
-      name: "Mekdes Alemu",
-      position: "HR Manager",
-      phone: "+251921334455",
-      email: "mekdes.alemu@example.com",
-      salary: 22000,
-      district: "Yeka",
-      type: "Contractual",
-      joinedAt: "2022-07-01"
-    },
-    {
-      no: 3,
-      name: "Samuel Girma",
-      position: "Accountant",
-      phone: "+251911556677",
-      email: "samuel.girma@example.com",
-      salary: 18000,
-      district: "Nifas Silk",
-      type: "Permanent",
-      joinedAt: "2021-11-20"
-    },
-    {
-      no: 4,
-      name: "Hanna Tesfaye",
-      position: "Marketing Specialist",
-      phone: "+251931667788",
-      email: "hanna.tesfaye@example.com",
-      salary: 15000,
-      district: "Kolfe",
-      type: "Part-time",
-      joinedAt: "2024-04-10"
-    },
-    {
-      no: 5,
-      name: "Getachew Yonas",
-      position: "Project Manager",
-      phone: "+251911778899",
-      email: "getachew.yonas@example.com",
-      salary: 30000,
-      district: "Bole",
-      type: "Permanent",
-      joinedAt: "2020-09-05"
-    },
-    {
-      no: 6,
-      name: "Selamawit Dagne",
-      position: "UI/UX Designer",
-      phone: "+251941889900",
-      email: "selamawit.dagne@example.com",
-      salary: 19000,
-      district: "Yeka",
-      type: "Contractual",
-      joinedAt: "2023-06-18"
-    },
-    {
-      no: 7,
-      name: "Yohannes Fikru",
-      position: "System Administrator",
-      phone: "+251911990011",
-      email: "yohannes.fikru@example.com",
-      salary: 21000,
-      district: "Gullele",
-      type: "Permanent",
-      joinedAt: "2021-01-25"
-    },
-    {
-      no: 8,
-      name: "Rahel Asrat",
-      position: "Business Analyst",
-      phone: "+251931112233",
-      email: "rahel.asrat@example.com",
-      salary: 20000,
-      district: "Addis Ketema",
-      type: "Part-time",
-      joinedAt: "2024-01-12"
-    },
-    {
-      no: 9,
-      name: "Mesfin Tadesse",
-      position: "Data Scientist",
-      phone: "+251921223344",
-      email: "mesfin.tadesse@example.com",
-      salary: 28000,
-      district: "Arada",
-      type: "Permanent",
-      joinedAt: "2022-05-30"
-    },
-    {
-      no: 10,
-      name: "Lidya Gebremariam",
-      position: "Operations Officer",
-      phone: "+251911334455",
-      email: "lidya.gebremariam@example.com",
-      salary: 17000,
-      district: "Kirkos",
-      type: "Contractual",
-      joinedAt: "2023-09-14"
-    }
-  ];
   
 
-  // Fetch packages with performance optimizations
+  // Fetch employees with performance optimizations
   const {
-    data: packages,
+    data: employees,
     isLoading,
     isFetching,
     error,
     refetch,
   } = useQuery({
-    queryKey: ["packages"],
+    queryKey: ["employees"],
     queryFn: async () => {
-      // const res = await packagesApi.getPackages();
-      return employees;
+      console.debug("[Employees] Fetch start", { 
+        params: { page: 1, limit: 50, q: "", sort: "" },
+        isVisible,
+        role,
+        timestamp: new Date().toISOString()
+      });
+      try {
+        const res = await employeesApi.getEmployees({ page: 1, limit: 50, q: "", sort: "" });
+        console.debug("[Employees] Fetch success", { 
+          status: res.status,
+          dataLength: res.data?.data?.length || 0,
+          paging: res.data?.paging
+        });
+        return (res.data?.data || []) as Employee[];
+      } catch (e: any) {
+        // Enhanced error logging
+        console.error("[Employees] Fetch error", {
+          error: e,
+          message: e?.message,
+          code: e?.code,
+          status: e?.response?.status,
+          data: e?.response?.data,
+          url: e?.config?.url,
+          method: e?.config?.method,
+          withCredentials: e?.config?.withCredentials,
+          baseURL: e?.config?.baseURL,
+          request: e?.request ? { withCredentials: e?.request?.withCredentials, responseURL: e?.request?.responseURL } : undefined,
+          stack: e?.stack,
+          name: e?.name
+        });
+        
+        // Don't throw error to prevent logout - return empty array instead
+        console.warn("[Employees] API failed, returning empty array to prevent logout");
+        return [];
+      }
     },
     staleTime: 15 * 60 * 1000, // 15 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
@@ -182,136 +92,67 @@ export function EmployeesPageClient() {
     refetchInterval: false,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    enabled: isVisible && role === "admin",
+    enabled: isVisible && role === "admin" && isAuthenticated,
   });
 
-  // Create package mutation with optimistic updates
-  const createPackageMutation = useMutation({
-    mutationFn: async (data: CreatePackageRequest) => {
-      return packagesApi.createPackage(data);
-    },
-    onMutate: async (newPackage) => {
-      await queryClient.cancelQueries({ queryKey: ["packages"] });
-      const previousData = queryClient.getQueryData(["packages"]);
-      
-      // Optimistically add the new package
-      queryClient.setQueryData(["packages"], (old: Package[] | undefined) => {
-        if (!old) return old;
-        const optimisticPackage: Package = {
-          _id: `temp-${Date.now()}`,
-          id: `temp-${Date.now()}`,
-          title: newPackage.title,
-          description: newPackage.description,
-          price: Number(newPackage.price),
-          duration: Number(newPackage.duration),
-          createdBy: {
-            _id: "temp",
-            fullName: "You",
-            role: "admin"
-          },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          __v: 0,
-        };
-        return [optimisticPackage, ...old];
+  // Monitor error state for debugging
+  useEffect(() => {
+    if (error) {
+      console.error("[Employees] Query error detected:", {
+        error,
+        message: error?.message,
+        status: (error as any)?.response?.status,
+        data: (error as any)?.response?.data,
+        stack: error?.stack,
+        timestamp: new Date().toISOString()
       });
-      
-      return { previousData };
-    },
-    onError: (err: any, variables, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(["packages"], context.previousData);
-      }
-      toast({ 
-        title: "Error", 
-        description: err?.response?.data?.message || "Failed to create package.", 
-        variant: "destructive" 
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["packages"] });
-    },
-    onSuccess: () => {
-      toast({ title: "Success", description: "Package created successfully.", variant: "default" });
-      setCreateModalOpen(false);
-      resetCreateForm();
-    },
-  });
+    }
+  }, [error]);
 
-  // Update package mutation with optimistic updates
-  const updatePackageMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: UpdatePackageRequest }) => {
-      return packagesApi.updatePackage(id, data);
-    },
-    onMutate: async ({ id, data }) => {
-      await queryClient.cancelQueries({ queryKey: ["packages"] });
-      const previousData = queryClient.getQueryData(["packages"]);
-      
-      queryClient.setQueryData(["packages"], (old: Package[] | undefined) => {
-        if (!old) return old;
-        return old.map((pkg) =>
-          pkg._id === id 
-            ? { ...pkg, ...data, updatedAt: new Date().toISOString() }
-            : pkg
-        );
-      });
-      
-      return { previousData };
-    },
-    onError: (err: any, variables, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(["packages"], context.previousData);
-      }
-      toast({ 
-        title: "Error", 
-        description: err?.response?.data?.message || "Failed to update package.", 
-        variant: "destructive" 
-      });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["packages"] });
-    },
-    onSuccess: () => {
-      toast({ title: "Success", description: "Package updated successfully.", variant: "default" });
-      setEditModalOpen(false);
-      setSelectedPackage(null);
-      resetEditForm();
-    },
-  });
+  // Employee mutations can be added here when needed
 
-  // Delete package mutation with optimistic updates
-  const deletePackageMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return packagesApi.deletePackage(id);
+  // Create employee mutation
+  const createEmployeeMutation = useMutation({
+    mutationFn: async (employeeData: any) => {
+      console.debug("[Create Employee] Sending data:", employeeData);
+      return employeesApi.createEmployee(employeeData);
     },
-    onMutate: async (id) => {
-      await queryClient.cancelQueries({ queryKey: ["packages"] });
-      const previousData = queryClient.getQueryData(["packages"]);
-      
-      queryClient.setQueryData(["packages"], (old: Package[] | undefined) => {
-        if (!old) return old;
-        return old.filter((pkg) => pkg._id !== id);
+    onSuccess: (response) => {
+      console.debug("[Create Employee] Success:", response.data);
+      toast({
+        title: "Success",
+        description: "Employee created successfully",
+        variant: "default",
       });
-      
-      return { previousData };
+      setCreateEmployeeModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
     },
-    onError: (err: any, variables, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(["packages"], context.previousData);
+    onError: (err: any) => {
+      console.error("[Create Employee] Error:", err);
+      console.error("[Create Employee] Error response:", err?.response?.data);
+      console.error("[Create Employee] Error response details:", JSON.stringify(err?.response?.data, null, 2));
+      console.error("[Create Employee] Error status:", err?.response?.status);
+      console.error("[Create Employee] Request data:", err?.config?.data);
+      
+      let errorMessage = "Failed to create employee.";
+      
+      if (err?.response?.data?.error) {
+        if (typeof err.response.data.error === 'object') {
+          errorMessage = err.response.data.error.message || err.response.data.error.details || JSON.stringify(err.response.data.error);
+        } else {
+          errorMessage = err.response.data.error;
+        }
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err?.message) {
+        errorMessage = err.message;
       }
-      toast({ 
-        title: "Error", 
-        description: err?.response?.data?.message || "Failed to delete package.", 
-        variant: "destructive" 
+      
+      toast({
+        title: "Create failed",
+        description: errorMessage,
+        variant: "destructive",
       });
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["packages"] });
-    },
-    onSuccess: () => {
-      toast({ title: "Success", description: "Package deleted successfully.", variant: "default" });
-      setDeleteModalOpen(false);
-      setSelectedPackage(null);
     },
   });
 
@@ -344,112 +185,12 @@ export function EmployeesPageClient() {
   }, [lastRefresh, lastActivity, refetch, isRefreshing]);
 
   
-  // Form handlers
-  const resetCreateForm = () => {
-    setCreateFormData({
-      title: "",
-      description: "",
-      price: 0,
-      duration: 0,
-    });
-  };
-  
-  const resetEditForm = () => {
-    setEditFormData({
-      title: "",
-      description: "",
-      price: 0,
-      duration: 0,
-    });
+  const handleEditEmployee = (employee: Employee) => {
+    setSelectedEmployee(employee);
+    // TODO: Add edit modal functionality
+    console.log('Edit employee:', employee);
   };
 
-  const handleCreate = () => {
-    console.log('handleCreate -> submitting', createFormData);
-    createPackageMutation.mutate(createFormData);
-  };
-
-  const handleEdit = () => {
-    if (!selectedPackage) return;
-    console.log('handleEdit -> submitting', { id: selectedPackage._id, data: editFormData });
-    updatePackageMutation.mutate({ 
-      id: selectedPackage._id, 
-      data: editFormData 
-    });
-  };
-
-  const handleDelete = () => {
-    if (!selectedPackage) return;
-    console.log('handleDelete -> submitting', { id: selectedPackage._id, title: selectedPackage.title });
-    deletePackageMutation.mutate(selectedPackage._id);
-  };
-
-  const openEditModal = (pkg: Package) => {
-    setSelectedPackage(pkg);
-    setEditFormData({
-      title: pkg.title,
-      description: pkg.description,
-      price: pkg.price,
-      duration: pkg.duration,
-    });
-    setEditModalOpen(true);
-  };
-
-  const openDeleteModal = (pkg: Package) => {
-    setSelectedPackage(pkg);
-    setDeleteModalOpen(true);
-  };
-
-  const openCreateModal = () => {
-    resetCreateForm();
-    setCreateModalOpen(true);
-  };
-
-  const handleEditPackage = (pkg: Package) => {
-    setSelectedPackage(pkg);
-    setEditFormData({
-      title: pkg.title,
-      description: pkg.description,
-      price: pkg.price,
-      duration: pkg.duration,
-    });
-    setEditModalOpen(true);
-  };
-
-  // Helper function to format duration for display
-  const formatDuration = (days: number) => {
-    if (days >= 365) {
-      const years = Math.floor(days / 365);
-      const remainingDays = days % 365;
-      
-      if (remainingDays === 0) {
-        return years === 1 ? `${years} year` : `${years} years`;
-      } else if (remainingDays >= 30) {
-        const months = Math.floor(remainingDays / 30);
-        const finalRemainingDays = remainingDays % 30;
-        
-        if (finalRemainingDays === 0) {
-          return `${years} year${years !== 1 ? 's' : ''} ${months} month${months !== 1 ? 's' : ''}`;
-        } else {
-          return `${years} year${years !== 1 ? 's' : ''} ${months} month${months !== 1 ? 's' : ''} ${finalRemainingDays} day${finalRemainingDays !== 1 ? 's' : ''}`;
-        }
-      } else {
-        return `${years} year${years !== 1 ? 's' : ''} ${remainingDays} day${remainingDays !== 1 ? 's' : ''}`;
-      }
-    } else if (days >= 30) {
-      const months = Math.floor(days / 30);
-      const remainingDays = days % 30;
-      
-      if (remainingDays === 0) {
-        return months === 1 ? `${months} month` : `${months} months`;
-      } else {
-        return `${months} month${months !== 1 ? 's' : ''} ${remainingDays} day${remainingDays !== 1 ? 's' : ''}`;
-      }
-    } else if (days === 1) {
-      return `${days} day`;
-    } else {
-      return `${days} days`;
-    }
-  };
 
   // Table columns
   const columns = [
@@ -460,33 +201,42 @@ export function EmployeesPageClient() {
       enableSorting: false,
     },
     {
-      accessorKey: "name",
+      accessorKey: "user_name",
       header: "Full Name",
       cell: ({ row }: any) => (
-        <div className="font-medium text-gray-900">{row.original.name}</div>
+        <div className="font-medium text-gray-900">{row.original.user_name}</div>
       ),
     },
     {
-      accessorKey: "phone",
+      accessorKey: "user_phone",
       header: "Phone",
       cell: ({ row }: any) => (
-        <div className="text-gray-600 max-w-xs truncate" title={row.original.phone}>
-          {row.original.phone}
+        <div className="text-gray-600 max-w-xs truncate" title={row.original.user_phone || "No phone"}>
+          {row.original.user_phone || "N/A"}
         </div>
       ),
     },
     {
-      accessorKey: "email",
+      accessorKey: "user_email",
       header: "Email",
       cell: ({ row }: any) => (
-        <div className="text-gray-600">{row.original.email}</div>
+        <div className="text-gray-600">{row.original.user_email}</div>
       ),
     },
     {
-      accessorKey: "position",
-      header: "Position",
+      accessorKey: "job_title",
+      header: "Job Title",
       cell: ({ row }: any) => (
-        <div className="text-gray-600">{row.original.position}</div>
+        <div className="text-gray-600">{row.original.job_title}</div>
+      ),
+    },
+    {
+      accessorKey: "department",
+      header: "Department",
+      cell: ({ row }: any) => (
+        <Badge className="bg-blue-100 text-blue-800 border border-blue-200">
+          {row.original.department}
+        </Badge>
       ),
     },
     {
@@ -494,7 +244,7 @@ export function EmployeesPageClient() {
       header: "Salary (Birr)",
       cell: ({ row }: any) => (
         <Badge className="bg-green-100 text-green-800 border border-green-200">
-          {row.original.salary} Br
+          {parseFloat(row.original.salary).toLocaleString()} Br
         </Badge>
       ),
     },
@@ -506,14 +256,14 @@ export function EmployeesPageClient() {
       ),
     },
     {
-      accessorKey: "type",
+      accessorKey: "employment_type",
       header: "Employment Type",
       cell: ({ row }: any) => {
-        const type = row.original.type;
+        const type = row.original.employment_type;
         const typeColors: Record<string, string> = {
-          Permanent: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-          "Part-time": "bg-blue-50 text-blue-700 border border-blue-200",
-          Contractual: "bg-rose-50 text-rose-700 border border-rose-200",
+          full_time: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+          part_time: "bg-blue-50 text-blue-700 border border-blue-200",
+          contractual: "bg-rose-50 text-rose-700 border border-rose-200",
         };
     
         return (
@@ -521,27 +271,38 @@ export function EmployeesPageClient() {
             className={`${typeColors[type] || "bg-gray-50 text-gray-700 border border-gray-200"} 
               px-3 py-1 rounded-full text-xs font-medium`}
           >
-            {type}
+            {type.replace('_', ' ').toUpperCase()}
           </Badge>
         );
       },
     },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }: any) => {
+        const status = row.original.status;
+        const statusColors: Record<string, string> = {
+          active: "bg-green-50 text-green-700 border border-green-200",
+          inactive: "bg-red-50 text-red-700 border border-red-200",
+          terminated: "bg-gray-50 text-gray-700 border border-gray-200",
+        };
     
-    // {
-    //   accessorKey: "email",
-    //   header: "DuraEmailtion (Days)",
-    //   cell: ({ row }: any) => (
-    //     <Badge className="bg-blue-100 text-blue-800 border border-blue-200">
-    //       {formatDuration(row.original.duration)}
-    //     </Badge>
-    //   ),
-    // },
-   
-    { accessorKey: "joinedAt",
-      header: "Joined At", 
+        return (
+          <Badge
+            className={`${statusColors[status] || "bg-gray-50 text-gray-700 border border-gray-200"} 
+              px-3 py-1 rounded-full text-xs font-medium`}
+          >
+            {status.toUpperCase()}
+          </Badge>
+        );
+      },
+    },
+    { 
+      accessorKey: "hired_at",
+      header: "Hired At", 
       cell: ({ row }: any) => (
        <div className="text-gray-600">
-         {new Date(row.original.joinedAt).toLocaleDateString("en-US", {
+         {new Date(row.original.hired_at).toLocaleDateString("en-US", {
            month: "short",
            day: "numeric",
            year: "numeric",
@@ -553,35 +314,20 @@ export function EmployeesPageClient() {
       id: "actions",
       header: "Actions",
       cell: ({ row }: any) => {
-        const pkg = row.original as Package;
+        const employee = row.original as Employee;
         return (
           <div className="flex items-center space-x-2">
             <Button
-              data-packages-action
+              data-employees-action
               variant="ghost"
               size="icon"
-              onClick={() =>handleEditPackage(pkg)}
+              onClick={() => handleEditEmployee(employee)}
               onMouseDown={(e) => { e.stopPropagation(); }}
               className="hover:bg-blue-50 hover:text-blue-600 pointer-events-auto relative z-20"
-              title="Edit package"
+              title="Edit employee"
             >
               <Edit className="h-4 w-4" />
             </Button>
-            {/* <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                console.log('Delete clicked', pkg._id || pkg.id);
-                toast({ title: 'Confirm delete', description: pkg.title });
-                setSelectedPackage(pkg);
-                setDeleteModalOpen(true);
-              }}
-              onMouseDown={(e) => { e.stopPropagation(); }}
-              className="hover:bg-red-50 hover:text-red-600 pointer-events-auto relative z-20"
-              title="Delete package"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button> */}
           </div>
         );
       },
@@ -609,29 +355,38 @@ export function EmployeesPageClient() {
               <p className="text-sm text-gray-400">View and manage employees lists</p>
             </div>
             <div className="flex gap-2">
-                {/* Employee Documents - Blue */}
+                {/* Create Employee - Primary */}
                 <Button
+                  className="bg-[#4082ea] hover:bg-[#4082ea] text-white transition-colors shadow-sm"
+                  onClick={() => setCreateEmployeeModalOpen(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Employee
+                </Button>
+
+                {/* Employee Documents - Blue */}
+                {/* <Button
                   className="bg-[#3B82F6] hover:bg-[#2563EB] text-white transition-colors shadow-sm"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Employee Documents
-                </Button>
+                </Button> */}
 
                 {/* Attendance Tracking - Green */}
-                <Button
+                {/* <Button
                   className="bg-[#10B981] hover:bg-[#059669] text-white transition-colors shadow-sm"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Attendance Tracking
-                </Button>
+                </Button> */}
 
                 {/* Employee Profile - Amber */}
-                <Button
+                {/* <Button
                   className="bg-[#F59E0B] hover:bg-[#D97706] text-white transition-colors shadow-sm"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Employee Profile
-                </Button>
+                </Button> */}
               </div>
 
 
@@ -639,200 +394,45 @@ export function EmployeesPageClient() {
           </div>
           <hr></hr>
 
-        {/* Packages Table */}
+        {/* Employees Table */}
         {error ? (
-          <div className="text-center py-10 text-red-500">
-            {(error as any)?.message || "Failed to load packages."}
+          <div className="text-center py-10">
+            <div className="text-red-500 mb-2">Failed to load employees</div>
+            <div className="text-sm text-gray-500">Check console for details</div>
+            <Button
+              onClick={() => refetch()}
+              className="mt-4"
+              variant="outline"
+            >
+              Retry
+            </Button>
           </div>
         ) : (
           <div className="relative pointer-events-auto z-0">
             {isFetching && !isLoading && (
-              <div data-packages-overlay className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 pointer-events-none">
+              <div data-employees-overlay className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 pointer-events-none">
                 <div className="flex items-center gap-2 text-gray-600">
                   <PackageIcon className="animate-spin w-5 h-5" />
-                  Syncing packages...
+                  Syncing employees...
                 </div>
               </div>
             )}
             <DataTable 
               columns={columns} 
-              data={packages || []} 
-              searchKey="name" 
-              quickFilterKey="type"
+              data={Array.isArray(employees) ? employees : []} 
+              searchKey="user_name" 
+              quickFilterKey="employment_type"
               searchPlaceholder="Search Employees by name..." 
             />
           </div>
         )}
       </div>
 
-      {/* Create Package Modal */}
-      <GlobalModal
-        open={createModalOpen}
-        onOpenChange={(open) => {
-          console.log('CreateModal onOpenChange', open);
-          if (!open) {
-            toast({ title: 'Create modal closed' });
-          }
-          setCreateModalOpen(open);
-        }}
-        title="Create New Package"
-      >
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="title">Package Title</Label>
-            <Input
-              id="title"
-              value={createFormData.title}
-              onChange={(e) => setCreateFormData({ ...createFormData, title: e.target.value })}
-              placeholder="e.g., 1 Month Package"
-            />
-          </div>
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={createFormData.description}
-              onChange={(e) => setCreateFormData({ ...createFormData, description: e.target.value })}
-              placeholder="Describe the package features and benefits"
-              rows={3}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="price">Price (Birr)</Label>
-              <Input
-                id="price"
-                type="number"
-                value={createFormData.price}
-                onChange={(e) => setCreateFormData({ ...createFormData, price: Number(e.target.value) })}
-                placeholder="100"
-                min="0"
-              />
-            </div>
-            <div>
-              <Label htmlFor="duration">Duration (Days)</Label>
-              <Input
-                id="duration"
-                type="number"
-                value={createFormData.duration}
-                onChange={(e) => setCreateFormData({ ...createFormData, duration: Number(e.target.value) })}
-                placeholder="30"
-                min="1"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setCreateModalOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreate}
-              disabled={createPackageMutation.isPending || !createFormData.title || !createFormData.description}
-              className="bg-[#A4D65E] hover:bg-[#A4D65E]/90"
-            >
-              {createPackageMutation.isPending ? "Creating..." : "Create Package"}
-            </Button>
-          </div>
-        </div>
-      </GlobalModal>
-
-      {/* Edit Package Modal */}
-      <GlobalModal
-        open={editModalOpen}
-        onOpenChange={(open) => {
-          console.log('EditModal onOpenChange', open);
-          setEditModalOpen(open);
-          if (!open) {
-            setSelectedPackage(null);
-            resetEditForm();
-            toast({ title: 'Edit modal closed' });
-          }
-        }}
-        title="Edit Package"
-      >
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="edit-title">Package Title</Label>
-            <Input
-              id="edit-title"
-              value={editFormData.title}
-              onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-              placeholder="e.g., 1 Month Package"
-            />
-          </div>
-          <div>
-            <Label htmlFor="edit-description">Description</Label>
-            <Textarea
-              id="edit-description"
-              value={editFormData.description}
-              onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-              placeholder="Describe the package features and benefits"
-              rows={3}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="edit-price">Price (Birr)</Label>
-              <Input
-                id="edit-price"
-                type="number"
-                value={editFormData.price}
-                onChange={(e) => setEditFormData({ ...editFormData, price: Number(e.target.value) })}
-                placeholder="100"
-                min="0"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-duration">Duration (Days)</Label>
-              <Input
-                id="edit-duration"
-                type="number"
-                value={editFormData.duration}
-                onChange={(e) => setEditFormData({ ...editFormData, duration: Number(e.target.value) })}
-                placeholder="30"
-                min="1"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setEditModalOpen(false);
-                setSelectedPackage(null);
-                resetEditForm();
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleEdit}
-              disabled={updatePackageMutation.isPending || !editFormData.title || !editFormData.description}
-              className="bg-[#A4D65E] hover:bg-[#A4D65E]/90"
-            >
-              {updatePackageMutation.isPending ? "Updating..." : "Update Package"}
-            </Button>
-          </div>
-        </div>
-      </GlobalModal>
-
-      {/* Delete Package Modal */}
-      <DeleteModal
-        open={deleteModalOpen}
-        onOpenChange={(open) => {
-          console.log('DeleteModal onOpenChange', open);
-          if (!open) {
-            toast({ title: 'Delete modal closed' });
-          }
-          setDeleteModalOpen(open);
-        }}
-        onConfirm={handleDelete}
-        title="Delete Package"
-        description={`Are you sure you want to delete "${selectedPackage?.title}"? This action cannot be undone.`}
-        isLoading={deletePackageMutation.isPending}
+      <CreateEmployeeModal
+        open={createEmployeeModalOpen}
+        onOpenChange={setCreateEmployeeModalOpen}
+        onCreateEmployee={(employeeData) => createEmployeeMutation.mutate(employeeData)}
+        isLoading={createEmployeeMutation.isPending}
       />
       </div>
     </DashboardLayout>

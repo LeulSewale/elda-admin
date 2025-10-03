@@ -12,10 +12,12 @@ import {
 
 type Ticket = {
   id: string | number;
-  title: string;
+  title?: string;
+  subject?: string;
   description: string;
-  status: "open" | "closed";
-  createdAt: string | number | Date;
+  status: "open" | "closed" | "in_progress" | "pending";
+  createdAt?: string | number | Date;
+  created_at?: string | number | Date;
 };
 
 const fmt = new Intl.DateTimeFormat(undefined, {
@@ -51,6 +53,22 @@ const palette: Record<
     dot: "bg-emerald-500",
     borderHover: "hover:border-emerald-300",
   },
+  in_progress: {
+    chip: "bg-yellow-50 text-yellow-700 ring-1 ring-yellow-200",
+    iconBg: "bg-yellow-50",
+    iconFg: "text-yellow-600",
+    iconRing: "ring-1 ring-yellow-200",
+    dot: "bg-yellow-500",
+    borderHover: "hover:border-yellow-300",
+  },
+  pending: {
+    chip: "bg-gray-50 text-gray-700 ring-1 ring-gray-200",
+    iconBg: "bg-gray-50",
+    iconFg: "text-gray-600",
+    iconRing: "ring-1 ring-gray-200",
+    dot: "bg-gray-500",
+    borderHover: "hover:border-gray-300",
+  },
 };
 
 export function TicketCardOutline({
@@ -62,13 +80,34 @@ export function TicketCardOutline({
   onClick: (t: Ticket) => void;
   onReadMore?: (t: Ticket) => void;
 }) {
-  const colors = palette[ticket.status];
+  const colors = palette[ticket.status] || palette.open;
+  
+  // Get the display title (subject or title)
+  const displayTitle = ticket.subject || ticket.title || "Untitled Ticket";
+  
+  // Get the creation date with proper validation
+  const getCreationDate = () => {
+    const dateValue = ticket.created_at || ticket.createdAt;
+    if (!dateValue) return "Unknown date";
+    
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) {
+        console.warn("Invalid date value:", dateValue);
+        return "Invalid date";
+      }
+      return fmt.format(date);
+    } catch (error) {
+      console.warn("Error formatting date:", dateValue, error);
+      return "Invalid date";
+    }
+  };
 
   return (
     <Card
       role="article"
       tabIndex={0}
-      aria-label={`${ticket.title} — ${ticket.status}`}
+      aria-label={`${displayTitle} — ${ticket.status}`}
       onClick={() => onClick(ticket)}
       className={[
         "group relative h-full rounded-xl bg-white/90",
@@ -83,11 +122,13 @@ export function TicketCardOutline({
         <div
           className={`grid size-10 place-items-center rounded-full ${colors.iconBg} ${colors.iconRing} ${colors.iconFg}`}
         >
-          {/* pick icon by status (support icon by default) */}
+          {/* pick icon by status */}
           {ticket.status === "open" ? (
             <AlertCircle className="h-5 w-5" />
           ) : ticket.status === "closed" ? (
             <CheckCircle2 className="h-5 w-5" />
+          ) : ticket.status === "in_progress" ? (
+            <Clock className="h-5 w-5" />
           ) : (
             <LifeBuoy className="h-5 w-5" />
           )}
@@ -95,11 +136,11 @@ export function TicketCardOutline({
 
         <div className="min-w-0">
           <h3 className="truncate text-[16px] font-semibold tracking-tight text-slate-900 dark:text-zinc-50">
-            {ticket.title}
+            {displayTitle}
           </h3>
           <div className="mt-0.5 flex items-center gap-1 text-xs text-slate-500 dark:text-zinc-300">
             <Clock className="h-3.5 w-3.5" />
-            <time>{fmt.format(new Date(ticket.createdAt))}</time>
+            <time>{getCreationDate()}</time>
           </div>
         </div>
 

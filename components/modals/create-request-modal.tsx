@@ -54,6 +54,20 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files)
+      
+      // Check if adding these files would exceed the 5 file limit
+      if (files.length + newFiles.length > 5) {
+        alert(`You can only upload up to 5 files. Currently you have ${files.length} files selected.`);
+        return;
+      }
+      
+      // Validate file sizes (max 10MB per file)
+      const oversizedFiles = newFiles.filter(file => file.size > 10 * 1024 * 1024);
+      if (oversizedFiles.length > 0) {
+        alert(`Some files are too large. Maximum file size is 10MB.`);
+        return;
+      }
+      
       setFiles(prev => [...prev, ...newFiles])
     }
   }
@@ -89,11 +103,22 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
 
   const handleSubmit = () => {
     if (isStepValid(currentStep)) {
-      const formDataWithFiles = {
-        ...formData,
-        files: files
+      // Transform form data to match API structure
+      const apiData = {
+        priority: formData.urgency,
+        disability_type: formData.disability,
+        service_type: formData.serviceType,
+        description: formData.issueDescription,
+        contact_method: formData.preferredContact,
+        remarks: formData.additionalNotes,
+        is_confidential: false,
       }
-      onSubmit?.(formDataWithFiles)
+      
+      console.debug("[Create Request] Submitting data:", apiData)
+      console.debug("[Create Request] Files:", files)
+      
+      // Pass both data and files to the parent component
+      onSubmit?.({ data: apiData, files: files })
       onOpenChange(false)
       setCurrentStep(1)
       setFiles([])
@@ -245,9 +270,13 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                       <SelectValue placeholder="Select service type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="visually-impaired">Visually Impaired</SelectItem>
-                      <SelectItem value="hearing-impaired">Hearing Impaired</SelectItem>
-                      <SelectItem value="mobility-support">Mobility Support</SelectItem>
+                      <SelectItem value="internet">Internet Service</SelectItem>
+                      <SelectItem value="legal">Legal Assistance</SelectItem>
+                      <SelectItem value="healthcare">Healthcare</SelectItem>
+                      <SelectItem value="education">Education</SelectItem>
+                      <SelectItem value="employment">Employment</SelectItem>
+                      <SelectItem value="transportation">Transportation</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -269,11 +298,14 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                     className="hidden"
                     multiple
                     onChange={handleFileChange}
-                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                    accept="*/*"
                   />
                   <Upload className="mx-auto mb-2 text-[#4082ea]" size={32} />
                   <p className="text-sm text-gray-600">Click to upload or drag & drop</p>
-                  <p className="text-xs text-gray-400">PDF, DOC, DOCX, PNG, JPG (max 10MB)</p>
+                  <p className="text-xs text-gray-400">Any file type (max 5 files, 10MB each)</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Files selected: {files.length}/5
+                  </p>
                 </div>
                 
                 {files.length > 0 && (

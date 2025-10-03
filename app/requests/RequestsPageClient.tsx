@@ -1,23 +1,23 @@
 "use client"
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { companiesApi } from "@/lib/api/companies"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/data-table/data-table"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@radix-ui/react-tooltip"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { useState, useEffect, useCallback } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import React, { useState, useEffect, useCallback } from "react"
 import { 
   Eye, 
   Plus, 
  
 } from "lucide-react"
 
-import { dummyRequests } from "@/lib/dummy-data"
-
 import { CreateRequestModal } from "@/components/modals/create-request-modal"
 import { useAuth } from "@/hooks/use-auth"
+import { useRequests } from "@/hooks/use-requests"
+import { requestsApi } from "@/lib/api/requests"
+import { toast } from "@/hooks/use-toast"
 
 
 /**
@@ -98,33 +98,34 @@ function useTabVisibility() {
 export default function RequestsPageClient() {
   const queryClient = useQueryClient();
   const { isVisible, lastActivity } = useTabVisibility();
-  const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
   const [openModal, setOpenModal] = useState(false);
-  const [action, setAction] = useState<"approve" | "reject" | null>(null);
   const [lastRefresh, setLastRefresh] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { role } = useAuth();
 
+  // Use the custom hook for role-based request fetching
+  const { requests, isLoading, isFetching, refetch, userRole } = useRequests();
 
-  
-  
-  // Fetch pending companies with ADVANCED PERFORMANCE OPTIMIZATIONS
-  const { data, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ["pending-companies"],
-    queryFn: async () => {
-      // const res = await companiesApi.getCompanies({ status: "pending" });
-      return dummyRequests;
+  // Create request mutation for users
+  const createRequestMutation = useMutation({
+    mutationFn: ({ data, files }: { data: any, files: File[] }) => requestsApi.createRequest(data, files),
+    onSuccess: () => {
+      toast({
+        title: "Request Created",
+        description: "Your request has been submitted successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["requests", userRole] });
+      setOpenModal(false);
     },
-    // 🚀 ADVANCED CACHING CONFIGURATION
-    staleTime: 15 * 60 * 1000, // 15 minutes - data considered fresh for 15 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes - cache kept in memory for 30 minutes
-    refetchOnWindowFocus: false, // Prevent refetch on window focus
-    refetchOnMount: false, // Prevent refetch on component mount if data exists
-    refetchOnReconnect: true, // Refetch on network reconnect for data consistency
-    refetchInterval: false, // Disable automatic refetching
-    retry: 2, // Retry failed requests up to 2 times
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    enabled: isVisible, // Only fetch when tab is visible
+    onError: (error: any) => {
+      console.error("[Requests] Create request error:", error);
+      toast({
+        title: "Error",
+        description: error?.response?.data?.message || "Failed to create request.",
+        variant: "destructive",
+      });
+    },
   });
 
   // Approve/Reject mutation with OPTIMISTIC UPDATES
@@ -211,75 +212,121 @@ export default function RequestsPageClient() {
     }
   }, [isVisible, lastActivity]);
 
-  // Flatten data for table
-  const tableData = (data || []).map((company: any, i: number) => ({
-    ...company,
+  // Flatten data for table with proper error handling
+  const tableData = React.useMemo(() => {
+    console.debug("[Requests] Processing requests data:", requests);
+    
+    // Handle different data structures
+    let requestsArray: any[] = [];
+    
+    if (Array.isArray(requests)) {
+      requestsArray = requests;
+    } else if (requests && typeof requests === 'object') {
+      // If requests is an object with a data property
+      if ('data' in requests && Array.isArray((requests as any).data)) {
+        requestsArray = (requests as any).data;
+      } else if ('requests' in requests && Array.isArray((requests as any).requests)) {
+        requestsArray = (requests as any).requests;
+      } else {
+        console.warn("[Requests] Unexpected requests data structure:", requests);
+        requestsArray = [];
+      }
+    } else {
+      console.warn("[Requests] Requests is not an array or object:", requests);
+      requestsArray = [];
+    }
+    
+    return requestsArray.map((request: any, i: number) => ({
+      ...request,
     no: i + 1,
-    title: company.title || "",
-    phone: company.phone || "",
-    serviceType: company.serviceType || "",
-    createdAt: company.createdAt,
-    status: company.status,
-  }));
+      id: request.id,
+      description: request.description || "",
+      created_by_name: request.created_by_name || "",
+      created_by_email: request.created_by_email || "",
+      assigned_to_name: request.assigned_to_name || "",
+      assigned_to_email: request.assigned_to_email || "",
+      service_type: request.service_type || "",
+      disability_type: request.disability_type || "",
+      priority: request.priority || "",
+      status: request.status || "",
+      created_at: request.created_at,
+      updated_at: request.updated_at,
+    }));
+  }, [requests]);
 
   // Table columns
   const columns = [
     { accessorKey: "no", header: "No", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
-    { accessorKey: "id", header: "ID", cell: ({ row }: any) => <span className="font-medium">{row.original.id}</span> },
-    { accessorKey: "title", header: "Title", cell: ({ row }: any) => <div className="font-medium">{row.original.title}</div> },
-    { accessorKey: "phone", header: "Contact", cell: ({ row }: any) => <div className="text-gray-600">{row.original.phone}</div> },
-    { accessorKey: "serviceType", header: "Service Type", cell: ({ row }: any) => <div className="text-gray-600">{row.original.email}</div> },
+    { accessorKey: "id", header: "Request ID", cell: ({ row }: any) => <span className="font-medium text-xs">{row.original.id}</span> },
+    { accessorKey: "description", header: "Description", cell: ({ row }: any) => (
+      <div className="max-w-xs truncate" title={row.original.description}>
+        {row.original.description}
+      </div>
+    )},
+    { accessorKey: "created_by_name", header: "Created By", cell: ({ row }: any) => (
+      <div className="text-gray-600">
+        <div className="font-medium">{row.original.created_by_name}</div>
+        <div className="text-xs text-gray-500">{row.original.created_by_email}</div>
+      </div>
+    )},
+    { accessorKey: "assigned_to_name", header: "Assigned To", cell: ({ row }: any) => (
+      <div className="text-gray-600">
+        <div className="font-medium">{row.original.assigned_to_name || "Unassigned"}</div>
+        {row.original.assigned_to_email && (
+          <div className="text-xs text-gray-500">{row.original.assigned_to_email}</div>
+        )}
+      </div>
+    )},
+    { accessorKey: "service_type", header: "Service Type", cell: ({ row }: any) => (
+      <div className="text-gray-600 capitalize">{row.original.service_type}</div>
+    )},
+    { accessorKey: "priority", header: "Priority", cell: ({ row }: any) => {
+      const priority = row.original.priority;
+      const priorityColors: Record<string, string> = {
+        low: "bg-green-100 text-green-800",
+        medium: "bg-yellow-100 text-yellow-800",
+        high: "bg-red-100 text-red-800",
+      };
+      return <Badge className={priorityColors[priority] || "bg-gray-100 text-gray-800"}>{priority.charAt(0).toUpperCase() + priority.slice(1)}</Badge>;
+    }},
     { accessorKey: "status", header: "Status", cell: ({ row }: any) => {
       const status = row.original.status;
       const statusColors: Record<string, string> = {
         pending: "bg-yellow-100 text-yellow-800",
+        in_progress: "bg-blue-100 text-blue-800",
         completed: "bg-green-100 text-green-800",
         rejected: "bg-red-100 text-red-800",
+        cancelled: "bg-gray-100 text-gray-800",
       };
       return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
-    } },
-    { accessorKey: "createdAt",
-       header: "Created At", 
-       cell: ({ row }: any) => (
+    }},
+    { accessorKey: "created_at", header: "Created At", cell: ({ row }: any) => (
         <div className="text-gray-600">
-          {new Date(row.original.createdAt).toLocaleDateString("en-US", {
+        {new Date(row.original.created_at).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
             year: "numeric",
           })}
         </div>
-      ),
-     },   
-    
+    )},   
      {
           id: "actions",
           header: "Actions",
           cell: ({ row }: any) => {
-            const user = row.original
+        const request = row.original
             return (
               <div className="flex items-center space-x-2">
                 <Button
                   variant="ghost"
                   size="icon"
-                  // onClick={() => {
-                  //   setSelectedUser(user)
-                  //   setDetailModalOpen(true)
-                  // }}
+              onClick={() => {
+                setSelectedRequest(request)
+                // TODO: Open request detail modal
+              }}
                   className="hover:bg-blue-50 hover:text-blue-600"
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
-                {/* <Button
-                  variant="ghost"
-                  size="icon"
-                  // onClick={() => {
-                  //   setSelectedUser(user)
-                  //   setDeleteModalOpen(true)
-                  // }}
-                  className="hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button> */}
               </div>
             )
           },
@@ -288,6 +335,47 @@ export default function RequestsPageClient() {
   ];
 
 
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <DashboardLayout title="Request Management" isFetching={true}>
+        <div className="p-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4082ea] mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading requests...</p>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show error state if authentication fails
+  if (!role) {
+    return (
+      <DashboardLayout title="Request Management" isFetching={false}>
+        <div className="p-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <div className="text-red-600">
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">Authentication Required</h3>
+                <p className="text-sm text-red-700 mt-1">
+                  Please log in to view requests. You will be redirected to the login page.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout title="Request Management" isFetching={isFetching}>
@@ -316,15 +404,15 @@ export default function RequestsPageClient() {
               columns={columns}
               data={tableData}
               quickFilterKey="status"
-              searchKey="title"
-              searchPlaceholder="Search request by title..."
+              searchKey="description"
+              searchPlaceholder="Search request by description..."
             />
           </div>
         </div>
         <CreateRequestModal
                   open={openModal}
                   onOpenChange={(open) => setOpenModal(open)}
-                  // onSubmit={handleCreateRequest}
+                  onSubmit={(payload) => createRequestMutation.mutate(payload)}
                 />
       </div>
     </DashboardLayout>

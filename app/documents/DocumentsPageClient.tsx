@@ -1,88 +1,52 @@
 "use client"
 
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
-import { companiesApi } from "@/lib/api/companies"
 import { Button } from "@/components/ui/button"
-import { DataTable } from "@/components/data-table/data-table"
 import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@radix-ui/react-tooltip"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState, useEffect, useCallback } from "react"
-import { useRouter, usePathname, useSearchParams } from "next/navigation"
-import { toast } from "@/hooks/use-toast"
 import { 
   Eye, 
   Plus, 
-  Filter, 
-  Download, 
   RefreshCw, 
-  MoreHorizontal,
   FileText,
+  FolderOpen,
+  Folder,
+  FileText as DocumentIcon,
+  MessageSquare,
   CheckCircle,
-  AlertTriangle,
   Clock,
-  Loader2,
-  ChevronDown,
-  File,
-  ExternalLink,
-  X,
-  Check,
-  Trash2,
-  Edit,
-  Star
+  AlertCircle,
+  MoreVertical,
+  Download,
+  Trash2
 } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useAuth } from "@/hooks/use-auth"
-import { requestsApi } from "@/lib/api/requests"
-import { Request, RequestStatus } from "@/lib/types/requests"
-import { format } from "date-fns"
-import { StatusBadge } from "@/components/requests/status-badge"
-import { Popover, PopoverContent, PopoverTrigger } from "@radix-ui/react-popover"
-import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog"
-import { DialogFooter, DialogHeader } from "@/components/ui/dialog"
-import Link from "next/link"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { UploadDocumentModal } from "@/components/modals/create-document-modal"
+import { CreateDocThreadModal } from "@/components/modals/create-doc-thread-modal"
+import { docThreadsApi, type DocThread, type DocThreadsResponse } from "@/lib/api/docThreads"
+import { useAuth } from "@/hooks/use-auth"
+import { useRouter } from "next/navigation"
+import { toast } from "@/hooks/use-toast"
 
-/**
- * ADVANCED PERFORMANCE OPTIMIZATIONS FOR REQUESTS FETCHING
- * 
- * 🚀 CACHING STRATEGY:
- * - Extended staleTime to 15 minutes (from default 0) to prevent unnecessary refetches
- * - Increased gcTime to 30 minutes for better memory management
- * - Disabled automatic refetching with refetchInterval: false
- * - Added retry logic with exponential backoff for robust error handling
- * 
- * 📱 TAB VISIBILITY OPTIMIZATION:
- * - Custom useTabVisibility hook tracks tab activity and visibility state
- * - Query only runs when tab is visible (enabled: isVisible)
- * - Prevents unnecessary API calls when user switches to other tabs
- * - Tracks last activity timestamp for smart refresh decisions
- * 
- * 🔄 SMART REFRESH SYSTEM:
- * - Debounced refresh with 2-second minimum interval
- * - Tab activity awareness: refresh if inactive for >5 minutes
- * - Time-based refresh logic: refresh if last refresh was >30 seconds ago
- * - Prevents excessive API calls while ensuring data freshness
- * 
- * 💾 CACHE MANAGEMENT:
- * - Direct cache updates using setQueryData for immediate UI updates
- * - Optimistic updates for better perceived performance
- * - Proper cache invalidation after mutations
- * 
- * 📊 PERFORMANCE IMPACT:
- * - Reduced API calls by ~70% through smart caching
- * - Eliminated unnecessary fetches on tab switches
- * - Improved user experience with instant status updates
- * - Better battery life on mobile devices
- * 
- * 🎯 BEST PRACTICES:
- * - Query keys are stable and predictable
- * - Error boundaries with retry mechanisms
- * - Performance monitoring indicators
- * - Responsive refresh button states
- */
 
 // Custom hook for tab visibility and activity tracking
 function useTabVisibility() {
@@ -121,105 +85,27 @@ function useTabVisibility() {
 }
 
 export default function DocumentsPageClient() {
-  const queryClient = useQueryClient();
+  const { isAuthenticated, role } = useAuth({ redirectOnFail: false })
   const { isVisible, lastActivity } = useTabVisibility();
-  const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
-  const [action, setAction] = useState<"approve" | "reject" | null>(null);
+  const [createThreadOpen, setCreateThreadOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [threads, setThreads] = useState<DocThread[]>([]);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [threadToDelete, setThreadToDelete] = useState<DocThread | null>(null);
 
-
-  const documents = [
-    {
-      no: 1,
-      id: "DOC-001",
-      title: "Project Proposal",
-      type: "PDF",
-      date: "2025-09-01",
-      status: "Unread",
-    },
-    {
-      no: 2,
-      id: "DOC-002",
-      title: "Meeting Minutes",
-      type: "DOCX",
-      date: "2025-09-02",
-      status: "Read",
-    },
-    {
-      no: 3,
-      id: "DOC-003",
-      title: "Budget Report",
-      type: "XLSX",
-      date: "2025-09-03",
-      status: "Unread",
-    },
-    {
-      no: 4,
-      id: "DOC-004",
-      title: "Design Mockups",
-      type: "PNG",
-      date: "2025-09-04",
-      status: "Read",
-    },
-    {
-      no: 5,
-      id: "DOC-005",
-      title: "Client Feedback",
-      type: "TXT",
-      date: "2025-09-05",
-      status: "Unread",
-    },
-    {
-      no: 6,
-      id: "DOC-006",
-      title: "Contract Agreement",
-      type: "PDF",
-      date: "2025-09-06",
-      status: "Read",
-    },
-    {
-      no: 7,
-      id: "DOC-007",
-      title: "System Architecture",
-      type: "DOCX",
-      date: "2025-09-07",
-      status: "Unread",
-    },
-    {
-      no: 8,
-      id: "DOC-008",
-      title: "User Manual",
-      type: "PDF",
-      date: "2025-09-08",
-      status: "Read",
-    },
-    {
-      no: 9,
-      id: "DOC-009",
-      title: "Training Material",
-      type: "PPTX",
-      date: "2025-09-09",
-      status: "Unread",
-    },
-    {
-      no: 10,
-      id: "DOC-010",
-      title: "Final Invoice",
-      type: "PDF",
-      date: "2025-09-10",
-      status: "Read",
-    },
-  ];
-  
-  
-  // Fetch pending companies with ADVANCED PERFORMANCE OPTIMIZATIONS
-  const { data, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ["pending-companies"],
+  // Fetch doc threads with ADVANCED PERFORMANCE OPTIMIZATIONS
+  const { data, isLoading, refetch, isFetching, error } = useQuery({
+    queryKey: ["doc-threads", cursor],
     queryFn: async () => {
-      // const res = await companiesApi.getCompanies({ status: "pending" });
-      return documents;
+      const res = await docThreadsApi.list(cursor ? { cursor, limit: 50 } : { limit: 50 })
+      const payload = (res as any)?.data as DocThreadsResponse
+      return payload
     },
     // 🚀 ADVANCED CACHING CONFIGURATION
     staleTime: 15 * 60 * 1000, // 15 minutes - data considered fresh for 15 minutes
@@ -228,52 +114,49 @@ export default function DocumentsPageClient() {
     refetchOnMount: false, // Prevent refetch on component mount if data exists
     refetchOnReconnect: true, // Refetch on network reconnect for data consistency
     refetchInterval: false, // Disable automatic refetching
-    retry: 2, // Retry failed requests up to 2 times
+    retry: (failureCount, error: any) => {
+      // Don't retry on 401 errors (authentication issues)
+      if (error?.response?.status === 401) {
+        console.warn('[Documents] 401 error detected - not retrying')
+        return false
+      }
+      // Retry up to 2 times for other errors
+      return failureCount < 2
+    },
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    enabled: isVisible, // Only fetch when tab is visible
+    enabled: isVisible && isAuthenticated, // Only fetch when tab is visible and user is authenticated
   });
 
-  // Approve/Reject mutation with OPTIMISTIC UPDATES
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ _id, status }: { _id: string; status: string }) => {
-      return companiesApi.updateCompany(_id, { status });
-    },
-    onMutate: async ({ _id, status }) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ["pending-companies"] });
-
-      // Snapshot the previous value
-      const previousData = queryClient.getQueryData(["pending-companies"]);
-
-      // Optimistically update to the new value
-      queryClient.setQueryData(["pending-companies"], (old: any) => {
-        if (!old) return old;
-        return old.map((company: any) =>
-          company._id === _id ? { ...company, status } : company
-        );
-      });
-
-      // Return a context object with the snapshotted value
-      return { previousData };
-    },
-    onError: (err: any, variables, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
-      if (context?.previousData) {
-        queryClient.setQueryData(["pending-companies"], context.previousData);
-      }
-      toast({ title: "Error", description: err?.response?.data?.message || "Failed to update status.", variant: "destructive" });
-    },
-    onSettled: () => {
-      // Always refetch after error or success to ensure data consistency
-      queryClient.invalidateQueries({ queryKey: ["pending-companies"] });
+  // Delete thread mutation
+  const deleteThreadMutation = useMutation({
+    mutationFn: async (threadId: string) => {
+      return docThreadsApi.delete(threadId)
     },
     onSuccess: () => {
-      toast({ title: "Success", description: `Company status updated.`, variant: "default" });
-      setModalOpen(false);
-      setSelectedCompany(null);
-      setAction(null);
+      toast({
+        title: "Success",
+        description: "Folder deleted successfully",
+      })
+      // Refresh the threads list
+      refetch()
     },
-  });
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete folder",
+        variant: "destructive",
+      })
+    },
+  })
+
+  useEffect(() => {
+    const resp = data as DocThreadsResponse | undefined
+    if (resp?.data) {
+      // When cursor changes, append; when refreshed from top (cursor undefined), replace
+      setThreads((prev) => (cursor ? [...prev, ...resp.data] : [...resp.data]))
+      setHasNextPage(Boolean(resp.paging?.hasNextPage) && Boolean(resp.paging?.nextCursor))
+    }
+  }, [data, cursor])
 
   // 🔄 SMART REFRESH FUNCTION WITH TAB ACTIVITY AWARENESS
   const handleRefresh = useCallback(async () => {
@@ -306,6 +189,30 @@ export default function DocumentsPageClient() {
     }
   }, [lastRefresh, lastActivity, refetch, isRefreshing]);
 
+  // Handler functions for card actions
+  const handleDeleteThread = (thread: DocThread) => {
+    setThreadToDelete(thread)
+    setShowDeleteDialog(true)
+  }
+
+  const confirmDeleteThread = () => {
+    if (threadToDelete) {
+      deleteThreadMutation.mutate(threadToDelete.id)
+      setShowDeleteDialog(false)
+      setThreadToDelete(null)
+    }
+  }
+
+  const handlePreviewThread = (thread: DocThread) => {
+    router.push(`/documents/${thread.id}`)
+  }
+
+  const handleDownloadThread = (thread: DocThread) => {
+    // For now, navigate to the thread page where users can download individual documents
+    // In the future, this could be enhanced to download all documents as a zip
+    router.push(`/documents/${thread.id}`)
+  }
+
   // 📱 TAB VISIBILITY EFFECTS FOR PERFORMANCE MONITORING
   useEffect(() => {
     if (isVisible && lastActivity) {
@@ -317,88 +224,132 @@ export default function DocumentsPageClient() {
     }
   }, [isVisible, lastActivity]);
 
-  // Flatten data for table
-  const tableData = (data || []).map((company: any, i: number) => ({
-    ...company,
-    no: i + 1,
-    title: company.title || "",
-    phone: company.phone || "",
-    serviceType: company.serviceType || "",
-    createdAt: company.createdAt,
-    status: company.status,
-  }));
+  const items = threads
 
-  // Table columns
-  const columns = [
-    { accessorKey: "no", header: "No", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
-    { accessorKey: "id", header: "ID", cell: ({ row }: any) => <span className="font-medium">{row.original.id}</span> },
-    { accessorKey: "title", header: "Title", cell: ({ row }: any) => <div className="font-medium">{row.original.title}</div> },
-    { accessorKey: "type", header: "Type", cell: ({ row }: any) => <div className="text-gray-600">{row.original.type}</div> },
-    { accessorKey: "status", header: "Status", cell: ({ row }: any) => {
-      const status = row.original.status;
-      const statusColors: Record<string, string> = {
-        Unread: "bg-yellow-100 text-yellow-800",
-        Read: "bg-green-100 text-green-800",
-      };
-      return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
-    } },
-    {
-      accessorKey: "date",
-      header: "Date",
-      cell: ({ row }: any) => (
-        <div className="text-gray-600">
-          {new Date(row.original.date).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </div>
-      ),
-    },
-    
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }: any) => {
-        const user = row.original
+  // Folder-like UI component for document threads
+  const DocumentThreadFolder = ({ thread }: { thread: DocThread }) => {
+    const statusColors: Record<string, string> = {
+      open: "bg-emerald-100 text-emerald-800 border-emerald-200",
+      closed: "bg-gray-100 text-gray-800 border-gray-200",
+    };
+
+    const getFolderIcon = () => {
+      if (thread.status === 'open') {
+        return <FolderOpen className="h-16 w-16 text-yellow-500" />;
+      }
+      return <Folder className="h-16 w-16 text-yellow-500" />;
+    };
+
+    const getPreviewContent = () => {
+      if (thread.status === 'open') {
         return (
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              // onClick={() => {
-              //   setSelectedUser(user)
-              //   setDetailModalOpen(true)
-              // }}
-              className="hover:bg-blue-50 hover:text-blue-600"
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-            {/* <Button
-              variant="ghost"
-              size="icon"
-              // onClick={() => {
-              //   setSelectedUser(user)
-              //   setDeleteModalOpen(true)
-              // }}
-              className="hover:bg-red-50 hover:text-red-600"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button> */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="flex flex-col items-center space-y-1">
+              <MessageSquare className="h-6 w-6 text-blue-600" />
+              <div className="w-8 h-1 bg-blue-200 rounded"></div>
+              <div className="w-6 h-1 bg-blue-200 rounded"></div>
+            </div>
           </div>
-        )
-      },
-      enableSorting: false,
-    },
-  ];
+        );
+      } else {
+        return (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="flex flex-col items-center space-y-1">
+              <CheckCircle className="h-6 w-6 text-gray-600" />
+              <div className="w-8 h-1 bg-gray-300 rounded"></div>
+              <div className="w-6 h-1 bg-gray-300 rounded"></div>
+            </div>
+          </div>
+        );
+      }
+    };
 
+    return (
+      <div 
+        className="relative group cursor-pointer transition-all duration-200 hover:scale-105"
+        onClick={() => router.push(`/documents/${thread.id}`)}
+      >
+        {/* Folder Container */}
+        <div className="relative w-32 h-32 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 border-2 border-yellow-300">
+          {/* Folder Icon */}
+          <div className="absolute top-2 left-2">
+            {getFolderIcon()}
+          </div>
+          
+          {/* Preview Content */}
+          {getPreviewContent()}
+          
+          {/* Status Badge */}
+          <div className="absolute top-2 right-2">
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[thread.status] || "bg-gray-100 text-gray-800"}`}>
+              {thread.status}
+            </div>
+          </div>
 
-
-  // Function to handle CSV export
-  const handleExportCSV = () => {
-    // Add your CSV export logic here
-    console.log('Exporting to CSV...');
-    // Example: exportToCSV(tableData, 'documents_export.csv');
+          {/* 3-Dot Menu */}
+          <div className="absolute bottom-2 right-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 bg-white/80 hover:bg-white text-gray-600 hover:text-gray-800"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVertical className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handlePreviewThread(thread)
+                  }}
+                  className="cursor-pointer"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Preview Folder
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDownloadThread(thread)
+                  }}
+                  className="cursor-pointer"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Documents
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDeleteThread(thread)
+                  }}
+                  className="cursor-pointer text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Folder
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+        
+        {/* Folder Label */}
+        <div className="mt-2 text-center">
+          <h3 className="text-sm font-medium text-gray-900 truncate max-w-32" title={thread.subject}>
+            {thread.subject}
+          </h3>
+          <p className="text-xs text-gray-500 mt-1">
+            {thread.user_name}
+          </p>
+          <div className="flex items-center justify-center mt-1 text-xs text-gray-400">
+            <Clock className="h-3 w-3 mr-1" />
+            {new Date(thread.last_document_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -407,31 +358,126 @@ export default function DocumentsPageClient() {
         <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
            <div className="flex justify-between items-center px-2 py-2">
           <div>
-             <h1 className="text-xl font-semibold">Documents</h1>
-            <p className="text-sm text-gray-400">View and manage document management</p>
+             <h1 className="text-xl font-semibold">Document Folders</h1>
+            <p className="text-sm text-gray-400">Start and track document conversations</p>
           </div>
-          <Button
-            onClick={() => setModalOpen(true)}
-            className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Upload Document
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={isRefreshing || isLoading}
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+              Refresh
+            </Button>
+            <Button
+              onClick={() => setCreateThreadOpen(true)}
+              className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Folder
+            </Button>
+          </div>
         </div>
         <hr></hr>
-          <div className="overflow-x-auto">
-            <DataTable
-              columns={columns}
-              data={tableData}
-              searchKey="title"
-              quickFilterKey="status"
-              searchPlaceholder="Search document by title..."
-              onExportCSV={handleExportCSV}
-              showExportButton={true}
-            />
+          <div className="px-2 pb-3 py-5">
+            {isLoading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 justify-items-center">
+                {Array.from({ length: 12 }).map((_, idx) => (
+                  <Skeleton key={idx} className="h-40 w-32" />
+                ))}
+              </div>
+            ) : error && (error as any)?.response?.status === 401 ? (
+              <div className="py-8 text-center">
+                <div className="text-red-500 mb-4">
+                  <AlertCircle className="h-12 w-12 mx-auto mb-2" />
+                  <h3 className="text-lg font-semibold">Session Expired</h3>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Your session has expired. Please log in again to continue.
+                  </p>
+                        </div>
+                          <Button
+                  onClick={() => router.push('/login')}
+                  className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
+                >
+                  Go to Login
+                          </Button>
+                        </div>
+            ) : items && items.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 justify-items-center">
+                {items.map((thread) => (
+                  <DocumentThreadFolder key={thread.id} thread={thread} />
+                ))}
+              </div>
+            ) : (
+              <div className="py-8 text-center text-gray-500">
+                No threads found.
+              </div>
+            )}
+            {hasNextPage && (
+              <div className="mt-4 flex justify-center">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const resp = data as DocThreadsResponse | undefined
+                    const next = resp?.paging?.nextCursor
+                    if (next) setCursor(next)
+                  }}
+                >
+                  Load more
+                </Button>
+              </div>
+            )}
           </div>
         </div>
        <UploadDocumentModal open={modalOpen} onOpenChange={setModalOpen} />
+       <CreateDocThreadModal
+         open={createThreadOpen}
+         onOpenChange={setCreateThreadOpen}
+         onCreated={(thread) => {
+           setThreads((prev) => [thread, ...prev])
+         }}
+       />
+
+      {/* Delete Folder Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Folder</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this folder? This action cannot be undone and will permanently remove:
+              <br />
+              <br />
+              • Folder: <strong>{threadToDelete?.subject}</strong>
+              <br />
+              • All documents in this folder
+              <br />
+              • All conversation history
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteThread}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={deleteThreadMutation.isPending}
+            >
+              {deleteThreadMutation.isPending ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Folder
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
     </DashboardLayout>
   );

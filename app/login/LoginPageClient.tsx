@@ -17,13 +17,12 @@
     const { login, isAuthenticating } = useAuth({ redirectOnFail: false })
     const form = useReactHookForm({
       defaultValues: {
-        phoneNumber: "",
+        email: "",
         password: "",
       },
     })
     
-  
-    const onSubmit = (values: { phoneNumber: string; password: string }) => {
+    const onSubmit = (values: { email: string; password: string }) => {
       login(values, {
         onSuccess: () => {
         },
@@ -86,21 +85,21 @@
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="phoneNumber"
+                      name="email"
                       rules={{
-                        required: "Phone number is required",
+                        required: "Email is required",
                         pattern: {
-                          value: /^(\+251|251|0)(9\d{8}|7\d{8})$/,
-                          message: "Please enter a valid Ethiopian phone number (e.g., +251912345678, 251912345678, 0912345678, 0712345678)",
+                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                          message: "Please enter a valid email address",
                         },
                       }}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
+                          <FormLabel>Email</FormLabel>
                           <FormControl>
                             <Input
-                              type="tel"
-                              placeholder="Enter Ethiopian phone number"
+                              type="email"
+                              placeholder="Enter your email"
                               disabled={isAuthenticating}
                               {...field}
                             />

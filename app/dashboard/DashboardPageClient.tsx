@@ -12,6 +12,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 // import { tendersApi } from "@/lib/api/tenders"
 import { dummyDocuments, dummyRequests, dummyUsers } from "@/lib/dummy-data"
 import { useAuth } from "@/hooks/use-auth"
+import { useRequests } from "@/hooks/use-requests"
 import Link from "next/link"
 import { Users, Building2, Gavel, FileText, RotateCcw, Eye, User, ListOrderedIcon } from "lucide-react"
 import { useMemo, useCallback, useState, useEffect } from "react"
@@ -76,7 +77,10 @@ export default function DashboardPageClient() {
   const [lastRefresh, setLastRefresh] = useState(0);
   const { isVisible, lastActivity } = useTabVisibility();
 
-  // DUMMY DATA: Fetch counts with dummy data
+  // Use real requests API for dashboard
+  const { requests, isLoading: requestsLoading, isFetching: requestsFetching, refetch: refetchRequests, userRole } = useRequests();
+
+  // DUMMY DATA: Fetch counts with dummy data (keeping for other stats)
   const usersQuery = useQuery({
     queryKey: ["dashboard-users-count"],
     queryFn: async () => {
@@ -145,24 +149,6 @@ export default function DashboardPageClient() {
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  // DUMMY DATA: Fetch recent bids with dummy data
-  const recentBidsQuery = useQuery({
-    queryKey: ["dashboard-recent-bids", role, companyId],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 400)) // Simulate API delay
-      return dummyRequests.slice(0, 10);
-    },
-    enabled: isVisible,
-    staleTime: 5 * 60 * 1000, // 5 minutes (more frequent for recent data)
-    gcTime: 15 * 60 * 1000, // 15 minutes
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: true,
-    refetchInterval: false,
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-  });
-
   // Smart refresh with debouncing and activity awareness
   const handleRefresh = useCallback(async () => {
     const now = Date.now();
@@ -191,14 +177,14 @@ export default function DashboardPageClient() {
         companiesQuery.refetch && companiesQuery.refetch(),
         bidsQuery.refetch && bidsQuery.refetch(),
         tendersQuery.refetch && tendersQuery.refetch(),
-        recentBidsQuery.refetch && recentBidsQuery.refetch(),
+        refetchRequests && refetchRequests(),
       ]);
     } catch (error) {
       console.error('Dashboard refresh failed:', error);
     } finally {
       setIsRefreshing(false);
     }
-  }, [lastRefresh, lastActivity, isRefreshing, usersQuery, companiesQuery, bidsQuery, tendersQuery, recentBidsQuery]);
+  }, [lastRefresh, lastActivity, isRefreshing, usersQuery, companiesQuery, bidsQuery, tendersQuery, refetchRequests]);
 
   // Log when tab becomes active after long inactivity
   useEffect(() => {
@@ -211,110 +197,160 @@ export default function DashboardPageClient() {
   const statCards = useMemo(() => {
     const cards = [];
     
+    // Calculate request statistics from real data
+    const totalRequests = Array.isArray(requests) ? requests.length : 0;
+    const pendingRequests = Array.isArray(requests) ? requests.filter((r: any) => r.status === 'pending').length : 0;
+    const inProgressRequests = Array.isArray(requests) ? requests.filter((r: any) => r.status === 'in_progress').length : 0;
+    const completedRequests = Array.isArray(requests) ? requests.filter((r: any) => r.status === 'completed').length : 0;
+    
     cards.push(
       {
-        label: "Unread Orders",
-        value: bidsQuery.data ?? 0,
-        loading: bidsQuery.isLoading,
+        label: "Total Requests",
+        value: totalRequests,
+        loading: requestsLoading,
         icon: <ListOrderedIcon />,
       },
       {
-        label: "Unsent Document",
-        value: tendersQuery.data ?? 0,
-        loading: tendersQuery.isLoading,
-        icon: <FileText  />,
-      }, {
-        label: "Total Users",
-        value: bidsQuery.data ?? 0,
-        loading: bidsQuery.isLoading,
-        icon: <User  />,
+        label: "Pending Requests",
+        value: pendingRequests,
+        loading: requestsLoading,
+        icon: <FileText />,
       },
       {
-        label: "Expiring Documents",
-        value: tendersQuery.data ?? 0,
-        loading: tendersQuery.isLoading,
-        icon: <FileText  />,
+        label: "In Progress",
+        value: inProgressRequests,
+        loading: requestsLoading,
+        icon: <User />,
+      },
+      {
+        label: "Completed",
+        value: completedRequests,
+        loading: requestsLoading,
+        icon: <FileText />,
       }
     );
     return cards;
-  }, [role, usersQuery.data, usersQuery.isLoading, companiesQuery.data, companiesQuery.isLoading, bidsQuery.data, bidsQuery.isLoading, tendersQuery.data, tendersQuery.isLoading]);
+  }, [requests, requestsLoading]);
 
-  // Flatten recent bids data for table and search
+  // Flatten recent requests data for table and search
   const tableData = useMemo(() => {
-    const requests = recentBidsQuery.data || [];
-    // Ensure maximum 10 bids are displayed
-    const limitedRecent = requests.slice(0, 10);
+    console.debug("[Dashboard] Processing requests data:", requests);
     
-    return limitedRecent;
-  }, [recentBidsQuery.data]);
+    // Handle different data structures
+    let requestsArray: any[] = [];
+    
+    if (Array.isArray(requests)) {
+      requestsArray = requests;
+    } else if (requests && typeof requests === 'object') {
+      // If requests is an object with a data property
+      if ('data' in requests && Array.isArray((requests as any).data)) {
+        requestsArray = (requests as any).data;
+      } else if ('requests' in requests && Array.isArray((requests as any).requests)) {
+        requestsArray = (requests as any).requests;
+      } else {
+        console.warn("[Dashboard] Unexpected requests data structure:", requests);
+        requestsArray = [];
+      }
+    } else {
+      console.warn("[Dashboard] Requests is not an array or object:", requests);
+      requestsArray = [];
+    }
+    
+    // Ensure maximum 10 requests are displayed
+    const limitedRecent = requestsArray.slice(0, 10);
+    
+    return limitedRecent.map((request: any, i: number) => ({
+      ...request,
+      no: i + 1,
+      id: request.id,
+      description: request.description || "",
+      created_by_name: request.created_by_name || "",
+      created_by_email: request.created_by_email || "",
+      assigned_to_name: request.assigned_to_name || "",
+      assigned_to_email: request.assigned_to_email || "",
+      service_type: request.service_type || "",
+      disability_type: request.disability_type || "",
+      priority: request.priority || "",
+      status: request.status || "",
+      created_at: request.created_at,
+      updated_at: request.updated_at,
+    }));
+  }, [requests]);
 
-  // Table columns for recent bids
+  // Table columns for recent requests
   const columns = [
     { accessorKey: "no", header: "No", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
-    { accessorKey: "id", header: "ID", cell: ({ row }: any) => <span className="font-medium">{row.original.id}</span> },
-    { accessorKey: "title", header: "Title", cell: ({ row }: any) => <div className="font-medium">{row.original.title}</div> },
-    { accessorKey: "phone", header: "Contact", cell: ({ row }: any) => <div className="text-gray-600">{row.original.phone}</div> },
-    { accessorKey: "serviceType", header: "Service Type", cell: ({ row }: any) => <div className="text-gray-600">{row.original.email}</div> },
+    { accessorKey: "id", header: "Request ID", cell: ({ row }: any) => <span className="font-medium text-xs">{row.original.id}</span> },
+    { accessorKey: "description", header: "Description", cell: ({ row }: any) => (
+      <div className="max-w-xs truncate" title={row.original.description}>
+        {row.original.description}
+      </div>
+    )},
+    { accessorKey: "created_by_name", header: "Created By", cell: ({ row }: any) => (
+      <div className="text-gray-600">
+        <div className="font-medium">{row.original.created_by_name}</div>
+        <div className="text-xs text-gray-500">{row.original.created_by_email}</div>
+      </div>
+    )},
+    { accessorKey: "service_type", header: "Service Type", cell: ({ row }: any) => (
+      <div className="text-gray-600 capitalize">{row.original.service_type}</div>
+    )},
+    { accessorKey: "priority", header: "Priority", cell: ({ row }: any) => {
+      const priority = row.original.priority;
+      const priorityColors: Record<string, string> = {
+        low: "bg-green-100 text-green-800",
+        medium: "bg-yellow-100 text-yellow-800",
+        high: "bg-red-100 text-red-800",
+      };
+      return <Badge className={priorityColors[priority] || "bg-gray-100 text-gray-800"}>{priority.charAt(0).toUpperCase() + priority.slice(1)}</Badge>;
+    }},
     { accessorKey: "status", header: "Status", cell: ({ row }: any) => {
       const status = row.original.status;
       const statusColors: Record<string, string> = {
         pending: "bg-yellow-100 text-yellow-800",
+        in_progress: "bg-blue-100 text-blue-800",
         completed: "bg-green-100 text-green-800",
         rejected: "bg-red-100 text-red-800",
+        cancelled: "bg-gray-100 text-gray-800",
       };
       return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
-    } },
-    { accessorKey: "createdAt",
-       header: "Created At", 
-       cell: ({ row }: any) => (
-        <div className="text-gray-600">
-          {new Date(row.original.createdAt).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })}
-        </div>
-      ),
-     },   
-    
-     {
-          id: "actions",
-          header: "Actions",
-          cell: ({ row }: any) => {
-            const user = row.original
-            return (
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  // onClick={() => {
-                  //   setSelectedUser(user)
-                  //   setDetailModalOpen(true)
-                  // }}
-                  className="hover:bg-blue-50 hover:text-blue-600"
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-                {/* <Button
-                  variant="ghost"
-                  size="icon"
-                  // onClick={() => {
-                  //   setSelectedUser(user)
-                  //   setDeleteModalOpen(true)
-                  // }}
-                  className="hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button> */}
-              </div>
-            )
-          },
-          enableSorting: false,
-        },
+    }},
+    { accessorKey: "created_at", header: "Created At", cell: ({ row }: any) => (
+      <div className="text-gray-600">
+        {new Date(row.original.created_at).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })}
+      </div>
+    )},   
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }: any) => {
+        const request = row.original
+        return (
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                // TODO: Open request detail modal
+                console.log("View request:", request.id);
+              }}
+              className="hover:bg-blue-50 hover:text-blue-600"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          </div>
+        )
+      },
+      enableSorting: false,
+    },
   ];
 
   return (
-    <DashboardLayout title="Dashboard" isFetching={isRefreshing}>
+    <DashboardLayout title="Dashboard" isFetching={isRefreshing || requestsFetching}>
       <div className="p-0">
         {/* Header with Refresh Button */}
         <div className="flex justify-between items-center mb-6">
@@ -409,8 +445,8 @@ export default function DashboardPageClient() {
               columns={columns}
               data={tableData}
               quickFilterKey="status"
-              searchKey="title"
-              searchPlaceholder="Search request by title..."
+              searchKey="description"
+              searchPlaceholder="Search request by description..."
             />
           </div>
         </div>

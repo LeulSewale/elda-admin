@@ -23,8 +23,9 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { GlobalModal } from "@/components/modals/global-modal"
 import { TicketCardOutline } from "@/components/cards/TicketCard"
-import { dummyTickets } from "@/lib/dummy-data"
-import { CreateTicketModal } from "@/components/modals/create-ticket-modal"
+import { useTickets } from "@/hooks/use-tickets"
+import { ticketsApi } from "@/lib/api/tickets"
+import { CreateTicketModal } from "@/components/modals/create-ticket-modal-new"
 
 // Style constants
 const statCardStyle =
@@ -35,10 +36,14 @@ const iconStyle =
 // Ticket type
 type Ticket = {
   id: string
-  title: string
+  subject: string
   description: string
-  status: "open" | "closed"
-  createdAt: string
+  status: "open" | "closed" | "in_progress" | "pending"
+  priority: "low" | "medium" | "high" | "urgent"
+  tags: string[]
+  created_at: string
+  creator_name: string
+  creator_email: string
 }
 
 
@@ -50,10 +55,28 @@ const TicketDetails = ({ ticket, onClose }: { ticket: Ticket | null, onClose: ()
   return (
     <div className="space-y-14">
       <div className="border-b pb-4">
-        <h3 className="text-lg font-semibold text-gray-900">{ticket.title}</h3>
+        <h3 className="text-lg font-semibold text-gray-900">{ticket.subject}</h3>
         <p className="text-sm text-gray-500">
-          Created on {new Date(ticket.createdAt).toLocaleDateString()}
+          Created on {new Date(ticket.created_at).toLocaleDateString()}
         </p>
+        <div className="flex gap-2 mt-2">
+          <Badge className={`text-xs ${
+            ticket.status === "open" ? "bg-blue-100 text-blue-800" :
+            ticket.status === "closed" ? "bg-green-100 text-green-800" :
+            ticket.status === "in_progress" ? "bg-yellow-100 text-yellow-800" :
+            "bg-gray-100 text-gray-800"
+          }`}>
+            {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+          </Badge>
+          <Badge className={`text-xs ${
+            ticket.priority === "urgent" ? "bg-red-100 text-red-800" :
+            ticket.priority === "high" ? "bg-orange-100 text-orange-800" :
+            ticket.priority === "medium" ? "bg-yellow-100 text-yellow-800" :
+            "bg-gray-100 text-gray-800"
+          }`}>
+            {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
+          </Badge>
+        </div>
       </div>
       
       <div className="space-y-2">
@@ -62,6 +85,19 @@ const TicketDetails = ({ ticket, onClose }: { ticket: Ticket | null, onClose: ()
           {ticket.description}
         </p>
       </div>
+      
+      {ticket.tags && ticket.tags.length > 0 && (
+        <div className="space-y-2">
+          <h4 className="font-medium text-gray-700">Tags</h4>
+          <div className="flex flex-wrap gap-1">
+            {ticket.tags.map((tag: string, index: number) => (
+              <Badge key={index} variant="secondary" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
       
       <div className="flex justify-end pt-4">
         <Button onClick={onClose} variant="outline">
@@ -74,48 +110,50 @@ const TicketDetails = ({ ticket, onClose }: { ticket: Ticket | null, onClose: ()
 
 export default function MyTicketsClientPage() {
   const [openModal, setOpenModal] = useState(false)
-  const [formTitle, setFormTitle] = useState("")
-  const [formDescription, setFormDescription] = useState("")
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [search, setSearch] = useState("")
   const [activeTab, setActiveTab] = useState<"open" | "closed">("open")
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
-  // 🚀 Fetch tickets
-  const {
-    data: tickets = [],
-    isLoading,
-    isFetching,
-  } = useQuery({
-    queryKey: ["tickets"],
-    queryFn: async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      return dummyTickets
-    },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  })
+  // 🚀 Fetch tickets with role-based logic
+  const { tickets, isLoading, isFetching, userRole } = useTickets()
 
   // 🚀 Create new ticket
   const createTicketMutation = useMutation({
-    mutationFn: async (data: Omit<Ticket, "id">) => {
-      await new Promise((resolve) => setTimeout(resolve, 800))
-      return { id: `new-${Date.now()}`, ...data } as Ticket
+    mutationFn: async (data: { subject: string; description: string; priority: "low" | "medium" | "high" | "urgent"; tags: string[] }) => {
+      console.debug("[My Tickets] Creating ticket with data:", data);
+      const res = await ticketsApi.createTicket({
+        subject: data.subject,
+        description: data.description,
+        priority: data.priority,
+        tags: data.tags
+      });
+      console.debug("[My Tickets] Create ticket response:", res.data);
+      return res.data.data;
     },
     onSuccess: (newTicket) => {
-      queryClient.setQueryData(["tickets"], (old: Ticket[] | undefined) =>
-        old ? [...old, newTicket] : [newTicket]
-      )
+      queryClient.setQueryData(["tickets", userRole], (old: any) => {
+        if (!old) return { data: [newTicket], paging: {} };
+        return {
+          ...old,
+          data: [...old.data, newTicket]
+        };
+      })
       toast({
         title: "Ticket created successfully",
-        description: `"${newTicket.title}" has been added to open tickets.`,
+        description: `"${newTicket.subject}" has been added to open tickets.`,
       })
       setOpenModal(false)
-      setFormTitle("")
-      setFormDescription("")
     },
+    onError: (error: any) => {
+      console.error("[My Tickets] Create ticket error:", error);
+      toast({
+        title: "Failed to create ticket",
+        description: error?.response?.data?.message || "An error occurred while creating the ticket.",
+        variant: "destructive"
+      })
+    }
   })
 
   const handleViewDetails = (ticket: Ticket) => {
@@ -126,22 +164,13 @@ export default function MyTicketsClientPage() {
     setSelectedTicket(null)
   }
 
-  const handleSubmit = () => {
-    if (!formTitle.trim()) return
-    createTicketMutation.mutate({
-      title: formTitle,
-      description: formDescription,
-      status: "open",
-      createdAt: new Date().toISOString().split("T")[0],
-    })
-  }
 
   // Derived lists
   const openTickets = tickets.filter((t) => t.status === "open")
   const closedTickets = tickets.filter((t) => t.status === "closed")
   const filtered = (list: any[]) =>
     list.filter((t) =>
-      t.title.toLowerCase().includes(search.toLowerCase()),
+      t.subject.toLowerCase().includes(search.toLowerCase()),
     )
   const listByTab = activeTab === "open" ? openTickets : closedTickets
   const visibleTickets = filtered(listByTab)
@@ -165,13 +194,15 @@ export default function MyTicketsClientPage() {
               </p>          
               
          </div>
-          <Button
-          onClick={() => setOpenModal(true)}
-            className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Ticket
-          </Button>
+          {userRole === "user" && (
+            <Button
+              onClick={() => setOpenModal(true)}
+              className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Ticket
+            </Button>
+          )}
           </div>
           <hr />
           <div className="flex justify-between items-center px-2 py-2">
@@ -204,7 +235,7 @@ export default function MyTicketsClientPage() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by title..."
+                  placeholder="Search by subject..."
                   className="pl-9"
                 />
               </div>
@@ -242,13 +273,16 @@ export default function MyTicketsClientPage() {
       >
         {selectedTicket && <TicketDetails ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />}
       </GlobalModal>
-      <CreateTicketModal 
-        open={openModal}
-        onOpenChange={setOpenModal}
-        onSubmit={(data) => {
-          // createTicketMutation.mutate(data)
-        }}
-      />
+      {userRole === "user" && (
+        <CreateTicketModal 
+          open={openModal}
+          onOpenChange={setOpenModal}
+          onSubmit={(data) => {
+            createTicketMutation.mutate(data)
+          }}
+          isLoading={createTicketMutation.isPending}
+        />
+      )}
     </DashboardLayout>
   )
 }
