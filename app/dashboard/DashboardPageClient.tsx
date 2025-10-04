@@ -276,7 +276,6 @@ export default function DashboardPageClient() {
   // Table columns for recent requests
   const columns = [
     { accessorKey: "no", header: "No", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
-    { accessorKey: "id", header: "Request ID", cell: ({ row }: any) => <span className="font-medium text-xs">{row.original.id}</span> },
     { accessorKey: "description", header: "Description", cell: ({ row }: any) => (
       <div className="max-w-xs truncate" title={row.original.description}>
         {row.original.description}

@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@radix-ui/react-tooltip"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import React, { useState, useEffect, useCallback } from "react"
-import { Eye, Plus } from "lucide-react"
+import { Eye, Plus, UserPlus, Settings } from "lucide-react"
 
 import { CreateRequestModal } from "@/components/modals/create-request-modal"
+import { AssignRequestModal } from "@/components/modals/assign-request-modal"
+import { ChangeStatusModal } from "@/components/modals/change-status-modal"
 import { useAuth } from "@/hooks/use-auth"
 import { useRequests } from "@/hooks/use-requests"
 import { requestsApi } from "@/lib/api/requests"
@@ -55,6 +57,8 @@ export default function RequestsPageClient() {
   const { isVisible, lastActivity } = useTabVisibility();
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
   const [openModal, setOpenModal] = useState(false);
+  const [assignModalOpen, setAssignModalOpen] = useState(false);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { role } = useAuth();
@@ -64,7 +68,11 @@ export default function RequestsPageClient() {
 
   // Create request mutation for users
   const createRequestMutation = useMutation({
-    mutationFn: ({ data, files }: { data: any, files: File[] }) => requestsApi.createRequest(data, files),
+    mutationFn: ({ data, files }: { data: any, files: File[] }) => {
+      console.debug("[Requests] Mutation received data:", data);
+      console.debug("[Requests] Mutation received files:", files);
+      return requestsApi.createRequest(data, files);
+    },
     onSuccess: () => {
       toast({
         title: "Request Created",
@@ -75,9 +83,13 @@ export default function RequestsPageClient() {
     },
     onError: (error: any) => {
       console.error("[Requests] Create request error:", error);
+      console.error("[Requests] Error response:", error?.response?.data);
+      console.error("[Requests] Error status:", error?.response?.status);
+      console.error("[Requests] Request data:", error?.config?.data);
+      
       toast({
         title: "Error",
-        description: error?.response?.data?.message || "Failed to create request.",
+        description: error?.response?.data?.message || error?.message || "Failed to create request.",
         variant: "destructive",
       });
     },
@@ -223,6 +235,36 @@ export default function RequestsPageClient() {
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
+                
+                {/* Admin-only actions */}
+                {role === "admin" && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedRequest(request)
+                        setAssignModalOpen(true)
+                      }}
+                      className="hover:bg-green-50 hover:text-green-600"
+                      title="Assign to Lawyer"
+                    >
+                      <UserPlus className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setSelectedRequest(request)
+                        setStatusModalOpen(true)
+                      }}
+                      className="hover:bg-purple-50 hover:text-purple-600"
+                      title="Change Status"
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
               </div>
             )
           },
@@ -310,6 +352,38 @@ export default function RequestsPageClient() {
                   onOpenChange={(open) => setOpenModal(open)}
                   onSubmit={(payload) => createRequestMutation.mutate(payload)}
                 />
+        
+        {/* Admin-only modals */}
+        {role === "admin" && selectedRequest && (
+          <>
+            <AssignRequestModal
+              open={assignModalOpen}
+              onOpenChange={setAssignModalOpen}
+              requestId={selectedRequest.id}
+              currentAssignee={selectedRequest.assigned_to_user_id}
+              onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ["requests", userRole] });
+                toast({
+                  title: "Request Assigned",
+                  description: "Request has been assigned to lawyer successfully.",
+                });
+              }}
+            />
+            <ChangeStatusModal
+              open={statusModalOpen}
+              onOpenChange={setStatusModalOpen}
+              requestId={selectedRequest.id}
+              currentStatus={selectedRequest.status}
+              onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ["requests", userRole] });
+                toast({
+                  title: "Status Updated",
+                  description: "Request status has been updated successfully.",
+                });
+              }}
+            />
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

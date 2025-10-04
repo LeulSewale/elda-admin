@@ -3,7 +3,6 @@
 import { useState, useRef, ChangeEvent } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent } from "@/components/ui/card"
@@ -26,15 +25,11 @@ const steps = [
 export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateRequestModalProps) {
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    phone: "",
-    email: "",
     disability: "",
     serviceType: "",
     issueDescription: "",
     urgency: "medium",
-    preferredContact: "phone",
+    preferredContact: "email",
     additionalNotes: ""
   })
   
@@ -112,10 +107,23 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
         contact_method: formData.preferredContact,
         remarks: formData.additionalNotes,
         is_confidential: false,
+        document: "" // Empty string as per API spec
       }
       
       console.debug("[Create Request] Submitting data:", apiData)
       console.debug("[Create Request] Files:", files)
+      console.debug("[Create Request] Form data state:", formData)
+      
+      // Validate that required fields are not empty
+      if (!formData.disability || !formData.serviceType || !formData.issueDescription) {
+        console.error("[Create Request] Missing required fields:", {
+          disability: formData.disability,
+          serviceType: formData.serviceType,
+          issueDescription: formData.issueDescription
+        });
+        alert("Please fill in all required fields before submitting.");
+        return;
+      }
       
       // Pass both data and files to the parent component
       onSubmit?.({ data: apiData, files: files })
@@ -123,15 +131,11 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
       setCurrentStep(1)
       setFiles([])
       setFormData({
-        firstName: "",
-        lastName: "",
-        phone: "",
-        email: "",
         disability: "",
         serviceType: "",
         issueDescription: "",
         urgency: "medium",
-        preferredContact: "phone",
+        preferredContact: "email",
         additionalNotes: ""
       })
     }
@@ -140,12 +144,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
   // ✅ Step Validation Logic
   const isStepValid = (step: number) => {
     if (step === 1) {
-      return (
-        formData.firstName.trim() !== "" &&
-        formData.lastName.trim() !== "" &&
-        formData.phone.trim() !== "" &&
-        formData.disability.trim() !== ""
-      )
+      return formData.disability.trim() !== ""
     }
     if (step === 2) {
       return (
@@ -199,41 +198,8 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
             <Card className="shadow-md">
               <CardContent className="p-6 space-y-4">
                 <h3 className="font-semibold text-[#4082ea]">Personal Information</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <Label>First Name *</Label>
-                    <Input
-                      placeholder="Enter text here"
-                      value={formData.firstName}
-                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Last Name *</Label>
-                    <Input
-                      placeholder="Enter text here"
-                      value={formData.lastName}
-                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Phone Number *</Label>
-                    <Input
-                      placeholder="Enter text here"
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Email (Optional)</Label>
-                    <Input
-                      type="email"
-                      placeholder="Enter text here"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    />
-                  </div>
-                  <div className="col-span-2">
                     <Label>Type of disability *</Label>
                     <Select
                       value={formData.disability}
@@ -243,10 +209,11 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                         <SelectValue placeholder="Select disability" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="visually-impaired">Visually Impaired</SelectItem>
-                        <SelectItem value="hearing-impaired">Hearing Impaired</SelectItem>
-                        <SelectItem value="mobility">Mobility Disability</SelectItem>
-                        <SelectItem value="cognitive">Cognitive Disability</SelectItem>
+                        <SelectItem value="visually_impaired">Visually Impaired</SelectItem>
+                        <SelectItem value="hearing_impaired">Hearing Impaired</SelectItem>
+                        <SelectItem value="mobility_impaired">Mobility Impaired</SelectItem>
+                        <SelectItem value="cognitive_impaired">Cognitive Impaired</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -271,11 +238,9 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="internet">Internet Service</SelectItem>
-                      <SelectItem value="legal">Legal Assistance</SelectItem>
-                      <SelectItem value="healthcare">Healthcare</SelectItem>
-                      <SelectItem value="education">Education</SelectItem>
-                      <SelectItem value="employment">Employment</SelectItem>
-                      <SelectItem value="transportation">Transportation</SelectItem>
+                      <SelectItem value="phone">Phone Service</SelectItem>
+                      <SelectItem value="tv">TV Service</SelectItem>
+                      <SelectItem value="mobile">Mobile Service</SelectItem>
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
@@ -358,6 +323,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                       <SelectItem value="low">Low - Not urgent</SelectItem>
                       <SelectItem value="medium">Medium - Standard priority</SelectItem>
                       <SelectItem value="high">High - Urgent attention needed</SelectItem>
+                      <SelectItem value="urgent">Urgent - Immediate attention</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -372,10 +338,10 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                       <SelectValue placeholder="Select preferred contact method" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="phone">Phone Call</SelectItem>
                       <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="phone">Phone Call</SelectItem>
+                      <SelectItem value="sms">SMS</SelectItem>
                       <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                      <SelectItem value="any">Any Method</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

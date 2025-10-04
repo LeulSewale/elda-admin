@@ -67,33 +67,73 @@ export const requestsApi = {
   
   // Create a new request with file upload support
   createRequest: (data: CreateRequestInput, files?: File[]) => {
+    console.debug("[Requests API] Raw data received:", data);
+    console.debug("[Requests API] Raw files received:", files);
+    
+    // Safety check
+    if (!data) {
+      console.error("[Requests API] No data provided!");
+      throw new Error("No data provided for request creation");
+    }
+    
     const formData = new FormData();
     
-    // Add form fields
-    formData.append('priority', data.priority || 'medium');
+    // Add form fields - ensure all required fields are present
+    formData.append('priority', (data as any).priority || 'medium');
     formData.append('disability_type', (data as any).disability_type || 'other');
     formData.append('service_type', (data as any).service_type || 'internet');
-    formData.append('description', data.description || '');
+    formData.append('description', (data as any).description || '');
     formData.append('contact_method', (data as any).contact_method || 'email');
     formData.append('remarks', (data as any).remarks || '');
     formData.append('is_confidential', String((data as any).is_confidential || false));
     
-    // Add files if provided (0-5 files)
+    // Add files if provided (0-5 files) - use 'files' as the key
     if (files && files.length > 0) {
       files.forEach((file, index) => {
         formData.append('files', file);
       });
     }
     
-    console.debug("[Requests API] Creating request with FormData:", {
-      priority: data.priority,
+    // Debug FormData contents BEFORE sending
+    console.debug("[Requests API] FormData contents BEFORE sending:");
+    console.debug("FormData entries:");
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.debug(`  ${key}:`, `File(${value.name}, ${value.size} bytes, ${value.type})`);
+      } else {
+        console.debug(`  ${key}:`, value);
+      }
+    }
+    
+    // Also log FormData as object for easier inspection
+    const formDataObj: Record<string, any> = {};
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        formDataObj[key] = `File(${value.name}, ${value.size} bytes, ${value.type})`;
+      } else {
+        formDataObj[key] = value;
+      }
+    }
+    console.debug("[Requests API] FormData as object:", formDataObj);
+    
+    console.debug("[Requests API] Creating request with processed data:", {
+      priority: (data as any).priority,
       disability_type: (data as any).disability_type,
       service_type: (data as any).service_type,
-      description: data.description,
+      description: (data as any).description,
       contact_method: (data as any).contact_method,
       remarks: (data as any).remarks,
       is_confidential: (data as any).is_confidential,
       fileCount: files?.length || 0
+    });
+    
+    // Make FormData available in console for manual inspection
+    (window as any).debugFormData = formData;
+    console.debug("[Requests API] FormData available as window.debugFormData for manual inspection");
+    
+    console.debug("[Requests API] About to send POST request to /requests");
+    console.debug("[Requests API] Request headers:", {
+      'Content-Type': 'multipart/form-data'
     });
     
     return api.post<ApiResponse<Request>>("/requests", formData, {
@@ -106,6 +146,14 @@ export const requestsApi = {
   // Update an existing request
   updateRequest: (id: string, data: UpdateRequestInput) => 
     api.put<ApiResponse<Request>>(`/requests/${id}`, data),
+  
+  // Patch request (admin only) - assign to lawyer or change status
+  patchRequest: (id: string, data: {
+    assigned_to_user_id?: string
+    priority?: string
+    remarks?: string
+    status?: string
+  }) => api.patch<ApiResponse<Request>>(`/requests/${id}`, data),
   
   // Delete a request
   deleteRequest: (id: string) => api.delete<ApiResponse<{ id: string }>>(`/requests/${id}`),
@@ -164,5 +212,18 @@ export const requestsApi = {
       byPriority: Record<string, number>
       byType: Record<string, number>
       byCategory: Record<string, number>
-    }>>('/requests/stats')
+    }>>('/requests/stats'),
+  
+  // Get lawyers for assignment (admin only)
+  getLawyers: () => 
+    api.get<ApiResponse<Array<{
+      _id: string
+      name: string
+      email: string
+      role: string
+    }>>>('/users?role=lawyer').catch(() => {
+      // Fallback: return empty array if endpoint doesn't exist
+      console.warn("[Requests API] Lawyers endpoint not available, using empty array");
+      return { data: { data: [] } };
+    })
 }

@@ -13,11 +13,10 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value
 
   if (!token && !isPublic) {
-    console.log(`[Middleware] No access_token cookie found for ${pathname}, but allowing request for debugging`)
-    // Temporarily disabled for debugging - let frontend handle auth
-    // const loginUrl = new URL("/login", request.url)
-    // loginUrl.searchParams.set("from", pathname) // Preserve original route for redirect after login
-    // return NextResponse.redirect(loginUrl)
+    console.log(`[Middleware] No access_token cookie found for ${pathname}, redirecting to login`)
+    const loginUrl = new URL("/login", request.url)
+    loginUrl.searchParams.set("from", pathname) // Preserve original route for redirect after login
+    return NextResponse.redirect(loginUrl)
   }
 
   // ✅ Allow request if authenticated or public
