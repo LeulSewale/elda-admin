@@ -15,47 +15,6 @@ import { useRequests } from "@/hooks/use-requests"
 import { requestsApi } from "@/lib/api/requests"
 import { toast } from "@/hooks/use-toast"
 
-
-/**
- * ADVANCED PERFORMANCE OPTIMIZATIONS FOR REQUESTS FETCHING
- * 
- * 🚀 CACHING STRATEGY:
- * - Extended staleTime to 15 minutes (from default 0) to prevent unnecessary refetches
- * - Increased gcTime to 30 minutes for better memory management
- * - Disabled automatic refetching with refetchInterval: false
- * - Added retry logic with exponential backoff for robust error handling
- * 
- * 📱 TAB VISIBILITY OPTIMIZATION:
- * - Custom useTabVisibility hook tracks tab activity and visibility state
- * - Query only runs when tab is visible (enabled: isVisible)
- * - Prevents unnecessary API calls when user switches to other tabs
- * - Tracks last activity timestamp for smart refresh decisions
- * 
- * 🔄 SMART REFRESH SYSTEM:
- * - Debounced refresh with 2-second minimum interval
- * - Tab activity awareness: refresh if inactive for >5 minutes
- * - Time-based refresh logic: refresh if last refresh was >30 seconds ago
- * - Prevents excessive API calls while ensuring data freshness
- * 
- * 💾 CACHE MANAGEMENT:
- * - Direct cache updates using setQueryData for immediate UI updates
- * - Optimistic updates for better perceived performance
- * - Proper cache invalidation after mutations
- * 
- * 📊 PERFORMANCE IMPACT:
- * - Reduced API calls by ~70% through smart caching
- * - Eliminated unnecessary fetches on tab switches
- * - Improved user experience with instant status updates
- * - Better battery life on mobile devices
- * 
- * 🎯 BEST PRACTICES:
- * - Query keys are stable and predictable
- * - Error boundaries with retry mechanisms
- * - Performance monitoring indicators
- * - Responsive refresh button states
- */
-
-// Custom hook for tab visibility and activity tracking
 function useTabVisibility() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastActivity, setLastActivity] = useState(Date.now());
@@ -124,48 +83,6 @@ export default function RequestsPageClient() {
     },
   });
 
-  // Approve/Reject mutation with OPTIMISTIC UPDATES
-  // const updateStatusMutation = useMutation({
-  //   mutationFn: async ({ _id, status }: { _id: string; status: string }) => {
-  //     return companiesApi.updateCompany(_id, { status });
-  //   },
-  //   onMutate: async ({ _id, status }) => {
-  //     // Cancel any outgoing refetches
-  //     await queryClient.cancelQueries({ queryKey: ["pending-companies"] });
-
-  //     // Snapshot the previous value
-  //     const previousData = queryClient.getQueryData(["pending-companies"]);
-
-  //     // Optimistically update to the new value
-  //     queryClient.setQueryData(["pending-companies"], (old: any) => {
-  //       if (!old) return old;
-  //       return old.map((company: any) =>
-  //         company._id === _id ? { ...company, status } : company
-  //       );
-  //     });
-
-  //     // Return a context object with the snapshotted value
-  //     return { previousData };
-  //   },
-  //   onError: (err: any, variables, context) => {
-  //     // If the mutation fails, use the context returned from onMutate to roll back
-  //     if (context?.previousData) {
-  //       queryClient.setQueryData(["pending-companies"], context.previousData);
-  //     }
-  //     toast({ title: "Error", description: err?.response?.data?.message || "Failed to update status.", variant: "destructive" });
-  //   },
-  //   onSettled: () => {
-  //     // Always refetch after error or success to ensure data consistency
-  //     queryClient.invalidateQueries({ queryKey: ["pending-companies"] });
-  //   },
-  //   onSuccess: () => {
-  //     toast({ title: "Success", description: `Company status updated.`, variant: "default" });
-  //     setModalOpen(false);
-  //     setSelectedCompany(null);
-  //     setAction(null);
-  //   },
-  // });
-
   // 🔄 SMART REFRESH FUNCTION WITH TAB ACTIVITY AWARENESS
   const handleRefresh = useCallback(async () => {
     const now = Date.now();
@@ -179,12 +96,7 @@ export default function RequestsPageClient() {
     }
     
     // Smart refresh logic: refresh if inactive for >5 minutes or if last refresh was >30 seconds ago
-    const shouldRefresh = timeSinceLastActivity > 5 * 60 * 1000 || timeSinceLastRefresh > 30 * 1000;
     
-    if (!shouldRefresh && !isRefreshing) {
-      console.log('Refresh blocked: Data is fresh');
-      return;
-    }
 
     try {
       setIsRefreshing(true);
@@ -196,17 +108,6 @@ export default function RequestsPageClient() {
       setIsRefreshing(false);
     }
   }, [lastRefresh, lastActivity, refetch, isRefreshing]);
-
-  // 📱 TAB VISIBILITY EFFECTS FOR PERFORMANCE MONITORING
-  useEffect(() => {
-    if (isVisible && lastActivity) {
-      const timeSinceLastActivity = Date.now() - lastActivity;
-      // Log when tab becomes active after long inactivity (10+ minutes)
-      if (timeSinceLastActivity > 10 * 60 * 1000) {
-        console.log('Tab became active after long inactivity, data might be stale');
-      }
-    }
-  }, [isVisible, lastActivity]);
 
   // Flatten data for table with proper error handling
   const tableData = React.useMemo(() => {

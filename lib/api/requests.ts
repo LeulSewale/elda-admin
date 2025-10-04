@@ -115,7 +115,7 @@ export const requestsApi = {
     page?: number
     limit?: number
     status?: string[]
-  }) => api.get<ApiResponse<PaginatedResponse<RequestTableItem>>>("/requests/assigned-to-me", { params }),
+  }) => api.get<ApiResponse<PaginatedResponse<RequestTableItem>>>("/requests/assigned", { params }),
   
   // Get requests created by the current user
   getMyCreatedRequests: (params?: {

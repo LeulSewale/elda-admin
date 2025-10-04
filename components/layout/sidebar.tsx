@@ -32,8 +32,8 @@ const navigation = [
     items: [
       { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard , roles: ["admin", "user","lawyer"] },
       { name: "Request Management", href: "/requests", icon: FileText, roles: ["admin","user","lawyer"] },
-      { name: "Ticket Management", href: "/tickets", icon: Ticket , roles: ["admin","user","lawyer"] },  
-      { name: "Document Management", href: "/documents", icon: BookText , roles: ["admin","user","lawyer"] },   
+      { name: "Ticket Management", href: "/tickets", icon: Ticket , roles: ["admin","user"] },  
+      { name: "Document Management", href: "/documents", icon: BookText , roles: ["admin","user"] },   
     ],
   },
   {

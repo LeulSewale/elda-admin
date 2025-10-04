@@ -41,9 +41,12 @@ export function useRequests(params?: RequestParams) {
       if (role === "admin") {
         console.debug("[Requests] Calling getAllRequests for admin")
         response = await requestsApi.getAllRequests(params)
-      } else if (role === "user" || role === "lawyer") {
-        console.debug("[Requests] Calling getMyRequests for", role)
-        response = await requestsApi.getMyRequests(params)
+        } else if (role === "user" ) {
+          console.debug("[Requests] Calling getMyRequests for", role)
+          response = await requestsApi.getMyRequests(params)
+        }
+       else if (role === "lawyer") {
+        response = await requestsApi.getMyAssignedRequests(params)
       } else {
         throw new Error(`Unsupported role: ${role}`)
       }
