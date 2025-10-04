@@ -1,7 +1,7 @@
 export const metadata = {
-  title: "Sign Up | Tele Tender Admin",
-  description: "Register your company to participate in tenders and manage your profile on Tele Tender.",
-  keywords: ["signup", "register", "company", "tender", "admin"],
+  title: "Sign Up | ELDA System",
+  description: "Create your user account to access the ELDA System and manage your requests and tickets.",
+  keywords: ["signup", "register", "user", "ELDA", "system"],
 }
 
 

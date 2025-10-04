@@ -140,7 +140,7 @@
                 {/* Sign up link */}
                 <div className="text-center text-sm text-gray-600">
                   Don&apos;t have an account?{" "}
-                  <Link href="#" className="text-[#A4D65E] hover:underline font-semibold">
+                  <Link href="/signup" className="text-[#A4D65E] hover:underline font-semibold">
                     Sign Up
                   </Link>
                 </div>

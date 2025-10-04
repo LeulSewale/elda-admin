@@ -1,7 +1,7 @@
 export const metadata = {
-  title: "Users | Tele Tender Admin",
-  description: "View and manage users in the Tele Tender Admin Dashboard.",
-  keywords: ["users", "dashboard", "tender", "admin"],
+  title: "Users | ELDA System Admin",
+  description: "View and manage users in the ELDA System Admin Dashboard.",
+  keywords: ["users", "dashboard", "ELDA", "admin"],
 }
 
 import { UsersPageClient } from "./UsersPageClient"

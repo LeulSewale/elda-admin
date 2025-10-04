@@ -336,7 +336,6 @@ export default function AllTicketsClientPage() {
   // Table columns
   const columns = [
     { accessorKey: "no", header: "No", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
-    { accessorKey: "id", header: "ID", cell: ({ row }: any) => <span className="font-medium">{row.original.id}</span> },
     { accessorKey: "subject", header: "Subject", cell: ({ row }: any) => <div className="font-medium">{row.original.subject}</div> },
     { accessorKey: "user", header: "Created By", cell: ({ row }: any) => <div className="font-medium">{row.original.user}</div> },
     { accessorKey: "priority", header: "Priority", cell: ({ row }: any) => {

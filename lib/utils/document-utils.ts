@@ -8,9 +8,10 @@ import { api } from "../axios"
 /**
  * Downloads a document file with proper file extension handling
  * @param doc - The document object
+ * @param customDestination - Optional custom destination folder path
  * @returns Promise that resolves when download is initiated
  */
-export const downloadDocument = async (doc: Document): Promise<void> => {
+export const downloadDocument = async (doc: Document, customDestination?: string): Promise<void> => {
   try {
     const downloadUrl = config.documents.getDownloadUrl(doc.download_path)
     
@@ -38,11 +39,20 @@ export const downloadDocument = async (doc: Document): Promise<void> => {
       const blobUrl = globalThis.URL.createObjectURL(blob)
       const link = globalThis.document.createElement('a')
       link.href = blobUrl
-      link.download = fileName
+      
+      // Set download path based on custom destination
+      if (customDestination && customDestination.trim()) {
+        // For custom destination, we'll use the full path
+        link.download = `${customDestination}/${fileName}`
+      } else {
+        // For default location, just use the filename
+        link.download = fileName
+      }
+      
       link.style.display = 'none'
       
       // Ensure download attribute is set
-      link.setAttribute('download', fileName)
+      link.setAttribute('download', customDestination && customDestination.trim() ? `${customDestination}/${fileName}` : fileName)
       
       globalThis.document.body.appendChild(link)
       link.click()
@@ -75,11 +85,18 @@ export const downloadDocument = async (doc: Document): Promise<void> => {
         const blobUrl = globalThis.URL.createObjectURL(blob)
         const link = globalThis.document.createElement('a')
         link.href = blobUrl
-        link.download = fileName
+        
+        // Set download path based on custom destination
+        if (customDestination && customDestination.trim()) {
+          link.download = `${customDestination}/${fileName}`
+        } else {
+          link.download = fileName
+        }
+        
         link.style.display = 'none'
         
         // Ensure download attribute is set
-        link.setAttribute('download', fileName)
+        link.setAttribute('download', customDestination && customDestination.trim() ? `${customDestination}/${fileName}` : fileName)
         
         globalThis.document.body.appendChild(link)
         link.click()
@@ -94,11 +111,18 @@ export const downloadDocument = async (doc: Document): Promise<void> => {
         
         const link = globalThis.document.createElement('a')
         link.href = downloadUrl
-        link.download = fileName
+        
+        // Set download path based on custom destination
+        if (customDestination && customDestination.trim()) {
+          link.download = `${customDestination}/${fileName}`
+        } else {
+          link.download = fileName
+        }
+        
         link.style.display = 'none'
         
         // Add proper attributes to force download
-        link.setAttribute('download', fileName)
+        link.setAttribute('download', customDestination && customDestination.trim() ? `${customDestination}/${fileName}` : fileName)
         link.setAttribute('type', doc.mime_type)
         
         globalThis.document.body.appendChild(link)

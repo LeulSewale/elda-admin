@@ -286,53 +286,6 @@ export default function DocumentsPageClient() {
             </div>
           </div>
 
-          {/* 3-Dot Menu */}
-          <div className="absolute bottom-2 right-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0 bg-white/80 hover:bg-white text-gray-600 hover:text-gray-800"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MoreVertical className="w-3 h-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem 
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handlePreviewThread(thread)
-                  }}
-                  className="cursor-pointer"
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  Preview Folder
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleDownloadThread(thread)
-                  }}
-                  className="cursor-pointer"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Documents
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleDeleteThread(thread)
-                  }}
-                  className="cursor-pointer text-red-600 focus:text-red-600"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Folder
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
         </div>
         
         {/* Folder Label */}

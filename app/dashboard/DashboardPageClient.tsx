@@ -6,10 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-// import { usersApi } from "@/lib/api/users"
-// import { companiesApi } from "@/lib/api/companies"
-// import { bidsApi } from "@/lib/api/bids"
-// import { tendersApi } from "@/lib/api/tenders"
 import { dummyDocuments, dummyRequests, dummyUsers } from "@/lib/dummy-data"
 import { useAuth } from "@/hooks/use-auth"
 import { useRequests } from "@/hooks/use-requests"
@@ -316,37 +312,37 @@ export default function DashboardPageClient() {
       return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
     }},
     { accessorKey: "created_at", header: "Created At", cell: ({ row }: any) => (
-      <div className="text-gray-600">
+        <div className="text-gray-600">
         {new Date(row.original.created_at).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        })}
-      </div>
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </div>
     )},   
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }: any) => {
+     {
+          id: "actions",
+          header: "Actions",
+          cell: ({ row }: any) => {
         const request = row.original
-        return (
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="icon"
+            return (
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
               onClick={() => {
                 // TODO: Open request detail modal
                 console.log("View request:", request.id);
               }}
-              className="hover:bg-blue-50 hover:text-blue-600"
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-          </div>
-        )
-      },
-      enableSorting: false,
-    },
+                  className="hover:bg-blue-50 hover:text-blue-600"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </div>
+            )
+          },
+          enableSorting: false,
+        },
   ];
 
   return (

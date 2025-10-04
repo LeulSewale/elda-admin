@@ -7,11 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@radix-ui/react-tooltip"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import React, { useState, useEffect, useCallback } from "react"
-import { 
-  Eye, 
-  Plus, 
- 
-} from "lucide-react"
+import { Eye, Plus } from "lucide-react"
 
 import { CreateRequestModal } from "@/components/modals/create-request-modal"
 import { useAuth } from "@/hooks/use-auth"
@@ -257,7 +253,6 @@ export default function RequestsPageClient() {
   // Table columns
   const columns = [
     { accessorKey: "no", header: "No", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
-    { accessorKey: "id", header: "Request ID", cell: ({ row }: any) => <span className="font-medium text-xs">{row.original.id}</span> },
     { accessorKey: "description", header: "Description", cell: ({ row }: any) => (
       <div className="max-w-xs truncate" title={row.original.description}>
         {row.original.description}

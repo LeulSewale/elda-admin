@@ -12,11 +12,11 @@ import { UserDetailModal } from "@/components/modals/user-detail-modal"
 import { DeleteModal } from "@/components/modals/delete-modal"
 import { CreateUserModal } from "@/components/modals/create-user-modal"
 import { EditUserModal } from "@/components/modals/edit-user-modal"
-import { Eye, Loader2, Trash2, Plus, Edit } from "lucide-react"
+import { Eye, Loader2, Trash2, Plus, Edit, RotateCcw } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { RotateCcw } from "lucide-react"
 import { useTabVisibility } from "@/hooks/use-tab-visibility"
+import { useAuth } from "@/hooks/use-auth"
 
 /**
  * ADVANCED PERFORMANCE OPTIMIZATIONS:
@@ -79,6 +79,7 @@ export function UsersPageClient() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isVisible, lastActivity } = useTabVisibility();
+  const { role } = useAuth();
 
   // Server provides: { status, message, data: User[], paging }
   
@@ -347,19 +348,19 @@ export function UsersPageClient() {
       cell: ({ row }: any) => {
         const user = row.original as User
         return (
-          <div className="flex items-center space-x-2" style={{ pointerEvents: 'auto', zIndex: 20, position: 'relative' }}>
+          <div className="flex items-center space-x-2 relative z-50" style={{ pointerEvents: 'auto' }}>
             <Button
               variant="ghost"
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
+                e.preventDefault()
                 console.debug("[Users] View button clicked", { user })
                 setSelectedUser(user)
                 setDetailModalOpen(true)
               }}
               className="hover:bg-blue-50 hover:text-blue-600"
-              style={{ pointerEvents: 'auto' }}
-              
+              style={{ pointerEvents: 'auto', zIndex: 100 }}
             >
               <Eye className="h-4 w-4" />
             </Button>
@@ -368,28 +369,36 @@ export function UsersPageClient() {
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                console.debug("[Users] Edit button clicked", { user })
+                e.preventDefault()
+                console.debug("[Users] Edit button clicked", { user, role, isLoading })
                 console.debug("[Users] Current modal state before:", { editUserModalOpen })
                 setSelectedUser(user)
                 setEditUserModalOpen(true)
                 console.debug("[Users] Modal state should be true now")
               }}
               className="hover:bg-blue-50 hover:text-blue-600"
-              style={{ pointerEvents: 'auto' }}
-            >
-              <Edit className="h-4 w-4" />
+              style={{ pointerEvents: 'auto', zIndex: 100 }}
+              >
+                <Edit className="h-4 w-4" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={(e) => {
                 e.stopPropagation()
-                console.debug("[Users] Delete button clicked", { user })
+                e.preventDefault()
+                console.debug("[Users] Delete button clicked", { user, role })
+                if (role !== "admin") {
+                  console.warn("[Users] Non-admin user attempted to delete user")
+                  // You could show a toast here if you want
+                  return
+                }
                 setSelectedUser(user)
                 setDeleteModalOpen(true)
               }}
-              className="hover:bg-red-50 hover:text-red-600"
-              style={{ pointerEvents: 'auto' }}
+              className={`hover:bg-red-50 hover:text-red-600 ${role !== "admin" ? "opacity-50 cursor-not-allowed" : ""}`}
+              style={{ pointerEvents: 'auto', zIndex: 100 }}
+              title={role !== "admin" ? "Only admins can delete users" : "Delete user"}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -401,11 +410,20 @@ export function UsersPageClient() {
   ]
 
   const handleDelete = async () => {
-    if (!selectedUser) return;
+    console.debug("[Users] handleDelete called", { selectedUser })
+    if (!selectedUser) {
+      console.warn("[Users] No selected user for deletion")
+      return;
+    }
     
     const userId = selectedUser._id || selectedUser.id;
-    if (!userId) return;
+    console.debug("[Users] Deleting user with ID:", userId)
+    if (!userId) {
+      console.warn("[Users] No user ID found")
+      return;
+    }
     
+    console.debug("[Users] Calling deleteUserMutation")
     deleteUserMutation.mutate({ userId });
   }
 
@@ -449,21 +467,6 @@ export function UsersPageClient() {
 
   return (
     <DashboardLayout title="Users" isFetching={isFetching}>
-      {/* Debug indicator */}
-      {editUserModalOpen && (
-        <div style={{ 
-          position: 'fixed', 
-          top: '10px', 
-          right: '10px', 
-          background: 'red', 
-          color: 'white', 
-          padding: '10px', 
-          zIndex: 9999,
-          borderRadius: '5px'
-        }}>
-          EDIT MODAL IS OPEN!
-        </div>
-      )}
       <div className="p-0">
       <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex justify-between items-center px-2 py-2">
@@ -471,6 +474,7 @@ export function UsersPageClient() {
              <h1 className="text-xl font-semibold">Users</h1>
             <p className="text-sm text-gray-400">View and manage users management</p>
           </div>
+          {role === "admin" && (
           <Button
             className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
             onClick={() => setCreateUserModalOpen(true)}
@@ -478,6 +482,7 @@ export function UsersPageClient() {
             <Plus className="w-4 h-4 mr-2" />
             Create User
           </Button>
+          )}
         </div>
         <hr></hr>
        
@@ -497,7 +502,7 @@ export function UsersPageClient() {
         ) : (
           <div className="relative">
             {isFetching && !isLoading && (
-              <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 pointer-events-none">
+              <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-5 pointer-events-none">
                 <div className="flex items-center gap-2 text-gray-600">
                   <Loader2 className="animate-spin w-5 h-5" />
                   Syncing users...
@@ -545,32 +550,6 @@ export function UsersPageClient() {
         isLoading={updateUserMutation.isPending || fetchUserQuery.isLoading}
       />
       
-      {/* Simple test modal */}
-      {editUserModalOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 10000
-        }}>
-          <div style={{
-            background: 'white',
-            padding: '20px',
-            borderRadius: '8px',
-            minWidth: '400px'
-          }}>
-            <h2>Test Edit Modal</h2>
-            <p>Selected User: {(selectedUser as any)?.name || (selectedUser as any)?.fullName || 'No user'}</p>
-            <button onClick={() => setEditUserModalOpen(false)}>Close</button>
-          </div>
-        </div>
-      )}
       <DeleteModal
         open={deleteModalOpen}
         onOpenChange={(open) => {
@@ -582,12 +561,14 @@ export function UsersPageClient() {
         description="Are you sure you want to permanently delete this user? This action cannot be undone."
         isLoading={deleteLoading || deleteUserMutation.isPending}
       />
+      {role === "admin" && (
       <CreateUserModal
         open={createUserModalOpen}
         onOpenChange={setCreateUserModalOpen}
         onCreateUser={(userData) => createUserMutation.mutate(userData)}
         isLoading={createUserMutation.isPending}
       />
+      )}
       </div>
     </DashboardLayout>
   )

@@ -63,11 +63,21 @@ export const docThreadsApi = {
     if (params?.limit) searchParams.set("limit", String(params.limit))
     const qs = searchParams.toString()
     const url = qs ? `/doc-threads?${qs}` : `/doc-threads`
+    console.debug("[DocThreads API] List request:", { url, params })
     return api.get<DocThreadsResponse>(url)
   },
-  create: (data: { subject: string; user_id?: string }) => api.post<DocThread>(`/doc-threads`, data),
-  getById: (id: string) => api.get<{ data: DocThread }>(`/doc-threads/${id}`),
-  delete: (id: string) => api.delete<{ id: string }>(`/doc-threads/${id}`),
+  create: (data: { subject: string; user_id?: string }) => {
+    console.debug("[DocThreads API] Create request:", { data })
+    return api.post<DocThread>(`/doc-threads`, data)
+  },
+  getById: (id: string) => {
+    console.debug("[DocThreads API] Get by ID request:", { id })
+    return api.get<{ data: DocThread }>(`/doc-threads/${id}`)
+  },
+  delete: (id: string) => {
+    console.debug("[DocThreads API] Delete thread request:", { id })
+    return api.delete<{ id: string }>(`/doc-threads/${id}`)
+  },
   
   // Document management endpoints
   getDocuments: (threadId: string, params?: { cursor?: string; limit?: number }) => {
@@ -76,16 +86,25 @@ export const docThreadsApi = {
     if (params?.limit) searchParams.set("limit", String(params.limit))
     const qs = searchParams.toString()
     const url = qs ? `/doc-threads/${threadId}/documents?${qs}` : `/doc-threads/${threadId}/documents`
+    console.debug("[DocThreads API] Get documents request:", { threadId, url, params })
     return api.get<DocumentsResponse>(url)
   },
-  uploadDocument: (threadId: string, formData: FormData) => 
-    api.post<{ data: Document }>(`/doc-threads/${threadId}/documents`, formData, {
+  uploadDocument: (threadId: string, formData: FormData) => {
+    console.debug("[DocThreads API] Upload document request:", { 
+      threadId, 
+      formDataKeys: Array.from(formData.keys()),
+      formDataSize: formData.get('file') ? (formData.get('file') as File).size : 'no file'
+    })
+    return api.post<{ data: Document }>(`/doc-threads/${threadId}/documents`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
-    }),
-  deleteDocument: (threadId: string, documentId: string) =>
-    api.delete<{ id: string }>(`/doc-threads/${threadId}/documents/${documentId}`),
+    })
+  },
+  deleteDocument: (threadId: string, documentId: string) => {
+    console.debug("[DocThreads API] Delete document request:", { threadId, documentId })
+    return api.delete<{ id: string }>(`/doc-threads/${threadId}/documents/${documentId}`)
+  },
 }
 
 

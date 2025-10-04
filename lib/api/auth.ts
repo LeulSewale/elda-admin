@@ -3,16 +3,27 @@ import { api } from "@/lib/axios"
 
 export const authApi = {
   login: (data: { email: string; password: string }) => api.post("/auth/login", data),
-  register:(formData:FormData)=>api.post('/auth/register',formData,{headers:{'Content-Type':'multipart/form-data'}}),
+  register: (data: { name: string; email: string; phone: string; password: string; role: string }) => 
+    api.post("/users", data, { headers: { 'Content-Type': 'application/json' } }),
   logout: () => api.post("/auth/logout"),
   me: () => {
     console.debug("[Auth API] me() called");
     console.debug("[Auth API] Base URL:", api.defaults.baseURL);
     console.debug("[Auth API] Full URL will be:", `${api.defaults.baseURL}/users/me`);
+    
+    // Debug: Check cookies before making request
+    if (typeof document !== 'undefined') {
+      const cookies = document.cookie;
+      const cookieList = cookies.split(';').map(c => c.trim());
+      console.debug("[Auth API] Cookies check:", {
+        cookies,
+        cookieList,
+        hasAccessToken: cookieList.some(c => c.includes('access_token')),
+        hasRefreshToken: cookieList.some(c => c.includes('refresh_token'))
+      });
+    }
+    
     return api.get("/users/me");
   },
   refresh: () => api.post("/auth/refresh"),
-  // OTP verification endpoints
-  verifyOTP: (userId: string, data: { code: string }) => api.post(`/auth/verify-otp/${userId}`, data),
-  resendOTP: (userId: string) => api.get(`/auth/resend-otp/${userId}`),
 }

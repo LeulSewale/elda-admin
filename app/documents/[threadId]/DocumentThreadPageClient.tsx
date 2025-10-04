@@ -37,6 +37,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import { FileUploadArea } from "@/components/documents/file-upload-area"
+import { DownloadDestinationDialog } from "@/components/modals/download-destination-dialog"
 import { config } from "@/lib/config"
 import { downloadDocument, previewDocument, formatFileSize, getFileIcon, formatRelativeDate, getDocumentDisplayName } from "@/lib/utils/document-utils"
 
@@ -52,6 +53,8 @@ export default function DocumentThreadPageClient() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showDeleteDocumentDialog, setShowDeleteDocumentDialog] = useState(false)
   const [documentToDelete, setDocumentToDelete] = useState<Document | null>(null)
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false)
+  const [documentToDownload, setDocumentToDownload] = useState<Document | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Get threadId from URL
@@ -115,10 +118,29 @@ export default function DocumentThreadPageClient() {
       })
       refetchDocuments()
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error("[Document Upload] Error:", error)
+      console.error("[Document Upload] Error response:", error?.response?.data)
+      console.error("[Document Upload] Error status:", error?.response?.status)
+      console.error("[Document Upload] Request data:", error?.config?.data)
+      
+      let errorMessage = "Failed to upload documents"
+      
+      if (error?.response?.data?.error) {
+        if (typeof error.response.data.error === 'object') {
+          errorMessage = error.response.data.error.message || error.response.data.error.details || JSON.stringify(error.response.data.error)
+        } else {
+          errorMessage = error.response.data.error
+        }
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error?.message) {
+        errorMessage = error.message
+      }
+      
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to upload documents",
+        title: "Upload failed",
+        description: errorMessage,
         variant: "destructive",
       })
     },
@@ -141,10 +163,28 @@ export default function DocumentThreadPageClient() {
       // Navigate back to documents list
       router.push("/documents")
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error("[Delete Folder] Error:", error)
+      console.error("[Delete Folder] Error response:", error?.response?.data)
+      console.error("[Delete Folder] Error status:", error?.response?.status)
+      
+      let errorMessage = "Failed to delete folder"
+      
+      if (error?.response?.data?.error) {
+        if (typeof error.response.data.error === 'object') {
+          errorMessage = error.response.data.error.message || error.response.data.error.details || JSON.stringify(error.response.data.error)
+        } else {
+          errorMessage = error.response.data.error
+        }
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error?.message) {
+        errorMessage = error.message
+      }
+      
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete folder",
+        title: "Delete failed",
+        description: errorMessage,
         variant: "destructive",
       })
     },
@@ -164,10 +204,28 @@ export default function DocumentThreadPageClient() {
       })
       refetchDocuments()
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error("[Delete Document] Error:", error)
+      console.error("[Delete Document] Error response:", error?.response?.data)
+      console.error("[Delete Document] Error status:", error?.response?.status)
+      
+      let errorMessage = "Failed to delete document"
+      
+      if (error?.response?.data?.error) {
+        if (typeof error.response.data.error === 'object') {
+          errorMessage = error.response.data.error.message || error.response.data.error.details || JSON.stringify(error.response.data.error)
+        } else {
+          errorMessage = error.response.data.error
+        }
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error?.message) {
+        errorMessage = error.message
+      }
+      
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete document",
+        title: "Delete failed",
+        description: errorMessage,
         variant: "destructive",
       })
     },
@@ -210,29 +268,41 @@ export default function DocumentThreadPageClient() {
   }
 
   const handleDownload = async (doc: Document) => {
+    // Show download destination dialog instead of direct download
+    setDocumentToDownload(doc)
+    setShowDownloadDialog(true)
+  }
+
+  const handleDownloadWithDestination = async (destination: string) => {
+    if (!documentToDownload) return
+
     try {
       // Set loading state
-      setDownloadingFiles(prev => new Set([...prev, doc.id]))
+      setDownloadingFiles(prev => new Set([...prev, documentToDownload.id]))
       
-      await downloadDocument(doc)
+      await downloadDocument(documentToDownload, destination)
       
       // Mark file as downloaded and remove from loading
-      setDownloadedFiles(prev => new Set([...prev, doc.id]))
+      setDownloadedFiles(prev => new Set([...prev, documentToDownload.id]))
       setDownloadingFiles(prev => {
         const newSet = new Set(prev)
-        newSet.delete(doc.id)
+        newSet.delete(documentToDownload.id)
         return newSet
       })
       
       toast({
         title: "Download started",
-        description: `${getDocumentDisplayName(doc)} is being downloaded`,
+        description: `${getDocumentDisplayName(documentToDownload)} is being downloaded${destination ? ` to ${destination}` : ''}`,
       })
+      
+      // Close dialog
+      setShowDownloadDialog(false)
+      setDocumentToDownload(null)
     } catch (error) {
       // Remove from loading state on error
       setDownloadingFiles(prev => {
         const newSet = new Set(prev)
-        newSet.delete(doc.id)
+        newSet.delete(documentToDownload.id)
         return newSet
       })
       
@@ -509,6 +579,15 @@ export default function DocumentThreadPageClient() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Download Destination Dialog */}
+      <DownloadDestinationDialog
+        open={showDownloadDialog}
+        onOpenChange={setShowDownloadDialog}
+        document={documentToDownload}
+        onDownload={handleDownloadWithDestination}
+        isLoading={downloadingFiles.has(documentToDownload?.id || '')}
+      />
     </DashboardLayout>
   )
 }
