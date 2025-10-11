@@ -25,7 +25,9 @@ interface UserDetailModalProps {
 export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalProps) {
   if (!user) return null
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | undefined) => {
+    if (!status) return <Badge variant="secondary">Unknown</Badge>
+    
     switch (status.toLowerCase()) {
       case 'active':
         return <Badge className="bg-[#A4D65E] text-white">Active</Badge>
@@ -109,10 +111,10 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
               )}
             </div>
             <div className="flex-1">
-              <h3 className="text-xl font-bold text-gray-900 mb-1">{user.fullName}</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-1">{user.fullName || user.name || 'Unknown User'}</h3>
               <p className="text-sm text-gray-500 mb-2">User ID: {user._id || user.id}</p>
               <div className="flex items-center gap-2">
-                {getStatusBadge(user.status)}
+                {getStatusBadge(user.status || (user.is_active ? 'active' : 'inactive'))}
               </div>
             </div>
           </div>
@@ -130,7 +132,7 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
               <Phone className="w-4 h-4 text-gray-500" />
               <div>
                 <p className="text-xs text-gray-500">Phone</p>
-                <p className="text-sm font-medium">{user.phoneNumber}</p>
+                <p className="text-sm font-medium">{user.phoneNumber || user.phone || 'N/A'}</p>
               </div>
             </div>
           </div>
@@ -146,7 +148,7 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
           </h4>
           <div className="p-3 bg-gray-50 rounded-lg">
             <p className="text-sm text-gray-600">
-              <span className="font-medium">Joined:</span> {formatDate(user.createdAt)}
+              <span className="font-medium">Joined:</span> {user.createdAt || user.created_at ? formatDate(user.createdAt || user.created_at) : 'N/A'}
             </p>
           </div>
         </div>
@@ -154,19 +156,23 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
         <Separator />
 
         {/* Location Information */}
-        <div className="space-y-3">
-          <h4 className="text-md font-semibold text-gray-800 flex items-center gap-2">
-            <MapPin className="w-4 h-4" />
-            Location
-          </h4>
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm">
-              <span className="font-medium">{user.address.city}</span>, {user.address.country}
-            </p>
-          </div>
-        </div>
-
-        <Separator />
+        {user.address && (
+          <>
+            <div className="space-y-3">
+              <h4 className="text-md font-semibold text-gray-800 flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                Location
+              </h4>
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm">
+                  <span className="font-medium">{user.address.city || 'N/A'}</span>, {user.address.country || 'N/A'}
+                </p>
+              </div>
+            </div>
+            
+            <Separator />
+          </>
+        )}
 
         {/* Package Information */}
         <div className="space-y-3">

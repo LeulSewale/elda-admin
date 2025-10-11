@@ -5,7 +5,7 @@ import { DataTable } from "@/components/data-table/data-table"
 import { usersApi } from "@/lib/api/users"
 import { api } from "@/lib/axios"
 import type { User } from "@/lib/types"
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { UserDetailModal } from "@/components/modals/user-detail-modal"
@@ -68,14 +68,6 @@ export function UsersPageClient() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefresh, setLastRefresh] = useState(0)
   
-  // Debug modal state changes
-  useEffect(() => {
-    console.debug("[Users] Edit modal state changed", { 
-      editUserModalOpen, 
-      selectedUser: selectedUser?.id || selectedUser?._id,
-      hasSelectedUser: !!selectedUser 
-    })
-  }, [editUserModalOpen, selectedUser])
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { isVisible, lastActivity } = useTabVisibility();
@@ -293,7 +285,7 @@ export function UsersPageClient() {
 
 
 
-  const columns = [
+  const columns = useMemo(() => [
     {
       id: "no",
       header: "No",
@@ -349,66 +341,59 @@ export function UsersPageClient() {
       cell: ({ row }: any) => {
         const user = row.original as User
         return (
-          <div className="flex items-center space-x-2 relative z-50" style={{ pointerEvents: 'auto' }}>
-            <Button
-              variant="ghost"
-              size="icon"
+          <div className="flex items-center space-x-2">
+            <button
               onClick={(e) => {
-                e.stopPropagation()
                 e.preventDefault()
-                console.debug("[Users] View button clicked", { user })
+                e.stopPropagation()
                 setSelectedUser(user)
                 setDetailModalOpen(true)
               }}
-              className="hover:bg-blue-50 hover:text-blue-600"
-              style={{ pointerEvents: 'auto', zIndex: 100 }}
+              className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors cursor-pointer"
+              title="View user"
+              type="button"
+              style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
             >
               <Eye className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
+            </button>
+            <button
               onClick={(e) => {
-                e.stopPropagation()
                 e.preventDefault()
-                console.debug("[Users] Edit button clicked", { user, role, isLoading })
-                console.debug("[Users] Current modal state before:", { editUserModalOpen })
+                e.stopPropagation()
                 setSelectedUser(user)
                 setEditUserModalOpen(true)
-                console.debug("[Users] Modal state should be true now")
               }}
-              className="hover:bg-blue-50 hover:text-blue-600"
-              style={{ pointerEvents: 'auto', zIndex: 100 }}
-              >
-                <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
+              className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors cursor-pointer"
+              title="Edit user"
+              type="button"
+              style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
+            >
+              <Edit className="h-4 w-4" />
+            </button>
+            <button
               onClick={(e) => {
-                e.stopPropagation()
                 e.preventDefault()
-                console.debug("[Users] Delete button clicked", { user, role })
+                e.stopPropagation()
                 if (role !== "admin") {
-                  console.warn("[Users] Non-admin user attempted to delete user")
-                  // You could show a toast here if you want
                   return
                 }
                 setSelectedUser(user)
                 setDeleteModalOpen(true)
               }}
-              className={`hover:bg-red-50 hover:text-red-600 ${role !== "admin" ? "opacity-50 cursor-not-allowed" : ""}`}
-              style={{ pointerEvents: 'auto', zIndex: 100 }}
+              className={`p-2 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors ${role !== "admin" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
               title={role !== "admin" ? "Only admins can delete users" : "Delete user"}
+              type="button"
+              style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
+              disabled={role !== "admin"}
             >
               <Trash2 className="h-4 w-4" />
-            </Button>
+            </button>
           </div>
         )
       },
       enableSorting: false,
     },
-  ]
+  ], [setSelectedUser, setDetailModalOpen, setEditUserModalOpen, setDeleteModalOpen, role]);
 
   const handleDelete = async () => {
     console.debug("[Users] handleDelete called", { selectedUser })
@@ -439,21 +424,24 @@ export function UsersPageClient() {
     const currentName = currentUser.name || ""
     const currentEmail = currentUser.email || ""
     const currentPhone = currentUser.phone || ""
+    const currentStatus = currentUser.status || (currentUser.is_active ? "active" : "inactive")
 
     const nextName = ((data as any).fullName ?? currentName) as string
     const nextEmail = (data.email ?? currentEmail) as string
     const nextPhone = ((data as any).phoneNumber ?? currentPhone) as string
+    const nextStatus = (data.status ?? currentStatus) as string
 
     const payload: Record<string, any> = {}
     if (nextName !== currentName) payload.name = nextName
     if (nextEmail !== currentEmail) payload.email = nextEmail
     if (nextPhone !== currentPhone) payload.phone = nextPhone
+    if (nextStatus !== currentStatus) payload.status = nextStatus
 
     // Debug logs
     console.debug("[Users] Update diff", { 
       userId, 
-      current: { currentName, currentEmail, currentPhone }, 
-      next: { nextName, nextEmail, nextPhone }, 
+      current: { currentName, currentEmail, currentPhone, currentStatus }, 
+      next: { nextName, nextEmail, nextPhone, nextStatus }, 
       payload 
     })
 
@@ -515,6 +503,7 @@ export function UsersPageClient() {
              data={users || []} 
              searchKey="name" 
              quickFilterKey="role"
+             quickFilterLabel="Role"
              searchPlaceholder="Search users by name" />
           </div>
         )}
@@ -530,7 +519,6 @@ export function UsersPageClient() {
       <EditUserModal
         open={editUserModalOpen}
         onOpenChange={(open) => {
-          console.debug("[Users] EditUserModal onOpenChange", { open, selectedUser })
           setEditUserModalOpen(open)
           if (!open) {
             setSelectedUser(null)
@@ -542,7 +530,7 @@ export function UsersPageClient() {
           fullName: fetchUserQuery.data.name || "",
           email: fetchUserQuery.data.email || "",
           phoneNumber: fetchUserQuery.data.phone || "",
-          status: fetchUserQuery.data.is_active ? "Active" : "Locked",
+          status: fetchUserQuery.data.status || (fetchUserQuery.data.is_active ? "active" : "inactive"),
           role: fetchUserQuery.data.role,
           createdAt: fetchUserQuery.data.created_at || "",
           updatedAt: fetchUserQuery.data.updated_at || "",

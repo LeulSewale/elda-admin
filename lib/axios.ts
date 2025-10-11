@@ -115,6 +115,18 @@ api.interceptors.response.use(
 
         console.debug("[Axios] Token refresh successful", { status: refreshResponse.status })
 
+        // Update stored tokens if the refresh response contains new tokens
+        if (refreshResponse.data?.accessToken) {
+          console.debug("[Axios] Updating stored access token after refresh")
+          if (typeof document !== 'undefined') {
+            const isProduction = process.env.NODE_ENV === 'production'
+            const secureFlag = isProduction ? 'secure;' : ''
+            const expires = new Date()
+            expires.setTime(expires.getTime() + (1 * 24 * 60 * 60 * 1000)) // 1 day
+            document.cookie = `access_token=${refreshResponse.data.accessToken};expires=${expires.toUTCString()};path=/;${secureFlag}samesite=strict`
+          }
+        }
+
         // Retry original request
         return api(originalRequest)
       } catch (refreshError: any) {
@@ -124,6 +136,27 @@ api.interceptors.response.use(
           data: refreshError?.response?.data,
           message: refreshError?.message || refreshError?.toString?.() || 'unknown error'
         })
+
+        // Clear cookies when refresh fails to prevent stale token issues
+        if (typeof document !== 'undefined') {
+          console.debug("[Axios] Clearing cookies due to refresh failure")
+          document.cookie.split(";").forEach((c) => {
+            const eqPos = c.indexOf("=");
+            const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim();
+            if (name === 'access_token' || name === 'refresh_token') {
+              document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+            }
+          });
+        }
+
+        // Provide more specific error information
+        if (refreshError?.response?.status === 401) {
+          console.warn("[Axios] Refresh token expired - user needs to login again")
+          error.message = "Session expired. Please log in again."
+        } else if (refreshError?.response?.status === 403) {
+          console.warn("[Axios] Refresh token invalid - user needs to login again")
+          error.message = "Invalid session. Please log in again."
+        }
 
         // Refresh failed - log but don't redirect automatically
         console.warn("[Axios] Token refresh failed - letting component handle the error")

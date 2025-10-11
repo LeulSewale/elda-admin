@@ -9,21 +9,23 @@ import { useForm as useReactHookForm, Controller } from "react-hook-form"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { GlobalModal } from "./global-modal"
 import { useEffect } from "react"
+import { Employee } from "@/lib/api/employees"
 
-interface CreateEmployeeModalProps {
+interface EditEmployeeModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onCreateEmployee: (data: any) => void
+  onUpdateEmployee: (id: string, data: any) => void
+  employee: Employee | null
   isLoading?: boolean
 }
 
-function EmployeeFormFields({ control, isLoading }: { control: any; isLoading?: boolean }) {
+function EditEmployeeFormFields({ control, isLoading }: { control: any; isLoading?: boolean }) {
   return (
     <>
       <div className="grid grid-cols-2 gap-4">
         <FormField
           control={control}
-          name="user.name"
+          name="name"
           rules={{ required: "Name is required" }}
           render={({ field }) => (
             <FormItem>
@@ -37,7 +39,7 @@ function EmployeeFormFields({ control, isLoading }: { control: any; isLoading?: 
         />
         <FormField
           control={control}
-          name="user.email"
+          name="email"
           rules={{ 
             required: "Email is required",
             pattern: {
@@ -57,7 +59,7 @@ function EmployeeFormFields({ control, isLoading }: { control: any; isLoading?: 
         />
         <FormField
           control={control}
-          name="user.phone"
+          name="phone"
           rules={{ required: "Phone is required" }}
           render={({ field }) => (
             <FormItem>
@@ -202,21 +204,17 @@ function EmployeeFormFields({ control, isLoading }: { control: any; isLoading?: 
             </FormItem>
           )}
         />
-       
       </div>
     </>
   )
 }
 
-export function CreateEmployeeModal({ open, onOpenChange, onCreateEmployee, isLoading = false }: CreateEmployeeModalProps) {
+export function EditEmployeeModal({ open, onOpenChange, onUpdateEmployee, employee, isLoading = false }: EditEmployeeModalProps) {
   
   const form = useReactHookForm<{
-    user: {
-      name: string
-      email: string
-      phone: string
-      is_active: boolean
-    }
+    name: string
+    email: string
+    phone: string
     job_title: string
     department: string
     employment_type: string
@@ -224,12 +222,9 @@ export function CreateEmployeeModal({ open, onOpenChange, onCreateEmployee, isLo
     district: string
   }>({
     defaultValues: {
-      user: {
-        name: "",
-        email: "",
-        phone: "",
-        is_active: true,
-      },
+      name: "",
+      email: "",
+      phone: "",
       job_title: "",
       department: "",
       employment_type: "",
@@ -238,61 +233,62 @@ export function CreateEmployeeModal({ open, onOpenChange, onCreateEmployee, isLo
     },
   })
 
-
   useEffect(() => {
-    if (open) {
+    if (open && employee) {
       form.reset({
-        user: {
-          name: "",
-          email: "",
-          phone: "",
-          is_active: true,
-        },
-        job_title: "",
-        department: "",
-        employment_type: "",
-        salary: 0,
-        district: ""
+        name: employee.user_name || "",
+        email: employee.user_email || "",
+        phone: employee.user_phone || "",
+        job_title: employee.job_title || "",
+        department: employee.department || "",
+        employment_type: employee.employment_type || "",
+        salary: parseFloat(employee.salary) || 0,
+        district: employee.district || "",
       });
     }
-  }, [open, form]);
+  }, [open, employee, form]);
 
   return (
     <GlobalModal
       open={open}
       onOpenChange={onOpenChange}
-      title="Create New Employee"
-      description="Fill in the employee details to create a new employee record"
+      title="Edit Employee"
       actions={
         <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             Cancel
           </Button>
-          <Button type="submit" form="create-employee-form" disabled={isLoading}>
-            {isLoading ? "Creating..." : "Create Employee"}
+          <Button type="submit" form="edit-employee-form" disabled={isLoading}>
+            {isLoading ? "Updating..." : "Update Employee"}
           </Button>
         </>
       }
     >
       <Form {...form}>
         <form
-          id="create-employee-form"
+          id="edit-employee-form"
           onSubmit={form.handleSubmit((data) => {
-            console.debug("[Create Employee] Form data:", data);
-            // Clean up the data before sending
-            const payload: any = {
-              ...data,
-              salary: parseInt(data.salary.toString()), // Convert back to number
+            console.debug("[Edit Employee] Form data:", data);
+            if (employee) {
+              // Transform form data to match API expectations
+              const apiData = {
+                name: data.name,
+                email: data.email,
+                phone: data.phone,
+                job_title: data.job_title,
+                department: data.department,
+                employment_type: data.employment_type,
+                salary: data.salary.toString(),
+                district: data.district,
+              };
+              console.debug("[Edit Employee] Transformed API data:", apiData);
+              onUpdateEmployee(employee.id, apiData);
             }
-            // Don't include manager_id if it's empty or null
-            // The backend doesn't require it and will fail validation with empty string
-            console.debug("[Create Employee] Final payload:", payload);
-            onCreateEmployee(payload)
           })}
           className="space-y-4"
         >
           <div className="space-y-4">
-            <EmployeeFormFields control={form.control} isLoading={isLoading} />
+            <EditEmployeeFormFields control={form.control} isLoading={isLoading} />
           </div>
         </form>
       </Form>

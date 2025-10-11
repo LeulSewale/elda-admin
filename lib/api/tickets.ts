@@ -147,5 +147,27 @@ export const ticketsApi = {
       },
       withCredentials: true
     })
+  },
+
+  // Add comment/reply to ticket
+  addComment: (ticketId: string, body: string, isInternal: boolean = false) => {
+    console.debug("[Tickets API] Adding comment to ticket:", { ticketId, body, isInternal })
+    return api.post(`/tickets/${ticketId}/comments`, { 
+      body, 
+      is_internal: isInternal 
+    }, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      withCredentials: true
+    })
+  },
+
+  // Get ticket comments
+  getComments: (ticketId: string) => {
+    console.debug("[Tickets API] Getting comments for ticket:", ticketId)
+    return api.get(`/tickets/${ticketId}/comments`, {
+      withCredentials: true
+    })
   }
 }

@@ -31,6 +31,8 @@ export const usersApi = {
       id,
       payload: data,
       url: `/users/${id}`,
+      fullURL: `${api.defaults.baseURL}/users/${id}`,
+      method: "PATCH",
       baseURL: api.defaults.baseURL,
       headers: api.defaults.headers,
       withCredentials: api.defaults.withCredentials,
@@ -43,7 +45,15 @@ export const usersApi = {
     })
   },
   lockUser: (_id: string, data: any) => api.patch(`/user/status/${_id}`, data),
-  deleteUser: (id: string) => api.delete(`/users/${id}`),
+  deleteUser: (id: string) => {
+    console.debug("[Users API] Deleting user", {
+      id,
+      url: `/users/${id}`,
+      fullURL: `${api.defaults.baseURL}/users/${id}`,
+      method: "DELETE",
+    })
+    return api.delete(`/users/${id}`)
+  },
   updateProfile: (data: FormData) => api.patch("/user/update-profile", data, {
     headers: {
       'Content-Type': 'multipart/form-data',

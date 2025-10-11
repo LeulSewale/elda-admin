@@ -7,16 +7,20 @@ import { Badge } from "@/components/ui/badge"
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 import { employeesApi, type Employee, type EmployeesResponse } from "@/lib/api/employees"
 import { useAuth } from "@/hooks/use-auth"
-import { useState, useCallback, useEffect } from "react"
-import { Plus, Edit, Package as PackageIcon } from "lucide-react"
+import { useState, useCallback, useEffect, useMemo } from "react"
+import { Plus, Edit, Trash2, Package as PackageIcon } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useTabVisibility } from "@/hooks/use-tab-visibility"
 import { CreateEmployeeModal } from "@/components/modals/create-employee-modal"
+import { EditEmployeeModal } from "@/components/modals/edit-employee-modal"
+import { DeleteModal } from "@/components/modals/delete-modal"
 
 
 export function EmployeesPageClient() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [createEmployeeModalOpen, setCreateEmployeeModalOpen] = useState(false);
+  const [editEmployeeModalOpen, setEditEmployeeModalOpen] = useState(false);
+  const [deleteEmployeeModalOpen, setDeleteEmployeeModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(0);
   
@@ -109,7 +113,109 @@ export function EmployeesPageClient() {
     }
   }, [error]);
 
-  // Employee mutations can be added here when needed
+  // Update employee mutation
+  const updateEmployeeMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: any }) => {
+      console.debug("[Update Employee] Sending data:", { id, data });
+      return employeesApi.updateEmployee(id, data);
+    },
+    onSuccess: (response) => {
+      console.debug("[Update Employee] Success:", response.data);
+      toast({
+        title: "Success",
+        description: "Employee updated successfully",
+        variant: "default",
+      });
+      setEditEmployeeModalOpen(false);
+      setSelectedEmployee(null);
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+    },
+    onError: (err: any) => {
+      console.error("[Update Employee] Error:", err);
+      console.error("[Update Employee] Error response:", err?.response?.data);
+      console.error("[Update Employee] Error details:", err?.response?.data?.error?.details);
+      
+      let errorMessage = "Failed to update employee.";
+      
+      if (err?.response?.data?.error) {
+        const error = err.response.data.error;
+        if (error.details && Array.isArray(error.details) && error.details.length > 0) {
+          // Show specific validation errors
+          errorMessage = error.details.map((d: any) => `${d.field}: ${d.message}`).join(', ');
+        } else if (error.message) {
+          errorMessage = error.message;
+        } else if (typeof error === 'string') {
+          errorMessage = error;
+        } else {
+          errorMessage = JSON.stringify(error);
+        }
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
+      toast({
+        title: "Update failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete employee mutation
+  const deleteEmployeeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      console.debug("[Delete Employee] Deleting employee with ID:", id);
+      return employeesApi.deleteEmployee(id);
+    },
+    onSuccess: (response) => {
+      console.debug("[Delete Employee] Success:", response.data);
+      toast({
+        title: "Success",
+        description: "Employee deleted successfully",
+        variant: "default",
+      });
+      setDeleteEmployeeModalOpen(false);
+      setSelectedEmployee(null);
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+    },
+    onError: (err: any) => {
+      console.error("[Delete Employee] Error:", err);
+      console.error("[Delete Employee] Error response:", err?.response?.data);
+      console.error("[Delete Employee] Error details:", err?.response?.data?.error?.details);
+      
+      let errorMessage = "Failed to delete employee.";
+      let errorTitle = "Delete failed";
+      
+      // Handle 409 Conflict errors specifically
+      if (err?.response?.status === 409) {
+        errorTitle = "Cannot delete employee";
+        errorMessage = "This employee cannot be deleted because they have associated records (tickets, documents, or other data). Please reassign or remove these records first.";
+      } else if (err?.response?.data?.error) {
+        const error = err.response.data.error;
+        if (error.details && Array.isArray(error.details) && error.details.length > 0) {
+          errorMessage = error.details.map((d: any) => `${d.field}: ${d.message}`).join(', ');
+        } else if (error.message) {
+          errorMessage = error.message;
+        } else if (typeof error === 'string') {
+          errorMessage = error;
+        } else {
+          errorMessage = JSON.stringify(error);
+        }
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
+      toast({
+        title: errorTitle,
+        description: errorMessage,
+        variant: "destructive",
+      });
+    },
+  });
 
   // Create employee mutation
   const createEmployeeMutation = useMutation({
@@ -128,11 +234,6 @@ export function EmployeesPageClient() {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
     },
     onError: (err: any) => {
-      console.error("[Create Employee] Error:", err);
-      console.error("[Create Employee] Error response:", err?.response?.data);
-      console.error("[Create Employee] Error response details:", JSON.stringify(err?.response?.data, null, 2));
-      console.error("[Create Employee] Error status:", err?.response?.status);
-      console.error("[Create Employee] Request data:", err?.config?.data);
       
       let errorMessage = "Failed to create employee.";
       
@@ -186,14 +287,30 @@ export function EmployeesPageClient() {
 
   
   const handleEditEmployee = (employee: Employee) => {
+    console.log('[Edit Employee] Button clicked, employee:', employee);
     setSelectedEmployee(employee);
-    // TODO: Add edit modal functionality
-    console.log('Edit employee:', employee);
+    setEditEmployeeModalOpen(true);
+  };
+
+  const handleDeleteEmployee = (employee: Employee) => {
+    console.log('[Delete Employee] Button clicked, employee:', employee);
+    setSelectedEmployee(employee);
+    setDeleteEmployeeModalOpen(true);
+  };
+
+  const handleUpdateEmployee = (id: string, data: any) => {
+    updateEmployeeMutation.mutate({ id, data });
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedEmployee) {
+      deleteEmployeeMutation.mutate(selectedEmployee.id);
+    }
   };
 
 
-  // Table columns
-  const columns = [
+  // Table columns with useMemo to prevent recreation on every render
+  const columns = useMemo(() => [
     {
       id: "no",
       header: "No",
@@ -315,25 +432,43 @@ export function EmployeesPageClient() {
       header: "Actions",
       cell: ({ row }: any) => {
         const employee = row.original as Employee;
+        
         return (
           <div className="flex items-center space-x-2">
-            <Button
-              data-employees-action
-              variant="ghost"
-              size="icon"
-              onClick={() => handleEditEmployee(employee)}
-              onMouseDown={(e) => { e.stopPropagation(); }}
-              className="hover:bg-blue-50 hover:text-blue-600 pointer-events-auto relative z-20"
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setSelectedEmployee(employee);
+                setEditEmployeeModalOpen(true);
+              }}
+              className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors cursor-pointer"
               title="Edit employee"
+              type="button"
+              style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
             >
               <Edit className="h-4 w-4" />
-            </Button>
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setSelectedEmployee(employee);
+                setDeleteEmployeeModalOpen(true);
+              }}
+              className="p-2 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors cursor-pointer"
+              title="Delete employee"
+              type="button"
+              style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
           </div>
         );
       },
       enableSorting: false,
     },
-  ];
+  ], [setSelectedEmployee, setEditEmployeeModalOpen, setDeleteEmployeeModalOpen]);
 
   if (role !== "admin") {
     return (
@@ -408,22 +543,25 @@ export function EmployeesPageClient() {
             </Button>
           </div>
         ) : (
-          <div className="relative pointer-events-auto z-0">
+          <div className="relative">
             {isFetching && !isLoading && (
-              <div data-employees-overlay className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 pointer-events-none">
+              <div data-employees-overlay className="absolute inset-0 bg-white/60 flex items-center justify-center z-[5] pointer-events-none">
                 <div className="flex items-center gap-2 text-gray-600">
                   <PackageIcon className="animate-spin w-5 h-5" />
                   Syncing employees...
                 </div>
               </div>
             )}
-            <DataTable 
-              columns={columns} 
-              data={Array.isArray(employees) ? employees : []} 
-              searchKey="user_name" 
-              quickFilterKey="employment_type"
-              searchPlaceholder="Search Employees by name..." 
-            />
+            <div className="relative z-[10]">
+              <DataTable 
+                columns={columns} 
+                data={Array.isArray(employees) ? employees : []} 
+                searchKey="user_name" 
+                quickFilterKey="employment_type"
+                quickFilterLabel="Employment Type"
+                searchPlaceholder="Search Employees by name..." 
+              />
+            </div>
           </div>
         )}
       </div>
@@ -433,6 +571,23 @@ export function EmployeesPageClient() {
         onOpenChange={setCreateEmployeeModalOpen}
         onCreateEmployee={(employeeData) => createEmployeeMutation.mutate(employeeData)}
         isLoading={createEmployeeMutation.isPending}
+      />
+
+      <EditEmployeeModal
+        open={editEmployeeModalOpen}
+        onOpenChange={setEditEmployeeModalOpen}
+        onUpdateEmployee={handleUpdateEmployee}
+        employee={selectedEmployee}
+        isLoading={updateEmployeeMutation.isPending}
+      />
+
+      <DeleteModal
+        open={deleteEmployeeModalOpen}
+        onOpenChange={setDeleteEmployeeModalOpen}
+        onConfirm={handleConfirmDelete}
+        title="Delete Employee"
+        description={`Are you sure you want to delete ${selectedEmployee?.user_name}? This action cannot be undone.`}
+        isLoading={deleteEmployeeMutation.isPending}
       />
       </div>
     </DashboardLayout>

@@ -252,8 +252,8 @@ export default function RequestsPageClient() {
                       <UserPlus className="h-4 w-4" />
                     </Button>
                     <Button
-                      variant="ghost"
-                      size="icon"
+                  variant="ghost"
+                  size="icon"
                       onClick={() => {
                         setSelectedRequest(request)
                         setStatusModalOpen(true)

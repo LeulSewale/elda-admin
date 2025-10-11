@@ -63,7 +63,25 @@ export const employeesApi = {
       withCredentials: true
     });
   },
-  updateEmployee: (id: string, data: any) => api.patch(`/employees/${id}`, data),
-  deleteEmployee: (id: string) => api.delete(`/employees/${id}`),
+  updateEmployee: (id: string, data: any) => {
+    console.debug("[Employees API] Updating employee with ID:", id);
+    console.debug("[Employees API] Update data:", data);
+    console.debug("[Employees API] Full URL will be:", `${api.defaults.baseURL}/employees/${id}`);
+    
+    return api.patch(`/employees/${id}`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      withCredentials: true
+    });
+  },
+  deleteEmployee: (id: string) => {
+    console.debug("[Employees API] Deleting employee with ID:", id);
+    console.debug("[Employees API] Full URL will be:", `${api.defaults.baseURL}/employees/${id}`);
+    
+    return api.delete(`/employees/${id}`, {
+      withCredentials: true
+    });
+  },
 }
 

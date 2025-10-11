@@ -10,12 +10,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Bell, LogOut, Settings, User, Flag } from "lucide-react"
+import { Bell, LogOut, User } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import type { User as UserType } from "@/lib/types"
 import { Sidebar, SidebarToggle } from "./sidebar"
 import { ProfileModal } from "@/components/modals/profile-modal"
-import { SettingsModal } from "@/components/modals/settings-modal"
 import { NotificationsDropdown } from "@/components/modals/notifications-modal"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useState } from "react"
@@ -28,7 +27,6 @@ export function Header({ title }: HeaderProps) {
   const { user, logout } = useAuth() as { user: UserType | null, logout: () => void }
   const { unreadCount } = useNotifications()
   const [profileOpen, setProfileOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
 
   return (
@@ -81,14 +79,6 @@ export function Header({ title }: HeaderProps) {
                   <User className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                  <div className="ml-auto flex items-center gap-1">
-                    <Flag className="w-3 h-3 text-blue-600" />
-                    <span className="text-xs text-blue-600">Coming Soon</span>
-                  </div>
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => logout()}>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -102,8 +92,6 @@ export function Header({ title }: HeaderProps) {
 
       {/* Modals */}
       <ProfileModal open={profileOpen} onOpenChange={setProfileOpen} />
-      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
-      {/* <NotificationsDropdown open={notificationsOpen} onOpenChange={setNotificationsOpen} /> */}
     </>
   )
 }

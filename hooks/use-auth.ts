@@ -104,6 +104,19 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
           name: err?.name,
           timestamp: new Date().toISOString()
         })
+
+        // Additional debugging for 401 errors
+        if (err?.response?.status === 401) {
+          console.error("[Auth] 401 Error Details:", {
+            cookies: typeof document !== 'undefined' ? document.cookie : 'no-document',
+            cookieList: typeof document !== 'undefined' ? document.cookie.split(';').map(c => c.trim()) : [],
+            hasAccessToken: typeof document !== 'undefined' ? document.cookie.includes('access_token') : false,
+            hasRefreshToken: typeof document !== 'undefined' ? document.cookie.includes('refresh_token') : false,
+            errorMessage: err?.response?.data?.message || err?.message,
+            errorCode: err?.response?.data?.code,
+            timestamp: new Date().toISOString()
+          })
+        }
         
         const status = err?.response?.status
         const isTimeout = err?.code === "ECONNABORTED" || err?.message?.toLowerCase().includes("timeout")

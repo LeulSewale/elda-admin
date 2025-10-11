@@ -16,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ListFilter, RefreshCw, Eye, Pencil, Trash2, FileDown } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, RefreshCw, Eye, Pencil, Trash2, FileDown } from "lucide-react"
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -167,35 +167,39 @@ export function DataTable<TData, TValue>({
     <div className="space-y-0">
       <div className="px-2 py-3">
         <div className="flex items-center justify-between mb-1">
+          {/* Left group: Filter section with employment type filters */}
           <div className="flex items-center gap-2">
             {quickFilterKey && quickFilterValues.length > 0 && (
-              <div className="inline-flex items-center">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={`h-10 rounded-none rounded-l-md px-3 ${!currentQuickValue ? 'bg-[#EEF5FF] text-[#1E66F5] border-[#BBD3FF]' : ''}`}
-                  onClick={() => setQuickFilter(undefined)}
-                  aria-pressed={!currentQuickValue}
-                >
-                  View all
-                </Button>
-                {quickFilterValues.slice(0, quickFilterLimit).map((val, idx, arr) => (
+              <div className="flex items-center gap-2">
+                
+                <div className="inline-flex items-center">
                   <Button
-                    key={val}
                     variant="outline"
                     size="sm"
-                    className={`h-10 rounded-none -ml-px px-3 ${idx === arr.length - 1 ? 'rounded-r-md' : ''} ${currentQuickValue === val ? 'bg-[#EEF5FF] text-[#1E66F5] border-[#BBD3FF]' : ''}`}
-                    onClick={() => setQuickFilter(val)}
-                    title={`${quickFilterLabel}: ${val}`}
-                    aria-pressed={currentQuickValue === val}
+                    className={`h-9 rounded-none rounded-l-md px-3 text-xs ${!currentQuickValue ? 'bg-[#EEF5FF] text-[#1E66F5] border-[#BBD3FF]' : ''}`}
+                    onClick={() => setQuickFilter(undefined)}
+                    aria-pressed={!currentQuickValue}
                   >
-                    {val}
+                    All
                   </Button>
-                ))}
+                  {quickFilterValues.slice(0, quickFilterLimit).map((val, idx, arr) => (
+                    <Button
+                      key={val}
+                      variant="outline"
+                      size="sm"
+                      className={`h-9 rounded-none -ml-px px-3 text-xs capitalize ${idx === arr.length - 1 ? 'rounded-r-md' : ''} ${currentQuickValue === val ? 'bg-[#EEF5FF] text-[#1E66F5] border-[#BBD3FF]' : ''}`}
+                      onClick={() => setQuickFilter(val)}
+                      title={`${quickFilterLabel}: ${val}`}
+                      aria-pressed={currentQuickValue === val}
+                    >
+                      {val.replace('_', ' ')}
+                    </Button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
-          {/* Right group: actions */}
+          {/* Right group: Search and actions */}
           <div className="flex items-center gap-2">
             <div className="relative w-72">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -206,14 +210,6 @@ export function DataTable<TData, TValue>({
                 className="pl-10 h-10 text-sm border-[#e7eeff] focus-visible:ring-1 focus-visible:ring-[#e7eeff]"
               />
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-10 border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
-            >
-              <ListFilter className="h-4 w-4 mr-2" />
-              Filter
-            </Button>
             {showExportButton && (
               <Button
                 variant="outline"
@@ -289,8 +285,7 @@ export function DataTable<TData, TValue>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={`py-4 px-4 text-[13px] font-semibold ${cell.column.id === 'actions' ? 'pointer-events-auto relative z-10' : ''}`}
-                      onClick={cell.column.id === 'actions' ? (e) => { e.stopPropagation(); } : undefined}
+                      className={`py-4 px-4 text-[13px] font-semibold`}
                       data-cell-id={cell.column.id}
                     >
                       {flexRender(cell.column.columnDef.cell, { ...cell.getContext(), visibleIndex: i })}

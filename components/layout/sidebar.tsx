@@ -12,9 +12,7 @@ import {
   BookText ,
   Menu,
   Users, 
-  Settings,
   LogOut,
-  Flag,
   User ,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -24,7 +22,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useAuth } from "@/hooks/use-auth"
 import Image from "next/image"
 import logo from "../../public/tele_tender.png"
-import { SettingsModal } from "@/components/modals/settings-modal"
 
 const navigation = [
   {
@@ -59,7 +56,6 @@ export const useSidebar = () => useContext(SidebarContext)
 function SidebarContent({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname()
   const { role, isLoading, logout } = useAuth();
-  const [settingsOpen, setSettingsOpen] = useState(false);
   if (isLoading) return null;
 
   return (
@@ -141,32 +137,10 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
             ))}
         </TooltipProvider>
       </nav>
-      {/* Settings and Log Out at the bottom */}
-      <div className={cn("px-4 pb-6 flex flex-col gap-2", collapsed && "px-2")}
+      {/* Log Out at the bottom */}
+      <div className={cn("px-4 pb-6", collapsed && "px-2")}
            style={{ marginTop: "auto" }}>
        <TooltipProvider>
-         <Tooltip>
-           <TooltipTrigger asChild>
-             <Button
-               variant="outline"
-               className={cn("flex items-center gap-2 w-full justify-start border-gray-300 text-gray-700 hover:bg-gray-100", collapsed && "justify-center px-0")}
-               onClick={() => setSettingsOpen(true)}
-             >
-               <Settings className="w-5 h-5" />
-               {!collapsed && (
-                 <div className="flex items-center gap-2 flex-1">
-                   <span>Settings</span>
-                   <div className="ml-auto flex items-center gap-1">
-                     <Flag className="w-3 h-3 text-blue-600" />
-                     <span className="text-xs text-blue-600">Coming Soon</span>
-                   </div>
-                 </div>
-               )}
-             </Button>
-            
-           </TooltipTrigger>
-           {collapsed && <TooltipContent side="right">Settings</TooltipContent>}
-         </Tooltip>
          <Tooltip>
            <TooltipTrigger asChild>
              <Button
@@ -181,7 +155,6 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
            {collapsed && <TooltipContent side="right">Log Out</TooltipContent>}
          </Tooltip>
        </TooltipProvider>
-       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
       </div>
     </div>
   )
