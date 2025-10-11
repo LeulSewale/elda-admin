@@ -148,7 +148,7 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
           </h4>
           <div className="p-3 bg-gray-50 rounded-lg">
             <p className="text-sm text-gray-600">
-              <span className="font-medium">Joined:</span> {user.createdAt || user.created_at ? formatDate(user.createdAt || user.created_at) : 'N/A'}
+              <span className="font-medium">Joined:</span> {(user.createdAt || user.created_at) ? formatDate((user.createdAt || user.created_at)!) : 'N/A'}
             </p>
           </div>
         </div>

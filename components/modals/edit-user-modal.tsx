@@ -49,7 +49,7 @@ export function EditUserModal({ open, onOpenChange, user, onSave, isLoading = fa
   useEffect(() => {
     if (user && open) {
       // Normalize status to lowercase
-      const normalizedStatus = (user.status?.toLowerCase() || (user.is_active ? "active" : "inactive"))
+      const normalizedStatus = user.status?.toLowerCase() || "active"
       const formData = {
         fullName: user.fullName || user.name || "",
         email: user.email || "",

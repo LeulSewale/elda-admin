@@ -45,6 +45,10 @@ export interface User extends BaseDocument {
   address: Address
   description: string
   createdBy: string
+  is_active?: boolean // Backend API field (alternative to status)
+  name?: string // Alternative field name from API
+  phone?: string // Alternative field name from API
+  created_at?: string // Alternative field name from API
   // documents?: Document[]
   entitlement?: {
     isActive: boolean
