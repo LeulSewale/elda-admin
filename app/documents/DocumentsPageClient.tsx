@@ -103,7 +103,7 @@ export default function DocumentsPageClient() {
   const { data, isLoading, refetch, isFetching, error } = useQuery({
     queryKey: ["doc-threads", cursor],
     queryFn: async () => {
-      const res = await docThreadsApi.list(cursor ? { cursor, limit: 50 } : { limit: 50 })
+      const res = await docThreadsApi.list(cursor ? { after: cursor, limit: 20 } : { limit: 20 })
       const payload = (res as any)?.data as DocThreadsResponse
       return payload
     },

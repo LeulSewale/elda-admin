@@ -6,7 +6,8 @@ import { useAuth } from "@/hooks/use-auth"
 
 interface RequestParams {
   limit?: number
-  cursor?: string
+  before?: string
+  after?: string
   status?: string[]
   priority?: string[]
   disability_type?: string[]

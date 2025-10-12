@@ -85,7 +85,7 @@ export function UsersPageClient() {
   } = useQuery({
     queryKey: ["users"],
     queryFn: async () => {
-      const params = { page: 1, limit: 20, q: "", sort: "" };
+      const params = { limit: 20 };
       // Debug: request params
       // eslint-disable-next-line no-console
       console.debug("[Users] Fetch start", {

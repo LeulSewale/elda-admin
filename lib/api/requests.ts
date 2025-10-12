@@ -35,7 +35,8 @@ export const requestsApi = {
   // Get all requests (admin only)
   getAllRequests: (params?: {
     limit?: number
-    cursor?: string
+    before?: string
+    after?: string
     status?: string[]
     priority?: string[]
     disability_type?: string[]
@@ -51,7 +52,8 @@ export const requestsApi = {
   // Get my requests (user/lawyer)
   getMyRequests: (params?: {
     limit?: number
-    cursor?: string
+    before?: string
+    after?: string
     status?: string[]
     priority?: string[]
     disability_type?: string[]

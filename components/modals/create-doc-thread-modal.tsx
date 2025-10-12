@@ -29,7 +29,7 @@ export function CreateDocThreadModal({ open, onOpenChange, onCreated }: CreateDo
   const { data: usersList } = useQuery({
     queryKey: ["users", "for-thread"],
     queryFn: async () => {
-      const res = await usersApi.getUsers({ page: 1, limit: 50, q: "", sort: "" })
+      const res = await usersApi.getUsers({ limit: 20 })
       const payload = (res as any)?.data?.data ?? (res as any)?.data ?? []
       return payload as Array<{ id: string; _id?: string; name?: string; fullName?: string; email?: string }>
     },

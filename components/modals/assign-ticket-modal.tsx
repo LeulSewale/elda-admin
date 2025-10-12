@@ -70,7 +70,7 @@ export function AssignTicketModal({
     queryKey: ["users-for-assignment"],
     queryFn: async () => {
       console.debug("[Assign Ticket] Fetching users for assignment...")
-      const res = await usersApi.getUsers({ limit: 100 })
+      const res = await usersApi.getUsers({ limit: 20 })
       console.debug("[Assign Ticket] Users response:", res.data)
       return res.data
     },

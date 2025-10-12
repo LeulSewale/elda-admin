@@ -26,23 +26,26 @@ export interface Employee {
 export interface EmployeesResponse {
   data: Employee[]
   paging: {
-    page: {
-      limit: number
-      nextCursor: string
-      prevCursor: string
-      hasNextPage: boolean
-      hasPrevPage: boolean
-    }
+    limit: number
+    nextCursor: string | null
+    prevCursor: string | null
+    hasNextPage: boolean
+    hasPrevPage: boolean
   }
 }
 
 export const employeesApi = {
-  getEmployees: (params?: { page?: number; limit?: number; q?: string; sort?: string }) => {
-    const { page = 1, limit = 50, q = "", sort = "" } = params || {}
-    console.debug("[Employees API] getEmployees called with params:", { page, limit, q, sort });
+  getEmployees: (params?: { before?: string; after?: string; limit?: number; q?: string; sort?: string }) => {
+    const { before, after, limit = 20, q = "", sort = "" } = params || {}
+    const queryParams: any = { limit }
+    if (q) queryParams.q = q
+    if (sort) queryParams.sort = sort
+    if (before) queryParams.before = before
+    if (after) queryParams.after = after
+    console.debug("[Employees API] getEmployees called with params:", queryParams);
     console.debug("[Employees API] Base URL:", api.defaults.baseURL);
     console.debug("[Employees API] Full URL will be:", `${api.defaults.baseURL}/employees`);
-    return api.get(`/employees`, { params: { page, limit, q, sort } })
+    return api.get(`/employees`, { params: queryParams })
   },
   getEmployee: (id: string) => api.get(`/employees/${id}`),
   createEmployee: (data: any) => {

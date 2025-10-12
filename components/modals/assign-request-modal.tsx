@@ -32,7 +32,7 @@ export function AssignRequestModal({
   // Fetch lawyers
   const { data: lawyersData, isLoading: lawyersLoading, error: lawyersError } = useQuery({
     queryKey: ["lawyers"],
-    queryFn: () => usersApi.getUsers({ q: "lawyer", limit: 100 }),
+    queryFn: () => usersApi.getUsers({ role: "lawyer", limit: 20 }),
     enabled: open,
     retry: 1,
   })
@@ -48,9 +48,6 @@ export function AssignRequestModal({
       lawyers = lawyersData.data.users
     }
   }
-  
-  // Filter for users with lawyer role
-  lawyers = lawyers.filter(user => user.role === 'lawyer')
   
   console.debug("[Assign Request] Users data:", lawyersData)
   console.debug("[Assign Request] Processed lawyers:", lawyers)

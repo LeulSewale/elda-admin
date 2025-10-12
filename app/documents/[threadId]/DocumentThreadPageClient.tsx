@@ -82,7 +82,7 @@ export default function DocumentThreadPageClient() {
     queryKey: ["doc-thread-documents", threadId],
     queryFn: async () => {
       if (!threadId) return null
-      const res = await docThreadsApi.getDocuments(threadId, { limit: 100 })
+      const res = await docThreadsApi.getDocuments(threadId, { limit: 20 })
       return res.data as DocumentsResponse
     },
     enabled: Boolean(threadId),

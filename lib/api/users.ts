@@ -2,9 +2,15 @@
 import { api } from "../axios"
 
 export const usersApi = {
-  getUsers: (params?: { page?: number; limit?: number; q?: string; sort?: string }) => {
-    const { page = 1, limit = 20, q = "", sort = "" } = params || {}
-    return api.get(`/users`, { params: { page, limit, q, sort } })
+  getUsers: (params?: { before?: string; after?: string; limit?: number; q?: string; sort?: string; role?: string }) => {
+    const { before, after, limit = 20, q = "", sort = "", role } = params || {}
+    const queryParams: any = { limit }
+    if (q) queryParams.q = q
+    if (sort) queryParams.sort = sort
+    if (role) queryParams.role = role
+    if (before) queryParams.before = before
+    if (after) queryParams.after = after
+    return api.get(`/users`, { params: queryParams })
   },
   getUser: (id: string) => api.get(`/users/${id}`),
   createUser: (data: any) => {

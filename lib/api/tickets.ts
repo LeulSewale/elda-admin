@@ -54,7 +54,8 @@ export const ticketsApi = {
   // Get all tickets (admin role)
   getAllTickets: (params?: {
     limit?: number
-    cursor?: string
+    before?: string
+    after?: string
     status?: string
     priority?: string
     search?: string
@@ -66,7 +67,8 @@ export const ticketsApi = {
   // Get my tickets (user role)
   getMyTickets: (params?: {
     limit?: number
-    cursor?: string
+    before?: string
+    after?: string
     status?: string
     priority?: string
     search?: string

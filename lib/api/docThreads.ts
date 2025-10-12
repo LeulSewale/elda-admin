@@ -57,9 +57,10 @@ export interface DocumentsResponse {
 }
 
 export const docThreadsApi = {
-  list: (params?: { cursor?: string; limit?: number }) => {
+  list: (params?: { before?: string; after?: string; limit?: number }) => {
     const searchParams = new URLSearchParams()
-    if (params?.cursor) searchParams.set("cursor", params.cursor)
+    if (params?.before) searchParams.set("before", params.before)
+    if (params?.after) searchParams.set("after", params.after)
     if (params?.limit) searchParams.set("limit", String(params.limit))
     const qs = searchParams.toString()
     const url = qs ? `/doc-threads?${qs}` : `/doc-threads`
@@ -80,9 +81,10 @@ export const docThreadsApi = {
   },
   
   // Document management endpoints
-  getDocuments: (threadId: string, params?: { cursor?: string; limit?: number }) => {
+  getDocuments: (threadId: string, params?: { before?: string; after?: string; limit?: number }) => {
     const searchParams = new URLSearchParams()
-    if (params?.cursor) searchParams.set("cursor", params.cursor)
+    if (params?.before) searchParams.set("before", params.before)
+    if (params?.after) searchParams.set("after", params.after)
     if (params?.limit) searchParams.set("limit", String(params.limit))
     const qs = searchParams.toString()
     const url = qs ? `/doc-threads/${threadId}/documents?${qs}` : `/doc-threads/${threadId}/documents`

@@ -53,13 +53,13 @@ export function EmployeesPageClient() {
     queryKey: ["employees"],
     queryFn: async () => {
       console.debug("[Employees] Fetch start", { 
-        params: { page: 1, limit: 50, q: "", sort: "" },
+        params: { limit: 20 },
         isVisible,
         role,
         timestamp: new Date().toISOString()
       });
       try {
-        const res = await employeesApi.getEmployees({ page: 1, limit: 50, q: "", sort: "" });
+        const res = await employeesApi.getEmployees({ limit: 20 });
         console.debug("[Employees] Fetch success", { 
           status: res.status,
           dataLength: res.data?.data?.length || 0,
@@ -553,14 +553,14 @@ export function EmployeesPageClient() {
               </div>
             )}
             <div className="relative z-[10]">
-              <DataTable 
-                columns={columns} 
-                data={Array.isArray(employees) ? employees : []} 
-                searchKey="user_name" 
-                quickFilterKey="employment_type"
+            <DataTable 
+              columns={columns} 
+              data={Array.isArray(employees) ? employees : []} 
+              searchKey="user_name" 
+              quickFilterKey="employment_type"
                 quickFilterLabel="Employment Type"
-                searchPlaceholder="Search Employees by name..." 
-              />
+              searchPlaceholder="Search Employees by name..." 
+            />
             </div>
           </div>
         )}

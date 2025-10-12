@@ -24,26 +24,43 @@ export interface RequestNote {
 }
 
 export interface Request extends BaseDocument {
-  title: string
-  description: string
+  id: string
+  user_id: string
+  assigned_to_user_id: string | null
+  assigned_at: string | null
   status: RequestStatus
   priority: RequestPriority
-  type: string
-  category: string
+  disability_type: string
+  service_type: string
+  description: string
+  contact_method: string
+  remarks: string | null
+  is_confidential: boolean
+  created_at: string
+  updated_at: string
+  created_by_name: string
+  created_by_email: string
+  assigned_to_name: string | null
+  assigned_to_email: string | null
+  rep_attachment_id: string | null
+  // Legacy fields for backward compatibility
+  title?: string
+  type?: string
+  category?: string
   assignedTo?: {
     id: string
     name: string
     role: string
   }
-  createdBy: {
+  createdBy?: {
     id: string
     name: string
     role: string
   }
-  company: string
+  company?: string
   dueDate?: string
-  documents: RequestDocument[]
-  notes: RequestNote[]
+  documents?: RequestDocument[]
+  notes?: RequestNote[]
   metadata?: Record<string, any>
 }
 

@@ -7,15 +7,18 @@ import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@radix-ui/react-tooltip"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import React, { useState, useEffect, useCallback } from "react"
-import { Eye, Plus, UserPlus, Settings } from "lucide-react"
+import { Eye, Plus, UserPlus, Edit } from "lucide-react"
 
 import { CreateRequestModal } from "@/components/modals/create-request-modal"
 import { AssignRequestModal } from "@/components/modals/assign-request-modal"
 import { ChangeStatusModal } from "@/components/modals/change-status-modal"
+import { RequestDetailModal } from "@/components/modals/request-detail-modal"
 import { useAuth } from "@/hooks/use-auth"
 import { useRequests } from "@/hooks/use-requests"
 import { requestsApi } from "@/lib/api/requests"
 import { toast } from "@/hooks/use-toast"
+import { useQuery } from "@tanstack/react-query"
+import { Request } from "@/lib/types/requests"
 
 function useTabVisibility() {
   const [isVisible, setIsVisible] = useState(true);
@@ -56,12 +59,26 @@ export default function RequestsPageClient() {
   const queryClient = useQueryClient();
   const { isVisible, lastActivity } = useTabVisibility();
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const [openModal, setOpenModal] = useState(false);
   const [assignModalOpen, setAssignModalOpen] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { role } = useAuth();
+
+  // Fetch request details by ID
+  const { data: requestDetail, isLoading: isLoadingDetail } = useQuery({
+    queryKey: ["request-detail", selectedRequestId],
+    queryFn: async () => {
+      if (!selectedRequestId) return null;
+      const response = await requestsApi.getRequest(selectedRequestId);
+      return response.data?.data as Request;
+    },
+    enabled: !!selectedRequestId && detailModalOpen,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Use the custom hook for role-based request fetching
   const { requests, isLoading, isFetching, refetch, userRole } = useRequests();
@@ -165,73 +182,121 @@ export default function RequestsPageClient() {
 
   // Table columns
   const columns = [
-    { accessorKey: "no", header: "No", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
-    { accessorKey: "description", header: "Description", cell: ({ row }: any) => (
-      <div className="max-w-xs truncate" title={row.original.description}>
-        {row.original.description}
-      </div>
-    )},
-    { accessorKey: "created_by_name", header: "Created By", cell: ({ row }: any) => (
-      <div className="text-gray-600">
-        <div className="font-medium">{row.original.created_by_name}</div>
-        <div className="text-xs text-gray-500">{row.original.created_by_email}</div>
-      </div>
-    )},
-    { accessorKey: "assigned_to_name", header: "Assigned To", cell: ({ row }: any) => (
-      <div className="text-gray-600">
-        <div className="font-medium">{row.original.assigned_to_name || "Unassigned"}</div>
-        {row.original.assigned_to_email && (
-          <div className="text-xs text-gray-500">{row.original.assigned_to_email}</div>
-        )}
-      </div>
-    )},
-    { accessorKey: "service_type", header: "Service Type", cell: ({ row }: any) => (
-      <div className="text-gray-600 capitalize">{row.original.service_type}</div>
-    )},
-    { accessorKey: "priority", header: "Priority", cell: ({ row }: any) => {
-      const priority = row.original.priority;
-      const priorityColors: Record<string, string> = {
-        low: "bg-green-100 text-green-800",
-        medium: "bg-yellow-100 text-yellow-800",
-        high: "bg-red-100 text-red-800",
-      };
-      return <Badge className={priorityColors[priority] || "bg-gray-100 text-gray-800"}>{priority.charAt(0).toUpperCase() + priority.slice(1)}</Badge>;
-    }},
-    { accessorKey: "status", header: "Status", cell: ({ row }: any) => {
-      const status = row.original.status;
-      const statusColors: Record<string, string> = {
-        pending: "bg-yellow-100 text-yellow-800",
-        in_progress: "bg-blue-100 text-blue-800",
-        completed: "bg-green-100 text-green-800",
-        rejected: "bg-red-100 text-red-800",
-        cancelled: "bg-gray-100 text-gray-800",
-      };
-      return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
-    }},
-    { accessorKey: "created_at", header: "Created At", cell: ({ row }: any) => (
-        <div className="text-gray-600">
-        {new Date(row.original.created_at).toLocaleDateString("en-US", {
+    { 
+      accessorKey: "no", 
+      header: "No", 
+      size: 50,
+      cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> 
+    },
+    { 
+      accessorKey: "description", 
+      header: "Description",
+      size: 150,
+      cell: ({ row }: any) => {
+        const desc = row.original.description || "";
+        const truncatedDesc = desc.length > 60 ? desc.substring(0, 60) + "..." : desc;
+        return (
+          <div className="max-w-[150px] truncate text-sm" title={row.original.description}>
+            {truncatedDesc}
+          </div>
+        );
+      }
+    },
+    { 
+      accessorKey: "created_by_name", 
+      header: "Created By",
+      size: 180,
+      cell: ({ row }: any) => (
+        <div className="text-gray-600 text-sm">
+          <div className="font-medium">{row.original.created_by_name}</div>
+          <div className="text-xs text-gray-500 truncate max-w-[150px]">{row.original.created_by_email}</div>
+        </div>
+      )
+    },
+    { 
+      accessorKey: "assigned_to_name", 
+      header: "Assigned To",
+      size: 180,
+      cell: ({ row }: any) => (
+        <div className="text-gray-600 text-sm">
+          <div className="font-medium">{row.original.assigned_to_name || "Unassigned"}</div>
+          {row.original.assigned_to_email && (
+            <div className="text-xs text-gray-500 truncate max-w-[150px]">{row.original.assigned_to_email}</div>
+          )}
+        </div>
+      )
+    },
+    { 
+      accessorKey: "service_type", 
+      header: "Service",
+      size: 100,
+      cell: ({ row }: any) => (
+        <div className="text-gray-600 capitalize text-sm">{row.original.service_type}</div>
+      )
+    },
+    { 
+      accessorKey: "priority", 
+      header: "Priority",
+      size: 100,
+      cell: ({ row }: any) => {
+        const priority = row.original.priority;
+        const priorityColors: Record<string, string> = {
+          low: "bg-green-100 text-green-800",
+          medium: "bg-yellow-100 text-yellow-800",
+          high: "bg-red-100 text-red-800",
+          critical: "bg-red-100 text-red-800",
+        };
+        return <Badge className={`${priorityColors[priority] || "bg-gray-100 text-gray-800"} text-xs px-2 py-1`}>{priority.charAt(0).toUpperCase() + priority.slice(1)}</Badge>;
+      }
+    },
+    { 
+      accessorKey: "status", 
+      header: "Status",
+      size: 110,
+      cell: ({ row }: any) => {
+        const status = row.original.status;
+        const statusColors: Record<string, string> = {
+          pending: "bg-yellow-100 text-yellow-800",
+          in_progress: "bg-blue-100 text-blue-800",
+          completed: "bg-green-100 text-green-800",
+          rejected: "bg-red-100 text-red-800",
+          cancelled: "bg-gray-100 text-gray-800",
+        };
+        const statusLabel = status.replace('_', ' ');
+        return <Badge className={`${statusColors[status] || "bg-gray-100 text-gray-800"} text-xs px-2 py-1`}>{statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}</Badge>;
+      }
+    },
+    { 
+      accessorKey: "created_at", 
+      header: "Created",
+      size: 100,
+      cell: ({ row }: any) => (
+        <div className="text-gray-600 text-sm">
+          {new Date(row.original.created_at).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
             year: "numeric",
           })}
         </div>
-    )},   
+      )
+    },   
      {
           id: "actions",
           header: "Actions",
+          size: 150,
           cell: ({ row }: any) => {
-        const request = row.original
+            const request = row.original
             return (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-1 min-w-[120px]">
                 <Button
                   variant="ghost"
-                  size="icon"
-              onClick={() => {
-                setSelectedRequest(request)
-                // TODO: Open request detail modal
-              }}
-                  className="hover:bg-blue-50 hover:text-blue-600"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedRequestId(request.id)
+                    setDetailModalOpen(true)
+                  }}
+                  className="h-8 px-2 hover:bg-blue-50 hover:text-blue-600"
+                  title="View Details"
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
@@ -241,27 +306,27 @@ export default function RequestsPageClient() {
                   <>
                     <Button
                       variant="ghost"
-                      size="icon"
+                      size="sm"
                       onClick={() => {
                         setSelectedRequest(request)
                         setAssignModalOpen(true)
                       }}
-                      className="hover:bg-green-50 hover:text-green-600"
+                      className="h-8 px-2 hover:bg-green-50 hover:text-green-600"
                       title="Assign to Lawyer"
                     >
                       <UserPlus className="h-4 w-4" />
                     </Button>
                     <Button
-                  variant="ghost"
-                  size="icon"
+                      variant="ghost"
+                      size="sm"
                       onClick={() => {
                         setSelectedRequest(request)
                         setStatusModalOpen(true)
                       }}
-                      className="hover:bg-purple-50 hover:text-purple-600"
+                      className="h-8 px-2 hover:bg-purple-50 hover:text-purple-600"
                       title="Change Status"
                     >
-                      <Settings className="h-4 w-4" />
+                      <Edit className="h-4 w-4" />
                     </Button>
                   </>
                 )}
@@ -384,6 +449,18 @@ export default function RequestsPageClient() {
             />
           </>
         )}
+
+        {/* Request Detail Modal */}
+        <RequestDetailModal
+          open={detailModalOpen}
+          onOpenChange={(open) => {
+            setDetailModalOpen(open);
+            if (!open) {
+              setSelectedRequestId(null);
+            }
+          }}
+          request={requestDetail || null}
+        />
       </div>
     </DashboardLayout>
   );
