@@ -148,7 +148,7 @@ export function ProfileModal({ open, onOpenChange }: ProfileModalProps) {
                         src={getProfileImageUrl() || "/placeholder-user.jpg"} 
                         alt="Profile" 
                       />
-                      <AvatarFallback className="bg-[#A4D65E] text-white text-xl">
+                      <AvatarFallback className="bg-blue-500 text-white text-xl">
                         {typeof user?.fullName === "string" && user.fullName
                           ? user.fullName.charAt(0).toUpperCase()
                           : "U"}
@@ -247,7 +247,7 @@ export function ProfileModal({ open, onOpenChange }: ProfileModalProps) {
                      <Button
                        type="submit"
                        disabled={updateProfileMutation.isPending}
-                       className="bg-[#A4D65E] hover:bg-[#95C653]"
+                       className="bg-blue-500 hover:bg-blue-600"
                      >
                        <Save className="w-4 h-4 mr-2" />
                        {updateProfileMutation.isPending ? "Saving..." : "Save Changes"}

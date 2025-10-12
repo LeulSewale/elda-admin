@@ -59,7 +59,7 @@ export function Header({ title }: HeaderProps) {
                       src={user?.profileImage?.url || "/placeholder-user.jpg"} 
                       alt={user?.fullName || "User"} 
                     />
-                    <AvatarFallback className="bg-[#A4D65E] text-white">
+                    <AvatarFallback className="bg-blue-500 text-white">
                       {typeof user?.fullName === "string" && user.fullName
                         ? user.fullName.charAt(0).toUpperCase()
                         : "U"}

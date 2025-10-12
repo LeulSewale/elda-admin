@@ -7,6 +7,9 @@ import { toast } from "@/hooks/use-toast"
 import { useEffect, useMemo, useState } from "react"
 import type { AxiosError } from "axios"
 import { getAccessToken } from "@/lib/token"
+import { config } from "@/lib/config"
+
+const DEBUG = config.features.debugLogging
 
 interface UseAuthOptions {
   redirectOnFail?: boolean
@@ -53,69 +56,86 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
     queryKey: ["auth", "me"],
     queryFn: async () => {
       try {
-        console.debug("[Auth] Query function started")
-        
-        // Debug: Check authentication state before API call
-        const cookies = typeof document !== 'undefined' ? document.cookie : 'no-document'
-        const cookieList = cookies.split(';').map(c => c.trim())
-        
-        console.debug("[Auth] Profile fetch attempt:", {
-          cookies,
-          cookieList,
-          hasAccessToken: cookieList.some(c => c.includes('access_token')),
-          hasRefreshToken: cookieList.some(c => c.includes('refresh_token')),
-          timestamp: new Date().toISOString()
-        })
-        
-        // Additional debugging: Check if we're in a browser environment
-        if (typeof document === 'undefined') {
-          console.warn("[Auth] Not in browser environment - this might cause auth issues")
+        if (DEBUG) {
+          console.debug("[Auth] Query function started")
+          
+          // Debug: Check authentication state before API call
+          const cookies = typeof document !== 'undefined' ? document.cookie : 'no-document'
+          const cookieList = cookies.split(';').map(c => c.trim())
+          
+          console.debug("[Auth] Profile fetch attempt:", {
+            cookies,
+            cookieList,
+            hasAccessToken: cookieList.some(c => c.includes('access_token')),
+            hasRefreshToken: cookieList.some(c => c.includes('refresh_token')),
+            timestamp: new Date().toISOString()
+          })
+          
+          // Additional debugging: Check if we're in a browser environment
+          if (typeof document === 'undefined') {
+            console.warn("[Auth] Not in browser environment - this might cause auth issues")
+          }
+          
+          console.debug("[Auth] About to call authApi.me()")
         }
         
-        console.debug("[Auth] About to call authApi.me()")
         const res = await authApi.me()
-        console.debug("[Auth] authApi.me() response:", {
-          status: res?.status,
-          data: res?.data,
-          headers: res?.headers
-        })
+        
+        if (DEBUG) {
+          console.debug("[Auth] authApi.me() response:", {
+            status: res?.status,
+            data: res?.data,
+            headers: res?.headers
+          })
+        }
+        
         const apiUser = (res as any)?.data?.data ?? (res as any)?.data
-        console.debug("[Auth] Normalizing user:", apiUser)
+        
+        if (DEBUG) {
+          console.debug("[Auth] Normalizing user:", apiUser)
+        }
+        
         const normalizedUser = normalizeUser(apiUser)
-        console.debug("[Auth] Normalized user:", normalizedUser)
+        
+        if (DEBUG) {
+          console.debug("[Auth] Normalized user:", normalizedUser)
+        }
+        
         return normalizedUser
       } catch (err: any) {
         // Enhanced error logging with more details
-        console.error("[Auth] Profile fetch error:", {
-          error: err,
-          message: err?.message,
-          code: err?.code,
-          status: err?.response?.status,
-          data: err?.response?.data,
-          url: err?.config?.url,
-          method: err?.config?.method,
-          withCredentials: err?.config?.withCredentials,
-          baseURL: err?.config?.baseURL,
-          request: err?.request ? { 
-            withCredentials: err?.request?.withCredentials, 
-            responseURL: err?.request?.responseURL 
-          } : undefined,
-          stack: err?.stack,
-          name: err?.name,
-          timestamp: new Date().toISOString()
-        })
-
-        // Additional debugging for 401 errors
-        if (err?.response?.status === 401) {
-          console.error("[Auth] 401 Error Details:", {
-            cookies: typeof document !== 'undefined' ? document.cookie : 'no-document',
-            cookieList: typeof document !== 'undefined' ? document.cookie.split(';').map(c => c.trim()) : [],
-            hasAccessToken: typeof document !== 'undefined' ? document.cookie.includes('access_token') : false,
-            hasRefreshToken: typeof document !== 'undefined' ? document.cookie.includes('refresh_token') : false,
-            errorMessage: err?.response?.data?.message || err?.message,
-            errorCode: err?.response?.data?.code,
+        if (DEBUG) {
+          console.error("[Auth] Profile fetch error:", {
+            error: err,
+            message: err?.message,
+            code: err?.code,
+            status: err?.response?.status,
+            data: err?.response?.data,
+            url: err?.config?.url,
+            method: err?.config?.method,
+            withCredentials: err?.config?.withCredentials,
+            baseURL: err?.config?.baseURL,
+            request: err?.request ? { 
+              withCredentials: err?.request?.withCredentials, 
+              responseURL: err?.request?.responseURL 
+            } : undefined,
+            stack: err?.stack,
+            name: err?.name,
             timestamp: new Date().toISOString()
           })
+
+          // Additional debugging for 401 errors
+          if (err?.response?.status === 401) {
+            console.error("[Auth] 401 Error Details:", {
+              cookies: typeof document !== 'undefined' ? document.cookie : 'no-document',
+              cookieList: typeof document !== 'undefined' ? document.cookie.split(';').map(c => c.trim()) : [],
+              hasAccessToken: typeof document !== 'undefined' ? document.cookie.includes('access_token') : false,
+              hasRefreshToken: typeof document !== 'undefined' ? document.cookie.includes('refresh_token') : false,
+              errorMessage: err?.response?.data?.message || err?.message,
+              errorCode: err?.response?.data?.code,
+              timestamp: new Date().toISOString()
+            })
+          }
         }
         
         const status = err?.response?.status
@@ -123,15 +143,16 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
         
         // Handle timeout errors gracefully
         if (isTimeout) {
-          console.warn("[Auth] Request timeout - returning null to prevent infinite retries")
+          if (DEBUG) console.warn("[Auth] Request timeout - returning null to prevent infinite retries")
           return null
         }
         
         if (status === 401 || status === 404) {
-          console.debug("[Auth] Returning null due to status:", status)
+          if (DEBUG) console.debug("[Auth] Returning null due to status:", status)
           return null
         }
-        console.error("[Auth] Re-throwing error")
+        
+        if (DEBUG) console.error("[Auth] Re-throwing error")
         throw err
       }
     },
@@ -142,7 +163,7 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
       const isAuthError = error?.response?.status === 401 || error?.response?.status === 404
       
       if (isTimeout || isAuthError) {
-        console.debug("[Auth] Not retrying due to timeout or auth error")
+        if (DEBUG) console.debug("[Auth] Not retrying due to timeout or auth error")
         return false
       }
       
@@ -162,7 +183,7 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
 
   // Monitor error state for debugging
   useEffect(() => {
-    if (isError && error) {
+    if (DEBUG && isError && error) {
       console.error("[Auth] useQuery error detected:", {
         error,
         message: error?.message,
@@ -177,7 +198,7 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
   useEffect(() => {
     // Only redirect on 401, not 404 (which means profile endpoint doesn't exist)
     if (isError && (error as any)?.response?.status === 401 && redirectOnFail) {
-      console.warn("[Auth] 401 error detected - redirecting to login");
+      if (DEBUG) console.warn("[Auth] 401 error detected - redirecting to login");
       // Clear any stale query data
       queryClient.clear();
       router.replace("/login");
@@ -191,20 +212,21 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
     },
     onSuccess: async (response) => {
       try {
-        // Debug: Log raw login response
-        // eslint-disable-next-line no-console
-        console.debug("Login response:", response?.data)
+        if (DEBUG) {
+          // Debug: Log raw login response
+          console.debug("Login response:", response?.data)
 
-        // Debug: Check cookies after login
-        if (typeof document !== 'undefined') {
-          const cookies = document.cookie
-          const cookieList = cookies.split(';').map(c => c.trim())
-          console.debug("[Auth] Cookies after login:", {
-            cookies,
-            cookieList,
-            hasAccessToken: cookieList.some(c => c.includes('access_token')),
-            hasRefreshToken: cookieList.some(c => c.includes('refresh_token'))
-          })
+          // Debug: Check cookies after login
+          if (typeof document !== 'undefined') {
+            const cookies = document.cookie
+            const cookieList = cookies.split(';').map(c => c.trim())
+            console.debug("[Auth] Cookies after login:", {
+              cookies,
+              cookieList,
+              hasAccessToken: cookieList.some(c => c.includes('access_token')),
+              hasRefreshToken: cookieList.some(c => c.includes('refresh_token'))
+            })
+          }
         }
 
         const loginUser = (response as any)?.data?.user
@@ -258,12 +280,12 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
   const logoutMutation = useMutation({
     mutationFn: authApi.logout,
     onSuccess: () => {
-      console.debug("[Auth] Logout successful - clearing data");
+      if (DEBUG) console.debug("[Auth] Logout successful - clearing data");
       queryClient.clear()
       router.replace("/login")
     },
     onError: (error) => {
-      console.warn("[Auth] Logout failed, but clearing data anyway:", error);
+      if (DEBUG) console.warn("[Auth] Logout failed, but clearing data anyway:", error);
       queryClient.clear()
       router.replace("/login")
     },
@@ -271,7 +293,7 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
 
   // Manual logout function for debugging
   const forceLogout = () => {
-    console.warn("[Auth] Force logout called - clearing all data");
+    if (DEBUG) console.warn("[Auth] Force logout called - clearing all data");
     queryClient.clear();
     // Clear cookies manually if possible
     if (typeof document !== 'undefined') {
@@ -305,8 +327,8 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
     console.log("======================");
   }
 
-  // Make debug function available globally for console access
-  if (typeof window !== 'undefined') {
+  // Make debug function available globally for console access (only in development)
+  if (typeof window !== 'undefined' && DEBUG) {
     (window as any).debugAuth = debugAuthStatus;
   }
 

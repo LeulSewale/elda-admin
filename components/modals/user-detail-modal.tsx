@@ -30,7 +30,7 @@ export function UserDetailModal({ open, onOpenChange, user }: UserDetailModalPro
     
     switch (status.toLowerCase()) {
       case 'active':
-        return <Badge className="bg-[#A4D65E] text-white">Active</Badge>
+        return <Badge className="bg-blue-500 text-white">Active</Badge>
       case 'suspended':
         return <Badge className="bg-[#FACC15] text-white">Suspended</Badge>
       case 'locked':

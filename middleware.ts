@@ -2,6 +2,8 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
+const DEBUG = process.env.NEXT_PUBLIC_ENABLE_DEBUG_LOGGING === 'true'
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -13,7 +15,9 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value
 
   if (!token && !isPublic) {
-    console.log(`[Middleware] No access_token cookie found for ${pathname}, redirecting to login`)
+    if (DEBUG) {
+      console.log(`[Middleware] No access_token cookie found for ${pathname}, redirecting to login`)
+    }
     const loginUrl = new URL("/login", request.url)
     loginUrl.searchParams.set("from", pathname) // Preserve original route for redirect after login
     return NextResponse.redirect(loginUrl)

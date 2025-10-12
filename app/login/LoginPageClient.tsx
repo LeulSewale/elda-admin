@@ -6,7 +6,6 @@
   import { Input } from "@/components/ui/input"
   import { Label } from "@/components/ui/label"
   import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-  import logo from "../../public/ELDA.png"
   import { useAuth } from "@/hooks/use-auth"
   import { toast } from "@/hooks/use-toast"
   import Link from "next/link"
@@ -50,12 +49,11 @@
             <div className="text-center space-y-4">
               <div className="inline-flex items-center justify-center">
                 <Image
-                  src={logo}
-                  alt="Tele Tender Logo"
-                  width={96}
-                  height={96}
-                  className="object-contain drop-shadow-lg"
-                  style={{ background: 'white', borderRadius: '1.5rem', border: '2px solid #4082ea', padding: '0.5rem' }}
+                  src="/elda-logo.png"
+                  alt="ELDA Logo"
+                  width={120}
+                  height={120}
+                  className="object-contain drop-shadow-xl"
                 />
               </div>
               <h1 className="text-6xl font-bold text-[#4082ea]">ELDA SYSTEM</h1>
@@ -68,12 +66,11 @@
               <CardHeader className="text-center lg:hidden">
                 <div className="inline-flex items-center justify-center mb-4">
                   <Image
-                    src={logo}
-                    alt="Tele Tender Logo"
-                    width={64}
-                    height={64}
-                    className="object-contain drop-shadow-lg"
-                    style={{ background: 'white', borderRadius: '1rem', border: '2px solid #4082ea', padding: '0.4rem' }}
+                    src="/elda-logo.png"
+                    alt="ELDA Logo"
+                    width={80}
+                    height={80}
+                    className="object-contain drop-shadow-xl"
                   />
                 </div>
                 <CardTitle className="text-2xl text-[#4082ea] font-extrabold tracking-tight">ELDA SYSTEM</CardTitle>
@@ -140,7 +137,7 @@
                 {/* Sign up link */}
                 <div className="text-center text-sm text-gray-600">
                   Don&apos;t have an account?{" "}
-                  <Link href="/signup" className="text-[#A4D65E] hover:underline font-semibold">
+                  <Link href="/signup" className="text-blue-500 hover:underline font-semibold">
                     Sign Up
                   </Link>
                 </div>

@@ -259,8 +259,8 @@ export function DataTable<TData, TValue>({
                                 <ArrowDown className="w-3 h-3 text-gray-300" />
                               </>
                             )}
-                            {isSorted === 'asc' && <ArrowUp className="w-3 h-3 text-[#A4D65E]" />}
-                            {isSorted === 'desc' && <ArrowDown className="w-3 h-3 text-[#A4D65E]" />}
+                            {isSorted === 'asc' && <ArrowUp className="w-3 h-3 text-blue-500" />}
+                            {isSorted === 'desc' && <ArrowDown className="w-3 h-3 text-blue-500" />}
                           </span>
                         )}
                       </div>

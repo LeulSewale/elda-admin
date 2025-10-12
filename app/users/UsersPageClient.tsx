@@ -318,7 +318,7 @@ export function UsersPageClient() {
       cell: ({ row }: any) => {
         const active = !!row.original.is_active
         if (active) {
-          return <Badge className="bg-[#A4D65E] text-white">Active</Badge>
+          return <Badge className="bg-blue-500 text-white">Active</Badge>
         } 
         return <Badge className="bg-[#FACC15] text-white">Inactive</Badge>
       },

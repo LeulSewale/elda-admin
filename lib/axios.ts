@@ -3,6 +3,8 @@ import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } fro
 import { getAccessToken } from "./token"
 import { config } from "./config"
 
+const DEBUG = config.features.debugLogging
+
 export const api = axios.create({
   baseURL: config.api.baseUrl,
   timeout: config.api.timeout,
@@ -16,7 +18,7 @@ export const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     // Debug: Log request details for authentication debugging
-    if (config.url?.includes('/users') || config.url?.includes('/employees') || config.url?.includes('/auth/refresh')) {
+    if (DEBUG && (config.url?.includes('/users') || config.url?.includes('/employees') || config.url?.includes('/auth/refresh'))) {
       const cookies = typeof document !== 'undefined' ? document.cookie : 'no-document'
       const cookieList = cookies.split(';').map(c => c.trim())
       
@@ -49,12 +51,14 @@ api.interceptors.response.use(
 
     // ⏱ Enhanced timeout and network error handling
     if (error.code === "ECONNABORTED" || error.message?.toLowerCase().includes("timeout")) {
-      console.warn("[Axios] Request timeout:", {
-        url: originalRequest.url,
-        method: originalRequest.method,
-        timeout: originalRequest.timeout,
-        message: error.message
-      });
+      if (DEBUG) {
+        console.warn("[Axios] Request timeout:", {
+          url: originalRequest.url,
+          method: originalRequest.method,
+          timeout: originalRequest.timeout,
+          message: error.message
+        });
+      }
       
       // Provide more specific error messages based on the request type
       if (originalRequest.url?.includes('/users/me')) {
@@ -68,11 +72,13 @@ api.interceptors.response.use(
     
     // Handle network errors
     if (error.code === "ERR_NETWORK" || error.message?.toLowerCase().includes("network")) {
-      console.warn("[Axios] Network error:", {
-        url: originalRequest.url,
-        method: originalRequest.method,
-        message: error.message
-      });
+      if (DEBUG) {
+        console.warn("[Axios] Network error:", {
+          url: originalRequest.url,
+          method: originalRequest.method,
+          message: error.message
+        });
+      }
       error.message = "Network error. Please check your internet connection.";
     }
 
@@ -84,21 +90,25 @@ api.interceptors.response.use(
     // 🔐 Handle 401 Unauthorized (token expired)
     if (error.response?.status === 401) {
       // Debug: Check token availability
-      const cookies = typeof document !== 'undefined' ? document.cookie : 'no-document'
-      const hasRefreshCookie = typeof document !== 'undefined' && document.cookie.includes('refresh_token')
-      const hasAccessCookie = typeof document !== 'undefined' && document.cookie.includes('access_token')
+      if (DEBUG) {
+        const cookies = typeof document !== 'undefined' ? document.cookie : 'no-document'
+        const hasRefreshCookie = typeof document !== 'undefined' && document.cookie.includes('refresh_token')
+        const hasAccessCookie = typeof document !== 'undefined' && document.cookie.includes('access_token')
+        
+        console.debug("[Axios] 401 Error - Token Debug:", {
+          cookies,
+          hasRefreshCookie,
+          hasAccessCookie,
+          originalUrl: originalRequest.url,
+          method: originalRequest.method
+        })
+      }
       
-      console.debug("[Axios] 401 Error - Token Debug:", {
-        cookies,
-        hasRefreshCookie,
-        hasAccessCookie,
-        originalUrl: originalRequest.url,
-        method: originalRequest.method
-      })
+      const hasRefreshCookie = typeof document !== 'undefined' && document.cookie.includes('refresh_token')
       
       // Only attempt refresh if we have a refresh token cookie available
       if (!hasRefreshCookie) {
-        console.warn("[Axios] No refresh token cookie found, rejecting 401")
+        if (DEBUG) console.warn("[Axios] No refresh token cookie found, rejecting 401")
         // No refresh token present; let the caller handle 401
         return Promise.reject(error)
       }
@@ -106,18 +116,18 @@ api.interceptors.response.use(
         originalRequest._retry = true
 
         // Debug: Log refresh attempt
-        console.debug("[Axios] Attempting token refresh...")
+        if (DEBUG) console.debug("[Axios] Attempting token refresh...")
 
         // Request new access token via cookie using direct axios call to avoid circular dependency
         const refreshResponse = await axios.post(`${config.api.baseUrl}/auth/refresh`, null, {
           withCredentials: true,
         })
 
-        console.debug("[Axios] Token refresh successful", { status: refreshResponse.status })
+        if (DEBUG) console.debug("[Axios] Token refresh successful", { status: refreshResponse.status })
 
         // Update stored tokens if the refresh response contains new tokens
         if (refreshResponse.data?.accessToken) {
-          console.debug("[Axios] Updating stored access token after refresh")
+          if (DEBUG) console.debug("[Axios] Updating stored access token after refresh")
           if (typeof document !== 'undefined') {
             const isProduction = process.env.NODE_ENV === 'production'
             const secureFlag = isProduction ? 'secure;' : ''
@@ -131,15 +141,17 @@ api.interceptors.response.use(
         return api(originalRequest)
       } catch (refreshError: any) {
         // Debug: Log refresh failure (downgraded to warn to reduce noise)
-        console.warn("[Axios] Token refresh failed", {
-          status: refreshError?.response?.status,
-          data: refreshError?.response?.data,
-          message: refreshError?.message || refreshError?.toString?.() || 'unknown error'
-        })
+        if (DEBUG) {
+          console.warn("[Axios] Token refresh failed", {
+            status: refreshError?.response?.status,
+            data: refreshError?.response?.data,
+            message: refreshError?.message || refreshError?.toString?.() || 'unknown error'
+          })
+        }
 
         // Clear cookies when refresh fails to prevent stale token issues
         if (typeof document !== 'undefined') {
-          console.debug("[Axios] Clearing cookies due to refresh failure")
+          if (DEBUG) console.debug("[Axios] Clearing cookies due to refresh failure")
           document.cookie.split(";").forEach((c) => {
             const eqPos = c.indexOf("=");
             const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim();
@@ -151,15 +163,15 @@ api.interceptors.response.use(
 
         // Provide more specific error information
         if (refreshError?.response?.status === 401) {
-          console.warn("[Axios] Refresh token expired - user needs to login again")
+          if (DEBUG) console.warn("[Axios] Refresh token expired - user needs to login again")
           error.message = "Session expired. Please log in again."
         } else if (refreshError?.response?.status === 403) {
-          console.warn("[Axios] Refresh token invalid - user needs to login again")
+          if (DEBUG) console.warn("[Axios] Refresh token invalid - user needs to login again")
           error.message = "Invalid session. Please log in again."
         }
 
         // Refresh failed - log but don't redirect automatically
-        console.warn("[Axios] Token refresh failed - letting component handle the error")
+        if (DEBUG) console.warn("[Axios] Token refresh failed - letting component handle the error")
         
         // Important: reject the ORIGINAL error so callers can handle 401s consistently
         return Promise.reject(error)

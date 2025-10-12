@@ -21,7 +21,6 @@ import { useState, createContext, useContext } from "react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useAuth } from "@/hooks/use-auth"
 import Image from "next/image"
-import logo from "../../public/tele_tender.png"
 
 const navigation = [
   {
@@ -69,12 +68,11 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
         <Link href="/dashboard" className="flex items-center space-x-2">
           <div className="flex items-center justify-center flex-shrink-0">
             <Image
-              src={logo}
-              alt="Tele Tender Logo"
-              width={32}
-              height={32}
-              className="object-contain drop-shadow"
-              style={{ background: 'white', borderRadius: '0.5rem', border: '2px solid #A4D65E', padding: '0.2rem' }}
+              src="/elda-logo.png"
+              alt="ELDA Logo"
+              width={40}
+              height={40}
+              className="object-contain drop-shadow-md"
             />
           </div>
           {!collapsed && <span className="text-xl font-bold text-gray-900">ELDA</span>}

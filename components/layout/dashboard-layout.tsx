@@ -28,7 +28,7 @@ function ProgressBar({ isFetching }: { isFetching?: boolean }) {
   return (
     <div className="w-full h-1 bg-gray-200 rounded overflow-hidden">
       <div
-        className="h-full bg-[#A4D65E] transition-all duration-300"
+        className="h-full bg-blue-500 transition-all duration-300"
         style={{ width: `${progress}%`, opacity: progress > 0 && progress < 100 ? 1 : 0 }}
       />
     </div>

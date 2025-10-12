@@ -1,21 +1,74 @@
 import { api } from "../axios"
+import { config } from "../config"
 
 export const notificationsApi = {
-  getNotifications: () => api.get("/notifications"),
-  getUserNotifications: (page = 1, limit = 20, read?: boolean) => {
+  // Get all notifications with pagination
+  getNotifications: (limit = 20, offset = 0) => {
     const params = new URLSearchParams()
-    params.append('page', page.toString())
     params.append('limit', limit.toString())
-    if (read !== undefined) {
-      params.append('read', read.toString())
+    if (offset > 0) {
+      params.append('offset', offset.toString())
     }
-    return api.get(`/notifications/user?${params.toString()}`)
+    return api.get(`/notifications?${params.toString()}`)
   },
+  
+  // Get a single notification by ID
   getNotification: (id: string) => api.get(`/notifications/${id}`),
-  createNotification: (data: any) => api.post("/notifications", data),
-  updateNotification: (id: string, data: any) => api.patch(`/notifications/${id}`, data),
+  
+  // Mark a notification as read
+  markAsRead: (id: string) => api.post(`/notifications/${id}/read`),
+  
+  // Mark all notifications as read
+  markAllAsRead: () => api.post("/notifications/read-all"),
+  
+  // Delete a notification
   deleteNotification: (id: string) => api.delete(`/notifications/${id}`),
-  markAsRead: (id: string) => api.patch(`/notifications/${id}/read`),
-  markAllAsRead: () => api.patch("/notifications/user/read-all"),
-  getUnreadCount: () => api.get("/notifications/user?read=false"),
+  
+  // Get unread count
+  getUnreadCount: () => api.get("/notifications/unread-count"),
+  
+  // Create SSE connection for real-time notifications
+  createEventSource: (onMessage: (notification: any) => void, onError?: (error: any) => void): EventSource | null => {
+    if (typeof window === 'undefined') return null
+    
+    try {
+      const streamUrl = `${config.api.baseUrl}/notifications/stream`
+      const eventSource = new EventSource(streamUrl, {
+        withCredentials: true
+      })
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          onMessage(data)
+        } catch (error) {
+          console.error('[SSE] Failed to parse notification:', error)
+        }
+      }
+      
+      eventSource.onerror = (error) => {
+        console.error('[SSE] Connection error:', error)
+        if (onError) onError(error)
+      }
+      
+      eventSource.addEventListener('connected', (event: any) => {
+        console.log('[SSE] Connected:', event.data)
+      })
+      
+      eventSource.addEventListener('notification', (event: any) => {
+        try {
+          const data = JSON.parse(event.data)
+          onMessage(data)
+        } catch (error) {
+          console.error('[SSE] Failed to parse notification event:', error)
+        }
+      })
+      
+      return eventSource
+    } catch (error) {
+      console.error('[SSE] Failed to create EventSource:', error)
+      if (onError) onError(error)
+      return null
+    }
+  }
 }

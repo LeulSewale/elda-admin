@@ -1,18 +1,18 @@
 export const metadata = {
-  title: "Dashboard | Tele Tender Admin",
-  description: "View analytics, recent bids, and manage tenders in the Tele Tender Admin Dashboard.",
-  keywords: ["tender", "admin", "dashboard", "bids", "companies", "analytics"],
+  title: "Dashboard | ELDA Admin",
+  description: "View analytics, manage requests, and track tickets in the ELDA Admin Dashboard.",
+  keywords: ["documents", "admin", "dashboard", "requests", "tickets", "analytics"],
   openGraph: {
-    title: "Dashboard | Tele Tender Admin",
-    description: "View analytics, recent bids, and manage tenders in the Tele Tender Admin Dashboard.",
+    title: "Dashboard | ELDA Admin",
+    description: "View analytics, manage requests, and track tickets in the ELDA Admin Dashboard.",
     url: "https://yourdomain.com/dashboard",
-    siteName: "Tele Tender Admin",
+    siteName: "ELDA Admin",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Dashboard | Tele Tender Admin",
-    description: "View analytics, recent bids, and manage tenders in the Tele Tender Admin Dashboard.",
+    title: "Dashboard | ELDA Admin",
+    description: "View analytics, manage requests, and track tickets in the ELDA Admin Dashboard.",
   },
 }
 

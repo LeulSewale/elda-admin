@@ -3,9 +3,6 @@ type Tokens = {
   refreshToken?: string
 }
 
-const ACCESS_TOKEN_KEY = "accessToken"
-const REFRESH_TOKEN_KEY = "refreshToken"
-
 /**
  * Check if running in the browser (avoids SSR errors)
  */
@@ -61,17 +58,13 @@ function deleteCookie(name: string): void {
 }
 
 /**
- * Get the access token from cookies (fallback to localStorage for backward compatibility)
+ * Get the access token from cookies
+ * Note: Backend should set httpOnly cookies for better security
  */
 export function getAccessToken(): string | null {
   if (!isBrowser) return null
   try {
-    // First try cookies
-    const cookieToken = getCookie("access_token")
-    if (cookieToken) return cookieToken
-    
-    // Fallback to localStorage for backward compatibility
-    return localStorage.getItem(ACCESS_TOKEN_KEY)
+    return getCookie("access_token")
   } catch (error) {
     console.error("Failed to get access token:", error)
     return null
@@ -79,17 +72,13 @@ export function getAccessToken(): string | null {
 }
 
 /**
- * Get the refresh token from cookies (fallback to localStorage for backward compatibility)
+ * Get the refresh token from cookies
+ * Note: Backend should set httpOnly cookies for better security
  */
 export function getRefreshToken(): string | null {
   if (!isBrowser) return null
   try {
-    // First try cookies
-    const cookieToken = getCookie("refresh_token")
-    if (cookieToken) return cookieToken
-    
-    // Fallback to localStorage for backward compatibility
-    return localStorage.getItem(REFRESH_TOKEN_KEY)
+    return getCookie("refresh_token")
   } catch (error) {
     console.error("Failed to get refresh token:", error)
     return null
@@ -97,7 +86,9 @@ export function getRefreshToken(): string | null {
 }
 
 /**
- * Save access and optionally refresh token to cookies and localStorage (for backward compatibility)
+ * Save access and optionally refresh token to cookies
+ * Note: This is a fallback for client-side cookie management
+ * Ideally, backend should set httpOnly cookies on login/refresh
  */
 export function setTokens({ accessToken, refreshToken }: Tokens): void {
   if (!isBrowser) return
@@ -107,19 +98,13 @@ export function setTokens({ accessToken, refreshToken }: Tokens): void {
     if (refreshToken) {
       setCookie("refresh_token", refreshToken, 7) // 7 days expiry for refresh token
     }
-    
-    // Also set localStorage for backward compatibility
-    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
-    if (refreshToken) {
-      localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken)
-    }
   } catch (error) {
     console.error("Failed to set tokens:", error)
   }
 }
 
 /**
- * Clear all tokens from cookies and localStorage
+ * Clear all tokens from cookies
  */
 export function clearTokens(): void {
   if (!isBrowser) return
@@ -127,10 +112,6 @@ export function clearTokens(): void {
     // Clear cookies
     deleteCookie("access_token")
     deleteCookie("refresh_token")
-    
-    // Clear localStorage
-    localStorage.removeItem(ACCESS_TOKEN_KEY)
-    localStorage.removeItem(REFRESH_TOKEN_KEY)
   } catch (error) {
     console.error("Failed to clear tokens:", error)
   }
