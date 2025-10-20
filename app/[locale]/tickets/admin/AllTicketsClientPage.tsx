@@ -26,6 +26,7 @@ import {
   Edit,
   Check
 } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/hooks/use-auth"
@@ -92,6 +93,10 @@ export default function AllTicketsClientPage() {
   const [replyText, setReplyText] = useState("");
   const [isInternalComment, setIsInternalComment] = useState(false);
   const [comments, setComments] = useState<any[]>([]);
+
+  // Translation hooks
+  const t = useTranslations('tickets');
+  const tCommon = useTranslations('common');
 
 
   
@@ -352,10 +357,10 @@ export default function AllTicketsClientPage() {
 
   // Table columns
   const columns = [
-    { accessorKey: "no", header: "No", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
-    { accessorKey: "subject", header: "Subject", cell: ({ row }: any) => <div className="font-medium">{row.original.subject}</div> },
-    { accessorKey: "user", header: "Created By", cell: ({ row }: any) => <div className="font-medium">{row.original.user}</div> },
-    { accessorKey: "priority", header: "Priority", cell: ({ row }: any) => {
+    { accessorKey: "no", header: "#", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
+    { accessorKey: "subject", header: t('subject'), cell: ({ row }: any) => <div className="font-medium">{row.original.subject}</div> },
+    { accessorKey: "user", header: t('createdBy'), cell: ({ row }: any) => <div className="font-medium">{row.original.user}</div> },
+    { accessorKey: "priority", header: t('priority'), cell: ({ row }: any) => {
       const priority = row.original.priority;
       const priorityColors: Record<string, string> = {
         low: "bg-gray-100 text-gray-800",
@@ -363,9 +368,9 @@ export default function AllTicketsClientPage() {
         high: "bg-orange-100 text-orange-800",
         urgent: "bg-red-100 text-red-800",
       };
-      return <Badge className={priorityColors[priority] || "bg-gray-100 text-gray-800"}>{priority.charAt(0).toUpperCase() + priority.slice(1)}</Badge>;
+      return <Badge className={priorityColors[priority] || "bg-gray-100 text-gray-800"}>{t(priority)}</Badge>;
     } },
-   { accessorKey: "status", header: "Status", cell: ({ row }: any) => {
+   { accessorKey: "status", header: t('status'), cell: ({ row }: any) => {
       const status = row.original.status;
       const statusColors: Record<string, string> = {
         open: "bg-blue-100 text-blue-800",
@@ -373,12 +378,12 @@ export default function AllTicketsClientPage() {
         in_progress: "bg-yellow-100 text-yellow-800",
         pending: "bg-gray-100 text-gray-800",
       };
-      return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
+      return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{t(status)}</Badge>;
     } },
-    { accessorKey: "assignee_name", header: "Assignee", cell: ({ row }: any) => {
+    { accessorKey: "assignee_name", header: t('assignedTo'), cell: ({ row }: any) => {
       const assigneeName = row.original.assignee_name;
       if (!assigneeName) {
-        return <span className="text-gray-400 text-sm italic">Unassigned</span>;
+        return <span className="text-gray-400 text-sm italic">{t('unassigned')}</span>;
       }
       return (
         <div className="flex items-center gap-2">
@@ -390,7 +395,7 @@ export default function AllTicketsClientPage() {
       );
     } },
     { accessorKey: "date",
-       header: "Date", 
+       header: t('createdAt'), 
        cell: ({ row }: any) => (
         <div className="text-gray-600">
           {new Date(row.original.date).toLocaleDateString("en-US", {
@@ -404,7 +409,7 @@ export default function AllTicketsClientPage() {
     
      {
           id: "actions",
-          header: "Actions",
+          header: tCommon('actions'),
           cell: ({ row }: any) => {
             const ticket = row.original
             return (
@@ -417,7 +422,7 @@ export default function AllTicketsClientPage() {
                     setModalOpen(true)
                   }}
                   className="hover:bg-blue-50 hover:text-blue-600"
-                  title="View ticket"
+                  title={t('view')}
                 >
                   <Eye className="h-4 w-4" />
                 </Button>
@@ -432,7 +437,7 @@ export default function AllTicketsClientPage() {
                       setChangeStatusModalOpen(true)
                     }}
                     className="hover:bg-orange-50 hover:text-orange-600"
-                    title="Change status/priority"
+                    title={t('changeStatus')}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -446,7 +451,7 @@ export default function AllTicketsClientPage() {
                       setAssignTicketModalOpen(true)
                     }}
                     className="hover:bg-purple-50 hover:text-purple-600"
-                    title="Assign ticket"
+                    title={t('assign')}
                   >
                     <User className="h-4 w-4" />
                   </Button>
@@ -483,14 +488,14 @@ export default function AllTicketsClientPage() {
   }
 
   return (
-    <DashboardLayout title="Tickets Management" isFetching={isFetching}>
+    <DashboardLayout title={t('title')} isFetching={isFetching}>
       <div className="p-0"> 
         
         <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
           <div className="flex justify-between items-center px-2 py-2">
           <div>
-             <h1 className="text-xl font-semibold">Tickets</h1>
-            <p className="text-sm text-gray-400">View and manage tickets management</p>
+             <h1 className="text-xl font-semibold">{t('pageTitle')}</h1>
+            <p className="text-sm text-gray-400">{t('pageSubtitle')}</p>
           </div>
           {userRole === "user" && (
           <Button
@@ -498,7 +503,7 @@ export default function AllTicketsClientPage() {
             className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Create Ticket
+            {t('createTicket')}
           </Button>
           )}
           </div>
@@ -510,9 +515,9 @@ export default function AllTicketsClientPage() {
               columns={columns}
               data={tableData}
               quickFilterKey="status"
-              quickFilterLabel="Status"
+              quickFilterLabel={t('status')}
               searchKey="subject"
-              searchPlaceholder="Search tickets by subject..."
+              searchPlaceholder={t('searchPlaceholder')}
             />
           </div>
         </div>
@@ -520,7 +525,7 @@ export default function AllTicketsClientPage() {
         <Dialog open={modalOpen} onOpenChange={setModalOpen}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-xl">Ticket Details & Replies</DialogTitle>
+              <DialogTitle className="text-xl">{t('ticketDetails')} & {t('replies')}</DialogTitle>
             </DialogHeader>
             
             {selectedCompany && (
@@ -565,15 +570,15 @@ export default function AllTicketsClientPage() {
                   
                   <CardContent className="space-y-4">
                     <div>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Description</h4>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('description')}</h4>
                       <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                        {selectedCompany.description || "No description provided"}
+                        {selectedCompany.description || t('noDescription')}
                       </p>
                 </div>
                 
                 {selectedCompany.tags && selectedCompany.tags.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Tags</h4>
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('tags')}</h4>
                         <div className="flex flex-wrap gap-2">
                       {selectedCompany.tags.map((tag: string, index: number) => (
                         <Badge key={index} variant="secondary" className="text-xs">
@@ -587,18 +592,18 @@ export default function AllTicketsClientPage() {
                     {/* Assignee Information */}
                     {selectedCompany.assignee_name && (
                       <div className="border-t border-gray-200 pt-4">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Assignment</h4>
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3">{t('assignment')}</h4>
                         <div className="flex items-center gap-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
                           <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white text-sm font-semibold shadow-md">
                             {selectedCompany.assignee_name.charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1">
-                            <p className="text-xs text-gray-600">Assigned to</p>
+                            <p className="text-xs text-gray-600">{t('assignedTo')}</p>
                             <p className="text-sm font-semibold text-gray-900">{selectedCompany.assignee_name}</p>
                             <p className="text-xs text-gray-500">{selectedCompany.assignee_email}</p>
                           </div>
                           <Badge variant="secondary" className="bg-purple-100 text-purple-900 border-purple-200">
-                            Assigned
+                            {t('assigned')}
                           </Badge>
                         </div>
                       </div>
@@ -611,7 +616,7 @@ export default function AllTicketsClientPage() {
                   <div className="flex items-center justify-between">
                     <h4 className="text-base font-semibold text-gray-900 flex items-center gap-2">
                       <FileText className="w-4 h-4" />
-                      Replies & Comments {comments.length > 0 && `(${comments.length})`}
+                      {t('replies')} & {t('comments')} {comments.length > 0 && `(${comments.length})`}
                     </h4>
                   </div>
 
@@ -635,7 +640,7 @@ export default function AllTicketsClientPage() {
                               </div>
                               {comment.is_internal && (
                                 <Badge variant="secondary" className="text-xs bg-amber-200 text-amber-900">
-                                  Internal
+                                  {t('internal')}
                                 </Badge>
                               )}
                             </div>
@@ -647,7 +652,7 @@ export default function AllTicketsClientPage() {
                   ) : (
                     <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
                       <FileText className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">No replies yet. Be the first to respond!</p>
+                      <p className="text-sm text-gray-500">{t('noRepliesYet')}</p>
               </div>
             )}
 
@@ -656,7 +661,7 @@ export default function AllTicketsClientPage() {
                     <Card className="border-blue-200 bg-blue-50/30">
                       <CardContent className="p-4 space-y-3">
                         <div className="flex items-center justify-between mb-2">
-                          <h5 className="text-sm font-semibold text-gray-900">Add Reply</h5>
+                          <h5 className="text-sm font-semibold text-gray-900">{t('addReply')}</h5>
                           <div className="flex items-center gap-2">
                             <input
                               type="checkbox"
@@ -667,14 +672,14 @@ export default function AllTicketsClientPage() {
                             />
                             <label htmlFor="internal-comment" className="text-xs text-gray-600 cursor-pointer flex items-center gap-1">
                               <AlertTriangle className="w-3 h-3" />
-                              Internal Note (hidden from user)
+                              {t('internalNote')}
                             </label>
                           </div>
                         </div>
                         <Textarea
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
-                          placeholder="Type your reply here..."
+                          placeholder={t('typeReplyHere')}
                           className="w-full min-h-[100px] resize-none"
                         />
                         <div className="flex justify-end gap-2">
@@ -687,7 +692,7 @@ export default function AllTicketsClientPage() {
                             }}
                             disabled={!replyText.trim() || addCommentMutation.isPending}
                           >
-                            Clear
+                            {tCommon('clear')}
                           </Button>
                           <Button
                             size="sm"
@@ -706,12 +711,12 @@ export default function AllTicketsClientPage() {
                             {addCommentMutation.isPending ? (
                               <>
                                 <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                                Posting...
+                                {t('posting')}
                               </>
                             ) : (
                               <>
                                 <Check className="w-3 h-3 mr-1" />
-                                Post Reply
+                                {t('postReply')}
                               </>
                             )}
                           </Button>
@@ -725,7 +730,7 @@ export default function AllTicketsClientPage() {
             
             <DialogFooter className="gap-2">
               <Button variant="outline" onClick={() => setModalOpen(false)} disabled={addCommentMutation.isPending}>
-                Close
+                {tCommon('close')}
                 </Button>
             </DialogFooter>
           </DialogContent>
@@ -760,40 +765,40 @@ export default function AllTicketsClientPage() {
         <Dialog open={changeStatusModalOpen} onOpenChange={setChangeStatusModalOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-xl">Change Ticket Status & Priority</DialogTitle>
+              <DialogTitle className="text-xl">{t('changeStatus')} & {t('priority')}</DialogTitle>
             </DialogHeader>
             
             {selectedTicketForStatusChange && (
               <div className="space-y-4 py-4">
                 <div>
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">{selectedTicketForStatusChange.subject}</h3>
-                  <p className="text-xs text-gray-600">Ticket ID: {selectedTicketForStatusChange.id}</p>
+                  <p className="text-xs text-gray-600">{t('ticketId')}: {selectedTicketForStatusChange.id}</p>
                 </div>
 
                 {/* Status Selection */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Status</label>
+                  <label className="text-sm font-medium text-gray-700">{t('status')}</label>
                   <Select value={newStatus} onValueChange={setNewStatus}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue placeholder={t('selectStatus')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="open">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                          Open
+                          {t('open')}
                         </div>
                       </SelectItem>
                       <SelectItem value="in_progress">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                          In Progress
+                          {t('in_progress')}
                         </div>
                       </SelectItem>
                       <SelectItem value="closed">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                          Closed
+                          {t('closed')}
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -802,34 +807,34 @@ export default function AllTicketsClientPage() {
 
                 {/* Priority Selection */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">Priority</label>
+                  <label className="text-sm font-medium text-gray-700">{t('priority')}</label>
                   <Select value={newPriority} onValueChange={setNewPriority}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select priority" />
+                      <SelectValue placeholder={t('selectPriority')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="low">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-gray-400"></div>
-                          Low
+                          {t('low')}
                         </div>
                       </SelectItem>
                       <SelectItem value="medium">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-yellow-400"></div>
-                          Medium
+                          {t('medium')}
                         </div>
                       </SelectItem>
                       <SelectItem value="high">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-                          High
+                          {t('high')}
                         </div>
                       </SelectItem>
                       <SelectItem value="urgent">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                          Urgent
+                          {t('urgent')}
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -838,7 +843,7 @@ export default function AllTicketsClientPage() {
 
                 <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-xs text-blue-800">
-                    Current: <strong>{selectedTicketForStatusChange.status}</strong> / <strong>{selectedTicketForStatusChange.priority}</strong>
+                    {t('current')}: <strong>{t(selectedTicketForStatusChange.status)}</strong> / <strong>{t(selectedTicketForStatusChange.priority)}</strong>
                   </p>
                 </div>
               </div>
@@ -855,7 +860,7 @@ export default function AllTicketsClientPage() {
                 }} 
                 disabled={updateTicketMutation.isPending}
               >
-                Cancel
+                {tCommon('cancel')}
               </Button>
               <Button
                 onClick={() => {
@@ -873,10 +878,10 @@ export default function AllTicketsClientPage() {
                 {updateTicketMutation.isPending ? (
                   <>
                     <Loader2 className="animate-spin w-4 h-4 mr-2" />
-                    Updating...
+                    {t('updating')}
                   </>
                 ) : (
-                  "Update Ticket"
+                  t('updateTicket')
                 )}
               </Button>
             </DialogFooter>

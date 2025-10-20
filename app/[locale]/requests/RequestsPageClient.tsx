@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@radix
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import React, { useState, useEffect, useCallback } from "react"
 import { Eye, Plus, UserPlus, Edit } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 import { CreateRequestModal } from "@/components/modals/create-request-modal"
 import { AssignRequestModal } from "@/components/modals/assign-request-modal"
@@ -66,6 +67,10 @@ export default function RequestsPageClient() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Translation hooks
+  const t = useTranslations('requests');
+  const tCommon = useTranslations('common');
   const { role } = useAuth();
 
   // Fetch request details by ID
@@ -184,13 +189,13 @@ export default function RequestsPageClient() {
   const columns = [
     { 
       accessorKey: "no", 
-      header: "No", 
+      header: "#", 
       size: 50,
       cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> 
     },
     { 
       accessorKey: "description", 
-      header: "Description",
+      header: t('description'),
       size: 150,
       cell: ({ row }: any) => {
         const desc = row.original.description || "";
@@ -204,7 +209,7 @@ export default function RequestsPageClient() {
     },
     { 
       accessorKey: "created_by_name", 
-      header: "Created By",
+      header: t('createdBy'),
       size: 180,
       cell: ({ row }: any) => (
         <div className="text-gray-600 text-sm">
@@ -215,7 +220,7 @@ export default function RequestsPageClient() {
     },
     { 
       accessorKey: "assigned_to_name", 
-      header: "Assigned To",
+      header: t('assignedTo'),
       size: 180,
       cell: ({ row }: any) => (
         <div className="text-gray-600 text-sm">
@@ -236,7 +241,7 @@ export default function RequestsPageClient() {
     },
     { 
       accessorKey: "priority", 
-      header: "Priority",
+      header: t('priority'),
       size: 100,
       cell: ({ row }: any) => {
         const priority = row.original.priority;
@@ -246,12 +251,12 @@ export default function RequestsPageClient() {
           high: "bg-red-100 text-red-800",
           critical: "bg-red-100 text-red-800",
         };
-        return <Badge className={`${priorityColors[priority] || "bg-gray-100 text-gray-800"} text-xs px-2 py-1`}>{priority.charAt(0).toUpperCase() + priority.slice(1)}</Badge>;
+        return <Badge className={`${priorityColors[priority] || "bg-gray-100 text-gray-800"} text-xs px-2 py-1`}>{t(priority)}</Badge>;
       }
     },
     { 
       accessorKey: "status", 
-      header: "Status",
+      header: t('status'),
       size: 110,
       cell: ({ row }: any) => {
         const status = row.original.status;
@@ -262,13 +267,12 @@ export default function RequestsPageClient() {
           rejected: "bg-red-100 text-red-800",
           cancelled: "bg-gray-100 text-gray-800",
         };
-        const statusLabel = status.replace('_', ' ');
-        return <Badge className={`${statusColors[status] || "bg-gray-100 text-gray-800"} text-xs px-2 py-1`}>{statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}</Badge>;
+        return <Badge className={`${statusColors[status] || "bg-gray-100 text-gray-800"} text-xs px-2 py-1`}>{t(status)}</Badge>;
       }
     },
     { 
       accessorKey: "created_at", 
-      header: "Created",
+      header: t('createdAt'),
       size: 100,
       cell: ({ row }: any) => (
         <div className="text-gray-600 text-sm">
@@ -282,7 +286,7 @@ export default function RequestsPageClient() {
     },   
      {
           id: "actions",
-          header: "Actions",
+          header: t('actions'),
           size: 150,
           cell: ({ row }: any) => {
             const request = row.original
@@ -381,21 +385,21 @@ export default function RequestsPageClient() {
   }
 
   return (
-    <DashboardLayout title="Request Management" isFetching={isFetching}>
+    <DashboardLayout title={t('title')} isFetching={isFetching}>
       <div className="p-0"> 
         
         <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
           <div className="flex justify-between items-center px-2 py-2">
           <div>
-             <h1 className="text-xl font-semibold">Requests</h1>
-            <p className="text-sm text-gray-400">View and manage request management</p>
+             <h1 className="text-xl font-semibold">{t('pageTitle')}</h1>
+            <p className="text-sm text-gray-400">{t('pageSubtitle')}</p>
           </div>
           {role === "user" && <Button
           onClick={() => setOpenModal(true)}
             className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Create Request
+            {t('createRequest')}
           </Button>
 
          }
@@ -408,7 +412,7 @@ export default function RequestsPageClient() {
               data={tableData}
               quickFilterKey="status"
               searchKey="description"
-              searchPlaceholder="Search request by description..."
+              searchPlaceholder={t('searchPlaceholder')}
             />
           </div>
         </div>

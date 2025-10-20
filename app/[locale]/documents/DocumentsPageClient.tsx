@@ -21,6 +21,7 @@ import {
   Download,
   Trash2
 } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -95,6 +96,10 @@ export default function DocumentsPageClient() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [threads, setThreads] = useState<DocThread[]>([]);
+  
+  // Translation hooks
+  const t = useTranslations('documents');
+  const tCommon = useTranslations('common');
   const [hasNextPage, setHasNextPage] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [threadToDelete, setThreadToDelete] = useState<DocThread | null>(null);
@@ -306,13 +311,13 @@ export default function DocumentsPageClient() {
   };
 
   return (
-    <DashboardLayout title="Document Management" isFetching={isFetching}>
+    <DashboardLayout title={t('title')} isFetching={isFetching}>
       <div className="p-0">       
         <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
            <div className="flex justify-between items-center px-2 py-2">
           <div>
-             <h1 className="text-xl font-semibold">Document Folders</h1>
-            <p className="text-sm text-gray-400">Start and track document conversations</p>
+             <h1 className="text-xl font-semibold">{t('pageTitle')}</h1>
+            <p className="text-sm text-gray-400">{t('pageSubtitle')}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -322,14 +327,14 @@ export default function DocumentsPageClient() {
               className="gap-2"
             >
               <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-              Refresh
+              {tCommon('refresh')}
             </Button>
             <Button
               onClick={() => setCreateThreadOpen(true)}
               className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Create Folder
+              {t('uploadDocument')}
             </Button>
           </div>
         </div>

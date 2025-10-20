@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { requestsApi } from "@/lib/api/requests"
+import { useTranslations } from 'next-intl'
 
 type ChangeStatusModalProps = {
   open: boolean
@@ -25,17 +26,21 @@ export function ChangeStatusModal({
 }: ChangeStatusModalProps) {
   const [newStatus, setNewStatus] = useState(currentStatus)
   const [remarks, setRemarks] = useState("")
+  
+  // Translation hooks
+  const t = useTranslations('requests');
+  const tCommon = useTranslations('common');
 
   const handleStatusChange = async () => {
     if (!newStatus) {
-      alert("Please select a status.")
+      alert(t('pleaseSelectStatus'))
       return
     }
 
     try {
       await requestsApi.patchRequest(requestId, {
         status: newStatus,
-        remarks: remarks || `Status changed to ${newStatus}`
+        remarks: remarks || `${t('statusChangedTo')} ${t(newStatus)}`
       })
       
       onSuccess?.()
@@ -46,7 +51,7 @@ export function ChangeStatusModal({
       setRemarks("")
     } catch (error) {
       console.error("[Change Status] Error:", error)
-      alert("Failed to change status. Please try again.")
+      alert(t('failedToChangeStatus'))
     }
   }
 
@@ -54,39 +59,39 @@ export function ChangeStatusModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[#4082ea] font-semibold">Change Request Status</DialogTitle>
+          <DialogTitle className="text-[#4082ea] font-semibold">{t('changeStatus')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
-            <Label>Current Status</Label>
+            <Label>{t('currentStatus')}</Label>
             <div className="p-2 bg-gray-100 rounded text-sm">
-              {currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1)}
+              {t(currentStatus)}
             </div>
           </div>
 
           <div>
-            <Label>New Status *</Label>
+            <Label>{t('newStatus')} *</Label>
             <Select
               value={newStatus}
               onValueChange={setNewStatus}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select new status" />
+                <SelectValue placeholder={t('selectNewStatus')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem key="pending" value="pending">Pending</SelectItem>
-                <SelectItem key="approved" value="approved">Approved</SelectItem>
-                <SelectItem key="rejected" value="rejected">Rejected</SelectItem>
-                <SelectItem key="closed" value="closed">Closed</SelectItem>
+                <SelectItem key="pending" value="pending">{t('pending')}</SelectItem>
+                <SelectItem key="approved" value="approved">{t('approved')}</SelectItem>
+                <SelectItem key="rejected" value="rejected">{t('rejected')}</SelectItem>
+                <SelectItem key="closed" value="closed">{t('closed')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div>
-            <Label>Remarks</Label>
+            <Label>{t('remarks')}</Label>
             <Textarea
-              placeholder="Add any remarks about this status change..."
+              placeholder={t('addRemarksAboutStatusChange')}
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               rows={3}
@@ -99,14 +104,14 @@ export function ChangeStatusModal({
             variant="outline"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button
             className="bg-[#4082ea] hover:bg-[#306ad1]"
             onClick={handleStatusChange}
             disabled={!newStatus || newStatus === currentStatus}
           >
-            Change Status
+            {t('changeStatus')}
           </Button>
         </div>
       </DialogContent>

@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge"
 import { Loader2, User } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { usersApi } from "@/lib/api/users"
+import { useTranslations } from 'next-intl'
 
 interface AssignTicketModalProps {
   open: boolean
@@ -64,6 +65,10 @@ export function AssignTicketModal({
   const [assignedUserId, setAssignedUserId] = useState("")
   const [status, setStatus] = useState<"open" | "closed" | "in_progress" | "pending">("in_progress")
   const [priority, setPriority] = useState<"low" | "medium" | "high" | "urgent">("high")
+  
+  // Translation hooks
+  const t = useTranslations('tickets');
+  const tCommon = useTranslations('common');
 
   // Fetch users for assignment
   const { data: usersResponse, isLoading: usersLoading } = useQuery({
@@ -114,7 +119,7 @@ export function AssignTicketModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]" aria-describedby="assign-ticket-description">
         <DialogHeader>
-          <DialogTitle>Assign Ticket</DialogTitle>
+          <DialogTitle>{t('assignTicket')}</DialogTitle>
           <p id="assign-ticket-description" className="sr-only">
             Assign a ticket to a user and update its status and priority
           </p>
@@ -127,7 +132,7 @@ export function AssignTicketModal({
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="assignedUser">Assign to User *</Label>
+            <Label htmlFor="assignedUser">{t('assignedTo')} *</Label>
             <Select value={assignedUserId} onValueChange={setAssignedUserId}>
               <SelectTrigger>
                 <SelectValue placeholder="Select a user to assign this ticket to" />
@@ -136,7 +141,7 @@ export function AssignTicketModal({
                 {usersLoading ? (
                   <div className="flex items-center justify-center p-4">
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Loading users...
+                    {tCommon('loading')}...
                   </div>
                 ) : users.length === 0 ? (
                   <div className="p-4 text-center text-gray-500">
@@ -166,7 +171,7 @@ export function AssignTicketModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status">{t('status')}</Label>
               <Select value={status} onValueChange={(value: any) => setStatus(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
@@ -176,7 +181,7 @@ export function AssignTicketModal({
                     <SelectItem key={option.value} value={option.value}>
                       <div className="flex items-center gap-2">
                         <Badge className={`text-xs ${option.color}`}>
-                          {option.label}
+                          {t(option.value)}
                         </Badge>
                       </div>
                     </SelectItem>
@@ -186,7 +191,7 @@ export function AssignTicketModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority">{t('priority')}</Label>
               <Select value={priority} onValueChange={(value: any) => setPriority(value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select priority" />
@@ -196,7 +201,7 @@ export function AssignTicketModal({
                     <SelectItem key={option.value} value={option.value}>
                       <div className="flex items-center gap-2">
                         <Badge className={`text-xs ${option.color}`}>
-                          {option.label}
+                          {t(option.value)}
                         </Badge>
                       </div>
                     </SelectItem>
@@ -208,14 +213,14 @@ export function AssignTicketModal({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button 
               type="submit" 
               disabled={!assignedUserId || isLoading}
               className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
             >
-              {isLoading ? "Assigning..." : "Assign Ticket"}
+              {isLoading ? tCommon('loading') : t('assignTicket')}
             </Button>
           </DialogFooter>
         </form>

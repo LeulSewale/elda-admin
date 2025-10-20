@@ -4,6 +4,7 @@ import React, { useState, useEffect, createContext, useContext, useCallback, use
 import { notificationsApi } from '@/lib/api/notifications'
 import { Notification } from '@/lib/types'
 import { useToast } from './use-toast'
+import { useAuth } from './use-auth'
 
 interface NotificationsContextType {
   unreadCount: number
@@ -28,6 +29,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
   const reconnectAttemptsRef = useRef(0)
   const maxReconnectAttempts = 5
   const { toast } = useToast()
+  const { isAuthenticated } = useAuth({ redirectOnFail: false })
 
   const refreshUnreadCount = useCallback(async () => {
     try {
@@ -35,7 +37,10 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
       const count = response.data?.data?.unread || 0
       setUnreadCount(count)
     } catch (err: any) {
-      console.error("[Notifications] Failed to fetch unread count:", err)
+      // Only log as error if it's not a 401 (unauthorized) error
+      if (err?.response?.status !== 401) {
+        console.error("[Notifications] Failed to fetch unread count:", err)
+      }
     }
   }, [])
 
@@ -49,7 +54,10 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
       const unreadNotifs = fetchedNotifications.filter((n: Notification) => !n.is_read)
       setUnreadCount(unreadNotifs.length)
     } catch (err: any) {
-      console.error("[Notifications] Failed to fetch notifications:", err)
+      // Only log as error if it's not a 401 (unauthorized) error
+      if (err?.response?.status !== 401) {
+        console.error("[Notifications] Failed to fetch notifications:", err)
+      }
     }
   }, [])
 
@@ -173,24 +181,28 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
     }
   }, [])
 
-  // Initialize: Fetch initial data and connect to SSE
+  // Initialize: Fetch initial data and connect to SSE (only when authenticated)
   useEffect(() => {
-    refreshNotifications()
-    connectToSSE()
+    if (isAuthenticated) {
+      refreshNotifications()
+      connectToSSE()
+    }
 
     // Cleanup on unmount
     return () => {
       disconnectFromSSE()
     }
-  }, []) // Only run once on mount
+  }, [isAuthenticated]) // Run when authentication status changes
 
-  // Handle tab visibility to reconnect when user comes back
+  // Handle tab visibility to reconnect when user comes back (only when authenticated)
   useEffect(() => {
+    if (!isAuthenticated) return
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         // Refresh data when tab becomes visible
         refreshNotifications()
-    refreshUnreadCount()
+        refreshUnreadCount()
         
         // Reconnect SSE if disconnected
         if (!eventSourceRef.current) {
@@ -204,7 +216,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [refreshNotifications, refreshUnreadCount, connectToSSE])
+  }, [isAuthenticated, refreshNotifications, refreshUnreadCount, connectToSSE])
 
   const value = {
     unreadCount,

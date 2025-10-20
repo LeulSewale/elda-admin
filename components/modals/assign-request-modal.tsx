@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { requestsApi } from "@/lib/api/requests"
 import { usersApi } from "@/lib/api/users"
 import { useQuery } from "@tanstack/react-query"
+import { useTranslations } from 'next-intl'
 
 type AssignRequestModalProps = {
   open: boolean
@@ -28,6 +29,10 @@ export function AssignRequestModal({
   const [selectedLawyer, setSelectedLawyer] = useState("")
   const [priority, setPriority] = useState("medium")
   const [remarks, setRemarks] = useState("")
+  
+  // Translation hooks
+  const t = useTranslations('requests');
+  const tCommon = useTranslations('common');
 
   // Fetch lawyers
   const { data: lawyersData, isLoading: lawyersLoading, error: lawyersError } = useQuery({
@@ -84,12 +89,12 @@ export function AssignRequestModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[#4082ea] font-semibold">Assign Request to Lawyer</DialogTitle>
+          <DialogTitle className="text-[#4082ea] font-semibold">{t('assignRequest')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div>
-            <Label>Select Lawyer *</Label>
+            <Label>{t('assignedTo')} *</Label>
             <Select
               value={selectedLawyer}
               onValueChange={(value) => {
@@ -99,7 +104,7 @@ export function AssignRequestModal({
               disabled={lawyersLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder={lawyersLoading ? "Loading lawyers..." : "Choose a lawyer"} />
+                <SelectValue placeholder={lawyersLoading ? tCommon('loading') : "Choose a lawyer"} />
               </SelectTrigger>
               <SelectContent>
                 {Array.isArray(lawyers) && lawyers.length > 0 ? (
@@ -113,7 +118,7 @@ export function AssignRequestModal({
                   })
                 ) : (
                   <SelectItem key="no-lawyers" value="no-lawyers" disabled>
-                    {lawyersError ? "Error loading lawyers" : lawyersLoading ? "Loading lawyers..." : "No lawyers available"}
+                    {lawyersError ? "Error loading lawyers" : lawyersLoading ? tCommon('loading') : "No lawyers available"}
                   </SelectItem>
                 )}
               </SelectContent>
@@ -121,7 +126,7 @@ export function AssignRequestModal({
           </div>
 
           <div>
-            <Label>Priority</Label>
+            <Label>{t('priority')}</Label>
             <Select
               value={priority}
               onValueChange={setPriority}
@@ -130,9 +135,9 @@ export function AssignRequestModal({
                 <SelectValue placeholder="Select priority" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem key="low" value="low">Low</SelectItem>
-                <SelectItem key="medium" value="medium">Medium</SelectItem>
-                <SelectItem key="high" value="high">High</SelectItem>
+                <SelectItem key="low" value="low">{t('low')}</SelectItem>
+                <SelectItem key="medium" value="medium">{t('medium')}</SelectItem>
+                <SelectItem key="high" value="high">{t('high')}</SelectItem>
                 <SelectItem key="urgent" value="urgent">Urgent</SelectItem>
               </SelectContent>
             </Select>
@@ -154,7 +159,7 @@ export function AssignRequestModal({
             variant="outline"
             onClick={() => onOpenChange(false)}
           >
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button
             className="bg-[#4082ea] hover:bg-[#306ad1]"
@@ -162,7 +167,7 @@ export function AssignRequestModal({
             disabled={!selectedLawyer || selectedLawyer === "no-lawyers"}
             title={`Selected: ${selectedLawyer || 'none'}`}
           >
-            Assign Request
+            {t('assignRequest')}
           </Button>
         </div>
       </DialogContent>

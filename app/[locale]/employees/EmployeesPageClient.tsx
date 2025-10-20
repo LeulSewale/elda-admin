@@ -14,6 +14,7 @@ import { useTabVisibility } from "@/hooks/use-tab-visibility"
 import { CreateEmployeeModal } from "@/components/modals/create-employee-modal"
 import { EditEmployeeModal } from "@/components/modals/edit-employee-modal"
 import { DeleteModal } from "@/components/modals/delete-modal"
+import { useTranslations } from 'next-intl'
 
 
 export function EmployeesPageClient() {
@@ -28,6 +29,10 @@ export function EmployeesPageClient() {
   const queryClient = useQueryClient();
   const { role, user, isAuthenticated } = useAuth();
   const { isVisible, lastActivity } = useTabVisibility();
+  
+  // Translation hooks
+  const t = useTranslations('employees');
+  const tCommon = useTranslations('common');
 
   // Debug authentication state
   console.debug("[Employees] Auth state:", {
@@ -481,13 +486,13 @@ export function EmployeesPageClient() {
   }
 
   return (
-    <DashboardLayout title="Employees" isFetching={isFetching}>
+    <DashboardLayout title={t('title')} isFetching={isFetching}>
       <div className="p-0">
       <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
           <div className="flex justify-between items-center px-2 py-2">
             <div>
-              <h1 className="text-xl font-semibold">Employees</h1>
-              <p className="text-sm text-gray-400">View and manage employees lists</p>
+              <h1 className="text-xl font-semibold">{t('pageTitle')}</h1>
+              <p className="text-sm text-gray-400">{t('pageSubtitle')}</p>
             </div>
             <div className="flex gap-2">
                 {/* Create Employee - Primary */}
@@ -496,7 +501,7 @@ export function EmployeesPageClient() {
                   onClick={() => setCreateEmployeeModalOpen(true)}
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Employee
+                  {t('createEmployee')}
                 </Button>
 
                 {/* Employee Documents - Blue */}

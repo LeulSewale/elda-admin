@@ -21,6 +21,7 @@ import {
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { X, Plus } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 interface CreateTicketModalProps {
   open: boolean
@@ -52,6 +53,10 @@ export function CreateTicketModal({
   const [priority, setPriority] = useState<"low" | "medium" | "high" | "urgent">("medium")
   const [tags, setTags] = useState<string[]>([])
   const [newTag, setNewTag] = useState("")
+  
+  // Translation hooks
+  const t = useTranslations('tickets');
+  const tCommon = useTranslations('common');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -97,12 +102,12 @@ export function CreateTicketModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Create New Ticket</DialogTitle>
+          <DialogTitle>{t('createTicket')}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="subject">Subject *</Label>
+            <Label htmlFor="subject">{t('subject')} *</Label>
             <Input
               id="subject"
               placeholder="Brief description of the issue"
@@ -113,7 +118,7 @@ export function CreateTicketModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="priority">Priority</Label>
+            <Label htmlFor="priority">{t('priority')}</Label>
             <Select value={priority} onValueChange={(value: any) => setPriority(value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select priority" />
@@ -123,7 +128,7 @@ export function CreateTicketModal({
                   <SelectItem key={option.value} value={option.value}>
                     <div className="flex items-center gap-2">
                       <Badge className={`text-xs ${option.color}`}>
-                        {option.label}
+                        {t(option.value)}
                       </Badge>
                     </div>
                   </SelectItem>
@@ -133,7 +138,7 @@ export function CreateTicketModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
+            <Label htmlFor="description">{t('message')} *</Label>
             <Textarea
               id="description"
               placeholder="Detailed description of the issue or request"
@@ -145,7 +150,7 @@ export function CreateTicketModal({
           </div>
 
           <div className="space-y-2">
-            <Label>Tags (Optional)</Label>
+            <Label>{t('category')} (Optional)</Label>
             <div className="flex gap-2">
               <Input
                 placeholder="Add a tag"
@@ -188,14 +193,14 @@ export function CreateTicketModal({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose} disabled={isLoading}>
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button 
               type="submit" 
               disabled={!subject.trim() || !description.trim() || isLoading}
               className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
             >
-              {isLoading ? "Creating..." : "Create Ticket"}
+              {isLoading ? tCommon('loading') : t('createTicket')}
             </Button>
           </DialogFooter>
         </form>

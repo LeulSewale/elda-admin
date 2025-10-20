@@ -13,16 +13,21 @@
   import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
   import { useState } from "react"
   import Image from "next/image"
+  import { useTranslations } from 'next-intl'
+  import { LanguageSwitcher } from '@/components/language-switcher'
   
   export default function SignupPageClient() {
   const router = useRouter()
+  const t = useTranslations('auth');
+  const tCommon = useTranslations('common');
+  const tValidation = useTranslations('validation');
   const registerMutation = useMutation({
     mutationFn: async (userData: { name: string; email: string; phone: string; password: string; role: string }) => 
       authApi.register(userData),
     onSuccess: (response) => {
       toast({
-        title: "Success",
-        description: "Account created successfully. You can now log in.",
+        title: tCommon('success'),
+        description: t('signupSuccess') || "Account created successfully. You can now log in.",
         duration: 3000,
       })
       setTimeout(() => {
@@ -31,8 +36,8 @@
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error?.response?.data?.message || error?.message || "Registration failed",
+        title: tCommon('error'),
+        description: error?.response?.data?.message || error?.message || t('signupError') || "Registration failed",
         variant: "destructive",
         duration: 3000,
       })
@@ -62,6 +67,11 @@
   
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-2 sm:p-4">
+        {/* Language Switcher - Top Right */}
+        <div className="absolute top-4 right-4 z-10">
+          <LanguageSwitcher />
+        </div>
+        
         <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-4 lg:gap-8 items-center">
           {/* Left side - Branding */}
           <div className="hidden lg:flex flex-col items-center justify-center space-y-8">
@@ -84,8 +94,8 @@
              <Card className="bg-gradient-to-br from-white via-blue-50 to-blue-100 shadow-md rounded-xl lg:rounded-2xl border-0 transition-transform duration-300 hover:scale-[1.02] animate-fade-in">
                                <CardHeader className="text-center px-4 lg:px-6">
                   <CardTitle className="text-2xl lg:text-3xl text-blue-500 font-extrabold tracking-tight">ELDA SYSTEM</CardTitle>
-                  <div className="mt-2 text-gray-500 text-base lg:text-lg font-medium">Create your user account</div>
-                  <div className="mt-1 text-gray-400 text-xs lg:text-sm">Join the ELDA system to manage your requests and tickets</div>
+                  <div className="mt-2 text-gray-500 text-base lg:text-lg font-medium">{t('signupTitle')}</div>
+                  <div className="mt-1 text-gray-400 text-xs lg:text-sm">{t('signupSubtitle')}</div>
                 </CardHeader>
                <div className="border-b border-gray-200 mx-4 lg:mx-6 mb-4 lg:mb-6" />
                <CardContent className="space-y-4 lg:space-y-6 px-4 lg:px-6">
@@ -96,14 +106,14 @@
                        <FormField
                          control={form.control}
                          name="fullName"
-                         rules={{ required: "Full name is required" }}
+                         rules={{ required: tValidation('required') }}
                          render={({ field }) => (
                            <FormItem>
-                             <FormLabel>Full Name</FormLabel>
+                             <FormLabel>{tCommon('name')}</FormLabel>
                              <FormControl>
                                <Input
                                  type="text"
-                                 placeholder="Enter your full name"
+                                 placeholder={tCommon('name')}
                                  disabled={registerMutation.isPending}
                                  {...field}
                                />
@@ -116,19 +126,19 @@
                          control={form.control}
                          name="phoneNumber"
                          rules={{ 
-                           required: "Phone number is required",
+                           required: tValidation('required'),
                            pattern: {
                              value: /^(\+251|251|0)(9\d{8}|7\d{8})$/,
-                             message: "Please enter a valid Ethiopian phone number (e.g., +251912345678, 251912345678, 0912345678, 0712345678)"
+                             message: tValidation('phoneInvalid')
                            }
                          }}
                          render={({ field }) => (
                            <FormItem>
-                             <FormLabel>Phone Number</FormLabel>
+                             <FormLabel>{tCommon('phone')}</FormLabel>
                              <FormControl>
                                <Input
                                  type="tel"
-                                 placeholder="Enter Ethiopian phone number"
+                                 placeholder={tCommon('phone')}
                                  disabled={registerMutation.isPending}
                                  {...field}
                                />
@@ -141,19 +151,19 @@
                          control={form.control}
                          name="email"
                          rules={{
-                           required: "Email is required",
+                           required: tValidation('required'),
                            pattern: {
                              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                             message: "Please enter a valid email address",
+                             message: tValidation('emailInvalid'),
                            },
                          }}
                          render={({ field }) => (
                            <FormItem>
-                             <FormLabel>Email Address</FormLabel>
+                             <FormLabel>{tCommon('email')}</FormLabel>
                              <FormControl>
                                <Input
                                  type="email"
-                                 placeholder="Enter your email address"
+                                 placeholder={tCommon('email')}
                                  disabled={registerMutation.isPending}
                                  {...field}
                                />
@@ -165,14 +175,14 @@
                        <FormField
                          control={form.control}
                          name="password"
-                         rules={{ required: "Password is required" }}
+                         rules={{ required: tValidation('required') }}
                          render={({ field }) => (
                            <FormItem>
-                             <FormLabel>Password</FormLabel>
+                             <FormLabel>{tCommon('password')}</FormLabel>
                              <FormControl>
                                <Input
                                  type="password"
-                                 placeholder="Enter password"
+                                 placeholder={tCommon('password')}
                                  disabled={registerMutation.isPending}
                                  {...field}
                                />
@@ -188,14 +198,14 @@
                       className="w-full h-10 lg:h-12 bg-blue-500 hover:bg-blue-600 text-white text-sm lg:text-base"
                       disabled={registerMutation.isPending}
                     >
-                      {registerMutation.isPending ? "Creating Account..." : "Create Account"}
+                      {registerMutation.isPending ? tCommon('loading') : t('signupTitle')}
                     </Button>
                   </form>
                 </Form>
                 <div className="text-center text-xs lg:text-sm text-gray-600">
-                  {"Already have an account? "}
+                  {t('alreadyHaveAccount')}{" "}
                   <Link href="/login" className="text-blue-500 hover:underline font-semibold">
-                    Login
+                    {tCommon('login')}
                   </Link>
                 </div>
               </CardContent>

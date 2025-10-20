@@ -11,9 +11,15 @@
   import Link from "next/link"
   import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
   import Image from "next/image"
+  import { useTranslations } from 'next-intl'
+  import { LanguageSwitcher } from '@/components/language-switcher'
   
   export default function LoginPage() {
     const { login, isAuthenticating } = useAuth({ redirectOnFail: false })
+    const t = useTranslations('auth');
+    const tCommon = useTranslations('common');
+    const tValidation = useTranslations('validation');
+    
     const form = useReactHookForm({
       defaultValues: {
         email: "",
@@ -26,14 +32,14 @@
         onSuccess: () => {
         },
         onError: (error) => {
-          let message = "Login failed"
+          let message = t('loginError')
           if (error?.response && typeof error.response.data === "object" && error.response.data !== null && "message" in error.response.data) {
             message = (error.response.data as { message?: string }).message || error?.message || message
           } else if (error?.message) {
             message = error.message
           }
           toast({
-            title: "Login Error",
+            title: t('loginError'),
             description: message,
             variant: "destructive",
           })
@@ -43,6 +49,11 @@
   
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        {/* Language Switcher - Top Right */}
+        <div className="absolute top-4 right-4 z-10">
+          <LanguageSwitcher />
+        </div>
+        
         <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
           {/* Left branding panel */}
           <div className="hidden lg:flex flex-col items-center justify-center space-y-8">
@@ -84,19 +95,19 @@
                       control={form.control}
                       name="email"
                       rules={{
-                        required: "Email is required",
+                        required: tValidation('required'),
                         pattern: {
                           value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                          message: "Please enter a valid email address",
+                          message: tValidation('emailInvalid'),
                         },
                       }}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel>{tCommon('email')}</FormLabel>
                           <FormControl>
                             <Input
                               type="email"
-                              placeholder="Enter your email"
+                              placeholder={tCommon('email')}
                               disabled={isAuthenticating}
                               {...field}
                             />
@@ -108,14 +119,14 @@
                     <FormField
                       control={form.control}
                       name="password"
-                      rules={{ required: "Password is required" }}
+                      rules={{ required: tValidation('required') }}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel>{tCommon('password')}</FormLabel>
                           <FormControl>
                             <Input
                               type="password"
-                              placeholder="Enter your password"
+                              placeholder={tCommon('password')}
                               disabled={isAuthenticating}
                               {...field}
                             />
@@ -130,15 +141,15 @@
                       disabled={isAuthenticating}
                       aria-busy={isAuthenticating}
                     >
-                      {isAuthenticating ? "Logging in..." : "Login"}
+                      {isAuthenticating ? tCommon('loading') : tCommon('login')}
                     </Button>
                   </form>
                 </Form>
                 {/* Sign up link */}
                 <div className="text-center text-sm text-gray-600">
-                  Don&apos;t have an account?{" "}
+                  {t('dontHaveAccount')}{" "}
                   <Link href="/signup" className="text-blue-500 hover:underline font-semibold">
-                    Sign Up
+                    {tCommon('signup')}
                   </Link>
                 </div>
               </CardContent>

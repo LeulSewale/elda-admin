@@ -17,6 +17,7 @@ import { Sidebar, SidebarToggle } from "./sidebar"
 import { ProfileModal } from "@/components/modals/profile-modal"
 import { NotificationsDropdown } from "@/components/modals/notifications-modal"
 import { useNotifications } from "@/hooks/use-notifications"
+import { LanguageSwitcher } from "@/components/language-switcher"
 import { useState } from "react"
 
 interface HeaderProps {
@@ -40,16 +41,19 @@ export function Header({ title }: HeaderProps) {
           </div>
 
           <div className="flex items-center space-x-4">
-          <NotificationsDropdown open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              )}
-            </Button>
-          </NotificationsDropdown>
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+            
+            <NotificationsDropdown open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </Button>
+            </NotificationsDropdown>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, RefreshCw, Eye, Pencil, Trash2, FileDown } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
@@ -59,6 +60,7 @@ export function DataTable<TData, TValue>({
   manualPagination = false,
   getRowClassName,
 }: DataTableProps<TData, TValue>) {
+  const tCommon = useTranslations('common');
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
@@ -180,7 +182,7 @@ export function DataTable<TData, TValue>({
                     onClick={() => setQuickFilter(undefined)}
                     aria-pressed={!currentQuickValue}
                   >
-                    All
+                    {tCommon('all')}
                   </Button>
                   {quickFilterValues.slice(0, quickFilterLimit).map((val, idx, arr) => (
                     <Button
@@ -218,7 +220,7 @@ export function DataTable<TData, TValue>({
                 onClick={handleExportCSV}
               >
                 <FileDown className="h-4 w-4 mr-2" />
-                Export CSV
+                {tCommon('exportCSV')}
               </Button>
             )}
             <Button
@@ -296,7 +298,7 @@ export function DataTable<TData, TValue>({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
+                  {tCommon('noResults')}
                 </TableCell>
               </TableRow>
             )}
@@ -306,7 +308,7 @@ export function DataTable<TData, TValue>({
 
       <div className="flex items-center justify-between space-x-2 py-4">
         <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Showing</p>
+          <p className="text-sm font-medium">{tCommon('showing')}</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => {
@@ -324,7 +326,7 @@ export function DataTable<TData, TValue>({
               ))}
             </SelectContent>
           </Select>
-          <p className="text-sm font-medium">of {table.getFilteredRowModel().rows.length} Entries</p>
+          <p className="text-sm font-medium">{tCommon('of')} {table.getFilteredRowModel().rows.length} {tCommon('entries')}</p>
         </div>
 
         <div className="flex items-center space-x-2">

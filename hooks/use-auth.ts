@@ -124,8 +124,8 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
             timestamp: new Date().toISOString()
           })
 
-          // Additional debugging for 401 errors
-          if (err?.response?.status === 401) {
+          // Additional debugging for 401 errors (only log if redirectOnFail is true)
+          if (err?.response?.status === 401 && redirectOnFail) {
             console.error("[Auth] 401 Error Details:", {
               cookies: typeof document !== 'undefined' ? document.cookie : 'no-document',
               cookieList: typeof document !== 'undefined' ? document.cookie.split(';').map(c => c.trim()) : [],
@@ -135,6 +135,13 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
               errorCode: err?.response?.data?.code,
               timestamp: new Date().toISOString()
             })
+          } else if (err?.response?.status === 401 && !redirectOnFail) {
+            if (DEBUG) {
+              console.debug("[Auth] 401 Unauthorized (expected on public pages):", {
+                redirectOnFail,
+                message: "User not authenticated - this is expected on login/signup pages"
+              })
+            }
           }
         }
         

@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { RequestStatus } from "@/lib/types/requests"
 import { CheckCircle2, Clock, AlertCircle, XCircle, HelpCircle } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 interface StatusBadgeProps {
   status: RequestStatus
@@ -8,29 +9,31 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, className = '' }: StatusBadgeProps) {
+  const t = useTranslations('requests');
+  
   const statusConfig = {
     pending: {
-      label: 'Pending',
+      label: t('pending'),
       icon: <Clock className="h-3 w-3 mr-1" />,
       variant: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200',
     },
     in_progress: {
-      label: 'In Progress',
+      label: t('inProgress'),
       icon: <HelpCircle className="h-3 w-3 mr-1" />,
       variant: 'bg-blue-100 text-blue-800 hover:bg-blue-200',
     },
     completed: {
-      label: 'Completed',
+      label: t('completed'),
       icon: <CheckCircle2 className="h-3 w-3 mr-1" />,
       variant: 'bg-green-100 text-green-800 hover:bg-green-200',
     },
     rejected: {
-      label: 'Rejected',
+      label: t('rejected'),
       icon: <XCircle className="h-3 w-3 mr-1" />,
       variant: 'bg-red-100 text-red-800 hover:bg-red-200',
     },
     cancelled: {
-      label: 'Cancelled',
+      label: t('cancelled'),
       icon: <AlertCircle className="h-3 w-3 mr-1" />,
       variant: 'bg-gray-100 text-gray-800 hover:bg-gray-200',
     },

@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTabVisibility } from "@/hooks/use-tab-visibility"
 import { useAuth } from "@/hooks/use-auth"
+import { useTranslations } from 'next-intl'
 
 /**
  * ADVANCED PERFORMANCE OPTIMIZATIONS:
@@ -72,6 +73,10 @@ export function UsersPageClient() {
   const queryClient = useQueryClient();
   const { isVisible, lastActivity } = useTabVisibility();
   const { role } = useAuth();
+  
+  // Translation hooks
+  const t = useTranslations('users');
+  const tCommon = useTranslations('common');
 
   // Server provides: { status, message, data: User[], paging }
   
@@ -288,43 +293,43 @@ export function UsersPageClient() {
   const columns = useMemo(() => [
     {
       id: "no",
-      header: "No",
+      header: "#",
       cell: ({ visibleIndex }: any) => visibleIndex + 1,
       enableSorting: false,
     },
     {
       accessorKey: "name",
-      header: "Name",
+      header: tCommon('name'),
       cell: ({ row }: any) => <span>{row.original.name}</span>,
     },
     {
       accessorKey: "email",
-      header: "Email",
+      header: tCommon('email'),
       cell: ({ row }: any) => <span>{row.original.email}</span>,
     },
     {
       accessorKey: "phone",
-      header: "Phone",
+      header: tCommon('phone'),
       cell: ({ row }: any) => <span>{row.original.phone || "-"}</span>,
     },
     {
       accessorKey: "role",
-      header: "Role",
-      cell: ({ row }: any) => <span className="capitalize">{row.original.role}</span>,
+      header: t('role'),
+      cell: ({ row }: any) => <span className="capitalize">{t(row.original.role)}</span>,
     },
     {
       accessorKey: "is_active",
-      header: "Status",
+      header: t('active'),
       cell: ({ row }: any) => {
         const active = !!row.original.is_active
         if (active) {
-          return <Badge className="bg-blue-500 text-white">Active</Badge>
+          return <Badge className="bg-blue-500 text-white">{t('active')}</Badge>
         } 
-        return <Badge className="bg-[#FACC15] text-white">Inactive</Badge>
+        return <Badge className="bg-[#FACC15] text-white">{t('inactive')}</Badge>
       },
     },
     { accessorKey: "created_at",
-      header: "Joined At", 
+      header: t('joinedAt'), 
       cell: ({ row }: any) => (
        <div className="text-gray-600">
          {row.original.created_at ? new Date(row.original.created_at).toLocaleDateString("en-US", {
@@ -337,7 +342,7 @@ export function UsersPageClient() {
     },   
     {
       id: "actions",
-      header: "Actions",
+      header: t('actions'),
       cell: ({ row }: any) => {
         const user = row.original as User
         return (
@@ -393,7 +398,7 @@ export function UsersPageClient() {
       },
       enableSorting: false,
     },
-  ], [setSelectedUser, setDetailModalOpen, setEditUserModalOpen, setDeleteModalOpen, role]);
+  ], [setSelectedUser, setDetailModalOpen, setEditUserModalOpen, setDeleteModalOpen, role, t, tCommon]);
 
   const handleDelete = async () => {
     console.debug("[Users] handleDelete called", { selectedUser })
@@ -455,13 +460,13 @@ export function UsersPageClient() {
   }
 
   return (
-    <DashboardLayout title="Users" isFetching={isFetching}>
+    <DashboardLayout title={t('pageTitle')} isFetching={isFetching}>
       <div className="p-0">
       <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex justify-between items-center px-2 py-2">
           <div>
-             <h1 className="text-xl font-semibold">Users</h1>
-            <p className="text-sm text-gray-400">View and manage users management</p>
+             <h1 className="text-xl font-semibold">{t('pageTitle')}</h1>
+            <p className="text-sm text-gray-400">{t('pageSubtitle')}</p>
           </div>
           {role === "admin" && (
           <Button
@@ -469,7 +474,7 @@ export function UsersPageClient() {
             onClick={() => setCreateUserModalOpen(true)}
           >
             <Plus className="w-4 h-4 mr-2" />
-            Create User
+            {t('createUser')}
           </Button>
           )}
         </div>
@@ -478,14 +483,14 @@ export function UsersPageClient() {
 
         {error ? (
           <div className="text-center py-10">
-            <div className="text-red-500 mb-2">Failed to load users</div>
+            <div className="text-red-500 mb-2">{t('failedToLoad')}</div>
             <div className="text-sm text-gray-500">Check console for details</div>
             <Button 
               onClick={() => refetch()} 
               className="mt-4"
               variant="outline"
             >
-              Retry
+              {t('retry')}
             </Button>
           </div>
         ) : (
@@ -494,7 +499,7 @@ export function UsersPageClient() {
               <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-5 pointer-events-none">
                 <div className="flex items-center gap-2 text-gray-600">
                   <Loader2 className="animate-spin w-5 h-5" />
-                  Syncing users...
+                  {t('syncingUsers')}
                 </div>
               </div>
             )}
@@ -503,8 +508,8 @@ export function UsersPageClient() {
              data={users || []} 
              searchKey="name" 
              quickFilterKey="role"
-             quickFilterLabel="Role"
-             searchPlaceholder="Search users by name" />
+             quickFilterLabel={t('role')}
+             searchPlaceholder={t('searchPlaceholder')} />
           </div>
         )}
       </div>

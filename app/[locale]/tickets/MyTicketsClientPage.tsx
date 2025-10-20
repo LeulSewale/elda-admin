@@ -1,15 +1,5 @@
 "use client"
 
-/**
- * 🎫 Tickets Management Page
- * 
- * FEATURES:
- * - View tickets grouped by Open and Closed
- * - Create new tickets via GlobalModal
- * - Optimized React Query caching
- * - Card-based layout like the design screenshot
- */
-
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -26,6 +16,7 @@ import { TicketCardOutline } from "@/components/cards/TicketCard"
 import { useTickets } from "@/hooks/use-tickets"
 import { ticketsApi } from "@/lib/api/tickets"
 import { CreateTicketModal } from "@/components/modals/create-ticket-modal-new"
+import { useTranslations } from 'next-intl'
 
 // Style constants
 const statCardStyle =
@@ -115,6 +106,10 @@ export default function MyTicketsClientPage() {
   const [activeTab, setActiveTab] = useState<"open" | "closed">("open")
   const queryClient = useQueryClient()
   const { toast } = useToast()
+  
+  // Translation hooks
+  const t = useTranslations('tickets');
+  const tCommon = useTranslations('common');
 
   // 🚀 Fetch tickets with role-based logic
   const { tickets, isLoading, isFetching, userRole } = useTickets()
@@ -176,21 +171,21 @@ export default function MyTicketsClientPage() {
   const visibleTickets = filtered(listByTab)
   const tabTotal = activeTab === "open" ? openTickets.length : closedTickets.length
   return (
-    <DashboardLayout title="Tickets" isFetching={isLoading || isFetching}>
+    <DashboardLayout title={t('title')} isFetching={isLoading || isFetching}>
       <div className="p-0">  
       <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
       <div className="flex justify-between items-center px-2 py-2">
           <div>
           <div className="relative inline-block">
                 <h2 className="text-lg font-semibold text-gray-800">
-                  {activeTab === "open" ? "Open Tickets" : "Closed Tickets"}
+                  {activeTab === "open" ? t('myTickets') : t('allTickets')}
                 </h2>
                 <span className="absolute -top-2 -right-3 px-2 py-0.5 text-[10px] font-medium rounded-full bg-[#e7eeff] text-[#4082ea]">
                   {tabTotal}
                 </span>
               </div>
               <p className="text-sm text-gray-500 mt-1">
-                {activeTab === "open" ? "Tickets that require attention" : "Resolved and completed tickets"}
+                {activeTab === "open" ? t('ticketsRequireAttention') : t('resolvedCompletedTickets')}
               </p>          
               
          </div>
@@ -200,7 +195,7 @@ export default function MyTicketsClientPage() {
               className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Create Ticket
+              {t('createTicket')}
             </Button>
           )}
           </div>
@@ -216,7 +211,7 @@ export default function MyTicketsClientPage() {
                       : "text-gray-600 hover:text-gray-800"
                   }`}
                 >
-                  Open
+                  {t('open')}
                 </button>
                 <button
                   type="button"
@@ -227,7 +222,7 @@ export default function MyTicketsClientPage() {
                       : "text-gray-600 hover:text-gray-800"
                   }`}
                 >
-                  Closed
+                  {t('closed')}
                 </button>
             </div>
             <div className="relative w-64">
@@ -235,7 +230,7 @@ export default function MyTicketsClientPage() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by subject..."
+                  placeholder={t('searchBySubject')}
                   className="pl-9"
                 />
               </div>
@@ -246,8 +241,8 @@ export default function MyTicketsClientPage() {
           {visibleTickets.length === 0 ? (
             <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg p-6">
               <FileText className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-              <p>No tickets found.</p>
-              <p className="text-sm mt-1">Try adjusting filters or search terms.</p>
+              <p>{t('noTicketsFound')}</p>
+              <p className="text-sm mt-1">{t('tryAdjustingFilters')}</p>
             </div>
           ) : (
             <div className="p-2 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -269,7 +264,7 @@ export default function MyTicketsClientPage() {
       <GlobalModal
         open={!!selectedTicket}
         onOpenChange={(open) => !open && setSelectedTicket(null)}
-        title="Ticket Details"
+        title={t('ticketDetails')}
       >
         {selectedTicket && <TicketDetails ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />}
       </GlobalModal>

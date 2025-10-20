@@ -21,22 +21,24 @@ import { useState, createContext, useContext } from "react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useAuth } from "@/hooks/use-auth"
 import Image from "next/image"
+import { useTranslations } from 'next-intl'
+import { LanguageSwitcher } from '@/components/language-switcher'
 
 const navigation = [
   {
-    name: "MAIN MENU",
+    name: "MAIN_MENU",
     items: [
-      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard , roles: ["admin", "user","lawyer"] },
-      { name: "Request Management", href: "/requests", icon: FileText, roles: ["admin","user","lawyer"] },
-      { name: "Ticket Management", href: "/tickets", icon: Ticket , roles: ["admin","user"] },  
-      { name: "Document Management", href: "/documents", icon: BookText , roles: ["admin","user"] },   
+      { name: "dashboard", href: "/dashboard", icon: LayoutDashboard , roles: ["admin", "user","lawyer"] },
+      { name: "requestManagement", href: "/requests", icon: FileText, roles: ["admin","user","lawyer"] },
+      { name: "ticketManagement", href: "/tickets", icon: Ticket , roles: ["admin","user"] },  
+      { name: "documentManagement", href: "/documents", icon: BookText , roles: ["admin","user"] },   
     ],
   },
   {
     name: "ADMINISTRATION",
     items: [
-      { name: "User Management", href: "/users", icon: User, roles: ["admin"] },
-      { name: "Employee Management", href: "/employees", icon: Users , roles: ["admin"] },
+      { name: "userManagement", href: "/users", icon: User, roles: ["admin"] },
+      { name: "employeeManagement", href: "/employees", icon: Users , roles: ["admin"] },
     ],
   },
  
@@ -55,6 +57,9 @@ export const useSidebar = () => useContext(SidebarContext)
 function SidebarContent({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname()
   const { role, isLoading, logout } = useAuth();
+  const t = useTranslations('navigation');
+  const tCommon = useTranslations('common');
+  
   if (isLoading) return null;
 
   return (
@@ -86,14 +91,14 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
               <div key={section.name}>
                 {!collapsed && (role === "admin" || section.name !== "ADMINISTRATION") && (
                   <h3 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-                    {section.name}
+                    {t(section.name.toLowerCase())}
                   </h3>
                 )}
                 <div className="space-y-1">
                   {section.items
                     .filter(item => !item.roles || !role || item.roles.includes(role))
                     .map((item) => {
-                      const computedHref = item.name === "Tickets" || item.name === "Ticket Management" ? (role === "admin" ? "/tickets/admin" : "/tickets") : item.href
+                      const computedHref = item.name === "ticketManagement" ? (role === "admin" ? "/tickets/admin" : "/tickets") : item.href
                       const isActive = pathname === computedHref
                       const linkContent = (
                         <Link
@@ -113,7 +118,7 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
                               isActive ? "text-[#4082ea]" : "text-gray-500 group-hover:text-gray-700",
                             )}
                           />
-                          {!collapsed && item.name}
+                          {!collapsed && t(item.name)}
                         </Link>
                       )
 
@@ -122,7 +127,7 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
                           <Tooltip key={item.name}>
                             <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
                             <TooltipContent side="right">
-                              <p>{item.name}</p>
+                              <p>{t(item.name)}</p>
                             </TooltipContent>
                           </Tooltip>
                         )
@@ -135,6 +140,12 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
             ))}
         </TooltipProvider>
       </nav>
+      
+      {/* Language Switcher */}
+      <div className={cn("px-4 pb-2", collapsed && "px-2")}>
+        <LanguageSwitcher />
+      </div>
+      
       {/* Log Out at the bottom */}
       <div className={cn("px-4 pb-6", collapsed && "px-2")}
            style={{ marginTop: "auto" }}>
@@ -147,10 +158,10 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
                onClick={() => logout()}
              >
                <LogOut className="w-5 h-5" />
-               {!collapsed && <span>Log Out</span>}
+               {!collapsed && <span>{tCommon('logout')}</span>}
              </Button>
            </TooltipTrigger>
-           {collapsed && <TooltipContent side="right">Log Out</TooltipContent>}
+           {collapsed && <TooltipContent side="right">{tCommon('logout')}</TooltipContent>}
          </Tooltip>
        </TooltipProvider>
       </div>

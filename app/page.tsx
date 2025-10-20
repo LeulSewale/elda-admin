@@ -1,11 +1,6 @@
-export const metadata = {
-  title: "ELDA Management System",
-  description: "Professional ELDA management system for admins and companies.",
-  keywords: ["employees","tickets", "admin", "dashboard", "requests", "documents"],
-}
+import { redirect } from 'next/navigation'
 
-import { HomePageClient } from "./HomePageClient"
-
-export default function HomePage() {
-  return <HomePageClient />
+export default function RootPage() {
+  // Redirect to default locale
+  redirect('/en')
 }

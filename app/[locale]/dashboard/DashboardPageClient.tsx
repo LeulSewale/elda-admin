@@ -13,6 +13,7 @@ import Link from "next/link"
 import { Users, Building2, Gavel, FileText, RotateCcw, Eye, User, ListOrderedIcon } from "lucide-react"
 import { useMemo, useCallback, useState, useEffect } from "react"
 import { useTabVisibility } from "@/hooks/use-tab-visibility"
+import { useTranslations } from 'next-intl'
 
 /**
  * ADVANCED PERFORMANCE OPTIMIZATIONS:
@@ -72,6 +73,9 @@ export default function DashboardPageClient() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(0);
   const { isVisible, lastActivity } = useTabVisibility();
+  const t = useTranslations('dashboard');
+  const tCommon = useTranslations('common');
+  const tRequests = useTranslations('requests');
 
   // Use real requests API for dashboard
   const { requests, isLoading: requestsLoading, isFetching: requestsFetching, refetch: refetchRequests, userRole } = useRequests();
@@ -201,25 +205,25 @@ export default function DashboardPageClient() {
     
     cards.push(
       {
-        label: "Total Requests",
+        label: t('totalRequests'),
         value: totalRequests,
         loading: requestsLoading,
         icon: <ListOrderedIcon />,
       },
       {
-        label: "Pending Requests",
+        label: t('pendingRequests'),
         value: pendingRequests,
         loading: requestsLoading,
         icon: <FileText />,
       },
       {
-        label: "In Progress",
+        label: t('inProgressRequests'),
         value: inProgressRequests,
         loading: requestsLoading,
         icon: <User />,
       },
       {
-        label: "Completed",
+        label: t('completedRequests'),
         value: completedRequests,
         loading: requestsLoading,
         icon: <FileText />,
@@ -275,31 +279,31 @@ export default function DashboardPageClient() {
 
   // Table columns for recent requests
   const columns = [
-    { accessorKey: "no", header: "No", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
-    { accessorKey: "description", header: "Description", cell: ({ row }: any) => (
+    { accessorKey: "no", header: "#", cell: ({ row }: any) => <span className="font-medium">{row.original.no}</span> },
+    { accessorKey: "description", header: tRequests('description'), cell: ({ row }: any) => (
       <div className="max-w-xs truncate" title={row.original.description}>
         {row.original.description}
       </div>
     )},
-    { accessorKey: "created_by_name", header: "Created By", cell: ({ row }: any) => (
+    { accessorKey: "created_by_name", header: tRequests('createdBy'), cell: ({ row }: any) => (
       <div className="text-gray-600">
         <div className="font-medium">{row.original.created_by_name}</div>
         <div className="text-xs text-gray-500">{row.original.created_by_email}</div>
       </div>
     )},
-    { accessorKey: "service_type", header: "Service Type", cell: ({ row }: any) => (
+    { accessorKey: "service_type", header: tRequests('serviceType'), cell: ({ row }: any) => (
       <div className="text-gray-600 capitalize">{row.original.service_type}</div>
     )},
-    { accessorKey: "priority", header: "Priority", cell: ({ row }: any) => {
+    { accessorKey: "priority", header: tRequests('priority'), cell: ({ row }: any) => {
       const priority = row.original.priority;
       const priorityColors: Record<string, string> = {
         low: "bg-green-100 text-green-800",
         medium: "bg-yellow-100 text-yellow-800",
         high: "bg-red-100 text-red-800",
       };
-      return <Badge className={priorityColors[priority] || "bg-gray-100 text-gray-800"}>{priority.charAt(0).toUpperCase() + priority.slice(1)}</Badge>;
+      return <Badge className={priorityColors[priority] || "bg-gray-100 text-gray-800"}>{tRequests(priority)}</Badge>;
     }},
-    { accessorKey: "status", header: "Status", cell: ({ row }: any) => {
+    { accessorKey: "status", header: tRequests('status'), cell: ({ row }: any) => {
       const status = row.original.status;
       const statusColors: Record<string, string> = {
         pending: "bg-yellow-100 text-yellow-800",
@@ -308,9 +312,9 @@ export default function DashboardPageClient() {
         rejected: "bg-red-100 text-red-800",
         cancelled: "bg-gray-100 text-gray-800",
       };
-      return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
+      return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{tRequests(status)}</Badge>;
     }},
-    { accessorKey: "created_at", header: "Created At", cell: ({ row }: any) => (
+    { accessorKey: "created_at", header: tRequests('createdAt'), cell: ({ row }: any) => (
         <div className="text-gray-600">
         {new Date(row.original.created_at).toLocaleDateString("en-US", {
             month: "short",
@@ -321,7 +325,7 @@ export default function DashboardPageClient() {
     )},   
      {
           id: "actions",
-          header: "Actions",
+          header: tCommon('actions'),
           cell: ({ row }: any) => {
         const request = row.original
             return (
@@ -345,11 +349,11 @@ export default function DashboardPageClient() {
   ];
 
   return (
-    <DashboardLayout title="Dashboard" isFetching={isRefreshing || requestsFetching}>
+    <DashboardLayout title={t('title')} isFetching={isRefreshing || requestsFetching}>
       <div className="p-0">
         {/* Header with Refresh Button */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
+          <h1 className="text-2xl font-bold text-gray-800">{t('title')}</h1>
           <Button 
             onClick={handleRefresh} 
             variant="outline" 
@@ -358,12 +362,12 @@ export default function DashboardPageClient() {
             disabled={isRefreshing}
             title={
               isRefreshing 
-                ? 'Refreshing dashboard...' 
-                : 'Refresh dashboard data'
+                ? t('refreshing') 
+                : t('refreshDashboard')
             }
           >
             <RotateCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} /> 
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            {isRefreshing ? t('refreshing') : tCommon('refresh')}
           </Button>
         </div>
 
@@ -424,8 +428,8 @@ export default function DashboardPageClient() {
         <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
           <div className="flex justify-between items-center px-2 py-2">
           <div>
-             <h1 className="text-xl font-semibold">Requests</h1>
-            <p className="text-sm text-gray-400">View and manage request management</p>
+             <h1 className="text-xl font-semibold">{tRequests('title')}</h1>
+            <p className="text-sm text-gray-400">{t('viewAndManage')}</p>
           </div>
           {/* <Button
             className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
@@ -441,7 +445,7 @@ export default function DashboardPageClient() {
               data={tableData}
               quickFilterKey="status"
               searchKey="description"
-              searchPlaceholder="Search request by description..."
+              searchPlaceholder={`${tCommon('search')} ${tRequests('title').toLowerCase()} ${tRequests('description').toLowerCase()}...`}
             />
           </div>
         </div>

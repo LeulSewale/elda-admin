@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Clock,
 } from "lucide-react";
+import { useTranslations } from 'next-intl';
 
 type Ticket = {
   id: string | number;
@@ -80,26 +81,27 @@ export function TicketCardOutline({
   onClick: (t: Ticket) => void;
   onReadMore?: (t: Ticket) => void;
 }) {
+  const t = useTranslations('tickets');
   const colors = palette[ticket.status] || palette.open;
   
   // Get the display title (subject or title)
-  const displayTitle = ticket.subject || ticket.title || "Untitled Ticket";
+  const displayTitle = ticket.subject || ticket.title || t('untitledTicket');
   
   // Get the creation date with proper validation
   const getCreationDate = () => {
     const dateValue = ticket.created_at || ticket.createdAt;
-    if (!dateValue) return "Unknown date";
+    if (!dateValue) return t('unknownDate');
     
     try {
       const date = new Date(dateValue);
       if (isNaN(date.getTime())) {
         console.warn("Invalid date value:", dateValue);
-        return "Invalid date";
+        return t('invalidDate');
       }
       return fmt.format(date);
     } catch (error) {
       console.warn("Error formatting date:", dateValue, error);
-      return "Invalid date";
+      return t('invalidDate');
     }
   };
 
@@ -151,7 +153,7 @@ export function TicketCardOutline({
           ].join(" ")}
         >
           <span className={`h-1.5 w-1.5 rounded-full ${colors.dot}`} />
-          {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+          {t(ticket.status)}
         </span>
       </div>
 
@@ -170,7 +172,7 @@ export function TicketCardOutline({
           }}
           className="mt-3 inline-flex items-center text-sm font-medium text-sky-700 hover:text-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
         >
-          Read More
+          {t('readMore')}
           <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
         </button>
       </div>

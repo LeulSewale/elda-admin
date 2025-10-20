@@ -1,18 +1,18 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
 import "./globals.css"
-import { Providers, AuthGate } from "@/components/providers"
-import { SidebarProvider } from "@/components/layout/sidebar"
-import { LogoutSpinnerOverlay } from "@/components/LogoutSpinnerOverlay"
-import { NotificationsProvider } from "@/hooks/use-notifications"
 
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--font-inter",
-  fallback: ["system-ui", "arial"],
-})
+// Use system fonts as fallback to avoid Google Fonts timeout issues
+const fontFamily = [
+  "system-ui",
+  "-apple-system",
+  "BlinkMacSystemFont",
+  "Segoe UI",
+  "Roboto",
+  "Helvetica Neue",
+  "Arial",
+  "sans-serif"
+].join(", ")
 
 export const metadata: Metadata = {
   title: "ELDA - Admin Panel",
@@ -24,7 +24,11 @@ export const viewport = {
   initialScale: 1,
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ 
+  children
+}: { 
+  children: React.ReactNode
+}) {
   return (
     <html lang="en">
       <head>
@@ -32,17 +36,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <title>ELDA Admin</title>
         <link rel="icon" href="/favicon.ico" type="image/png" />
       </head>
-      <body className={`${inter.className} antialiased`}>
-        <Providers>
-          <AuthGate>
-            <SidebarProvider>
-              <NotificationsProvider>
-                <LogoutSpinnerOverlay />
-                {children}
-              </NotificationsProvider>
-            </SidebarProvider>
-          </AuthGate>
-        </Providers>
+      <body className="antialiased" style={{ fontFamily }}>
+        {children}
       </body>
     </html>
   )

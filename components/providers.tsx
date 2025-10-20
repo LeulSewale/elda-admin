@@ -32,13 +32,22 @@ export function Providers({ children }: { children: React.ReactNode }) {
 }
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
-  const { bootstrapping } = useAuth();
-  if (bootstrapping) {
-    return (
-      <div className="flex items-center justify-center h-screen w-full">
-        <Loader2 className="animate-spin w-8 h-8 text-gray-400" />
-      </div>
-    );
+  const { bootstrapping } = useAuth({ redirectOnFail: false });
+  
+  // For public pages (login, signup), don't show loading spinner
+  // Only show loading for protected pages
+  if (bootstrapping && typeof window !== 'undefined') {
+    const pathname = window.location.pathname;
+    const isPublicPage = pathname.includes('/login') || pathname.includes('/signup');
+    
+    if (!isPublicPage) {
+      return (
+        <div className="flex items-center justify-center h-screen w-full">
+          <Loader2 className="animate-spin w-8 h-8 text-gray-400" />
+        </div>
+      );
+    }
   }
+  
   return <>{children}</>;
 }

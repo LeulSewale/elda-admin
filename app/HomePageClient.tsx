@@ -1,23 +1,28 @@
 "use client"
 
 import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { FileText } from "lucide-react"
+import { getPreferredLanguage, getCurrentLocaleFromPath } from "@/lib/language-utils"
 
 export function HomePageClient() {
   const router = useRouter()
+  const pathname = usePathname()
   const { isAuthenticated, isLoading } = useAuth()
 
   useEffect(() => {
     if (!isLoading) {
+      // Get current locale from pathname or preferred language
+      const currentLocale = getCurrentLocaleFromPath(pathname) || getPreferredLanguage()
+      
       if (isAuthenticated) {
-        router.push("/dashboard")
+        router.push(`/${currentLocale}/dashboard`)
       } else {
-        router.push("/login")
+        router.push(`/${currentLocale}/login`)
       }
     }
-  }, [isAuthenticated, isLoading, router])
+  }, [isAuthenticated, isLoading, router, pathname])
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Upload, FileText, X, Send, Plus } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
+import { useTranslations } from 'next-intl'
 
 interface FileWithMeta {
   file: File
@@ -20,6 +21,10 @@ interface FileUploadAreaProps {
 
 export function FileUploadArea({ onUpload, isUploading = false, disabled = false }: FileUploadAreaProps) {
   const [selectedFiles, setSelectedFiles] = useState<FileWithMeta[]>([])
+  
+  // Translation hooks
+  const t = useTranslations('documents');
+  const tCommon = useTranslations('common');
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
@@ -28,8 +33,8 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
     // Validate file count
     if (files.length > 5) {
       toast({
-        title: "Too many files",
-        description: "Please select maximum 5 files",
+        title: t('tooManyFiles'),
+        description: t('pleaseSelectMax5Files'),
         variant: "destructive",
       })
       return
@@ -39,8 +44,8 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
     const oversizedFiles = files.filter(file => file.size > 10 * 1024 * 1024)
     if (oversizedFiles.length > 0) {
       toast({
-        title: "File too large",
-        description: "Please select files smaller than 10MB",
+        title: t('fileTooLarge'),
+        description: t('pleaseSelectFilesSmallerThan10MB'),
         variant: "destructive",
       })
       return
@@ -67,8 +72,8 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
     const invalidFiles = files.filter(file => !allowedTypes.includes(file.type))
     if (invalidFiles.length > 0) {
       toast({
-        title: "Invalid file type",
-        description: "Please select PDF, Word, Excel, images, text files, or archives",
+        title: t('invalidFileType'),
+        description: t('pleaseSelectValidFileTypes'),
         variant: "destructive",
       })
       return
@@ -153,7 +158,7 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
               >
                 <span>
                   <Upload className="w-4 h-4 mr-2" />
-                  Select Files
+                  {t('selectFiles')}
                 </span>
               </Button>
             </label>
@@ -161,10 +166,10 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
           
           <div className="flex-1">
             <div className="text-sm text-gray-600">
-              📁 Choose up to 5 files (PDF, Word, Excel, Images, etc.)
+              📁 {t('chooseUpTo5Files')}
             </div>
             <div className="text-xs text-gray-500">
-              {selectedFiles.length}/5 files selected • Max 10MB per file
+              {selectedFiles.length}/5 {t('filesSelected')} • {t('max10MBPerFile')}
             </div>
           </div>
         </div>
@@ -173,7 +178,7 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
         {selectedFiles.length > 0 && (
           <div className="space-y-3">
             <div className="text-sm font-medium text-gray-700 mb-2">
-              📝 Add titles and metadata for your files:
+              📝 {t('addTitlesAndMetadata')}
             </div>
             {selectedFiles.map((item, index) => (
               <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
@@ -206,17 +211,17 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
                   {/* Title Input */}
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Document Title (Optional)
+                      {t('documentTitleOptional')}
                     </label>
                     <Input
-                      placeholder={`Enter title for ${item.file.name.split('.')[0]}...`}
+                      placeholder={`${t('enterTitleFor')} ${item.file.name.split('.')[0]}...`}
                       value={item.title}
                       onChange={(e) => handleTitleChange(index, e.target.value)}
                       className="w-full h-9 text-sm"
                       disabled={isUploading}
                     />
                     <div className="text-xs text-gray-500 mt-1">
-                      Leave empty to use filename as title
+                      {t('leaveEmptyToUseFilename')}
                     </div>
                   </div>
                   
@@ -234,7 +239,7 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
                       htmlFor={`confidential-${index}`}
                       className="text-sm text-gray-700 cursor-pointer"
                     >
-                      🔒 Mark as confidential
+                      🔒 {t('markAsConfidential')}
                     </label>
                   </div>
                 </div>
@@ -247,10 +252,10 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
         {selectedFiles.length > 0 && (
           <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
             <div className="text-sm text-gray-700">
-              <div className="font-medium">Ready to upload {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''}</div>
+              <div className="font-medium">{t('readyToUpload')} {selectedFiles.length} {t('file')}{selectedFiles.length > 1 ? 's' : ''}</div>
               <div className="text-xs text-gray-500">
-                {selectedFiles.filter(f => f.title.trim()).length} with custom titles • 
-                {selectedFiles.filter(f => f.is_confidential).length} marked confidential
+                {selectedFiles.filter(f => f.title.trim()).length} {t('withCustomTitles')} • 
+                {selectedFiles.filter(f => f.is_confidential).length} {t('markedConfidential')}
               </div>
             </div>
             
@@ -262,12 +267,12 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
               {isUploading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Uploading...
+                  {t('uploading')}
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
-                  Upload Files
+                  {t('uploadFiles')}
                 </>
               )}
             </Button>
