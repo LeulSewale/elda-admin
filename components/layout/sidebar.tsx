@@ -20,7 +20,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState, createContext, useContext } from "react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useAuth } from "@/hooks/use-auth"
-import Image from "next/image"
+import { Logo } from "@/components/ui/logo"
 import { useTranslations } from 'next-intl'
 import { LanguageSwitcher } from '@/components/language-switcher'
 
@@ -71,15 +71,12 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
     >
       <div className={cn("p-6 border-b border-gray-200", collapsed && "p-4")}> 
         <Link href="/dashboard" className="flex items-center space-x-2">
-          <div className="flex items-center justify-center flex-shrink-0">
-            <Image
-              src="/elda-logo.png"
-              alt="ELDA Logo"
-              width={40}
-              height={40}
-              className="object-contain drop-shadow-md"
-            />
-          </div>
+          <Logo 
+            width={40}
+            height={40}
+            className="drop-shadow-md"
+            fallbackText="E"
+          />
           {!collapsed && <span className="text-xl font-bold text-gray-900">ELDA</span>}
         </Link>
       </div>

@@ -12,7 +12,7 @@
   import { toast } from "@/hooks/use-toast"
   import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
   import { useState } from "react"
-  import Image from "next/image"
+  import { Logo } from "@/components/ui/logo"
   import { useTranslations } from 'next-intl'
   import { LanguageSwitcher } from '@/components/language-switcher'
   
@@ -78,12 +78,13 @@
   
           <div className="text-center space-y-4">
               <div className="inline-flex items-center justify-center">
-                <Image
+                <Logo
                   src="/elda-logo.png"
                   alt="ELDA Logo"
                   width={120}
                   height={120}
-                  className="object-contain drop-shadow-xl"
+                  className="drop-shadow-xl"
+                  fallbackText="ELDA"
                 />
               </div>
               <h1 className="text-6xl font-bold text-blue-500">ELDA SYSTEM</h1>

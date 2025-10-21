@@ -10,7 +10,7 @@
   import { toast } from "@/hooks/use-toast"
   import Link from "next/link"
   import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-  import Image from "next/image"
+  import { Logo } from "@/components/ui/logo"
   import { useTranslations } from 'next-intl'
   import { LanguageSwitcher } from '@/components/language-switcher'
   
@@ -59,12 +59,13 @@
           <div className="hidden lg:flex flex-col items-center justify-center space-y-8">
             <div className="text-center space-y-4">
               <div className="inline-flex items-center justify-center">
-                <Image
+                <Logo
                   src="/elda-logo.png"
                   alt="ELDA Logo"
                   width={120}
                   height={120}
-                  className="object-contain drop-shadow-xl"
+                  className="drop-shadow-xl"
+                  fallbackText="ELDA"
                 />
               </div>
               <h1 className="text-6xl font-bold text-[#4082ea]">ELDA SYSTEM</h1>
@@ -76,12 +77,13 @@
             <Card className="bg-gradient-to-br from-white via-[#f6ffe8] to-[#e8f7d4] shadow-md rounded-2xl border-0 transition-transform duration-300 hover:scale-[1.02] animate-fade-in">
               <CardHeader className="text-center lg:hidden">
                 <div className="inline-flex items-center justify-center mb-4">
-                  <Image
+                  <Logo
                     src="/elda-logo.png"
                     alt="ELDA Logo"
                     width={80}
                     height={80}
-                    className="object-contain drop-shadow-xl"
+                    className="drop-shadow-xl"
+                    fallbackText="ELDA"
                   />
                 </div>
                 <CardTitle className="text-2xl text-[#4082ea] font-extrabold tracking-tight">ELDA SYSTEM</CardTitle>

@@ -17,6 +17,15 @@ const nextConfig = {
   },
   images: {
     domains: ['placeholder.com'],
+    unoptimized: false,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'placeholder.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
   typescript: {
     ignoreBuildErrors: false,
