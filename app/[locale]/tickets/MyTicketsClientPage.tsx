@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { GlobalModal } from "@/components/modals/global-modal"
 import { TicketCardOutline } from "@/components/cards/TicketCard"
+import { DateRangeFilter } from "@/components/ui/date-range-filter"
 import { useTickets } from "@/hooks/use-tickets"
 import { ticketsApi } from "@/lib/api/tickets"
 import { CreateTicketModal } from "@/components/modals/create-ticket-modal-new"
@@ -104,6 +105,10 @@ export default function MyTicketsClientPage() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [search, setSearch] = useState("")
   const [activeTab, setActiveTab] = useState<"open" | "closed">("open")
+  const [dateRange, setDateRange] = useState<{ startDate: string | null; endDate: string | null }>({
+    startDate: null,
+    endDate: null
+  });
   const queryClient = useQueryClient()
   const { toast } = useToast()
   
@@ -111,8 +116,16 @@ export default function MyTicketsClientPage() {
   const t = useTranslations('tickets');
   const tCommon = useTranslations('common');
 
-  // 🚀 Fetch tickets with role-based logic
-  const { tickets, isLoading, isFetching, userRole } = useTickets()
+  // Handle date range changes
+  const handleDateRangeChange = (startDate: string | null, endDate: string | null) => {
+    setDateRange({ startDate, endDate });
+  };
+
+  // 🚀 Fetch tickets with role-based logic and date filtering
+  const { tickets, isLoading, isFetching, userRole } = useTickets({
+    startDate: dateRange.startDate || undefined,
+    endDate: dateRange.endDate || undefined
+  })
 
   // 🚀 Create new ticket
   const createTicketMutation = useMutation({
@@ -201,29 +214,32 @@ export default function MyTicketsClientPage() {
           </div>
           <hr />
           <div className="flex justify-between items-center px-2 py-2">
-          <div className="mt-3 inline-flex items-center rounded-lg bg-gray-100 p-1">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("open")}
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                    activeTab === "open"
-                      ? "bg-white text-[#4082ea] shadow"
-                      : "text-gray-600 hover:text-gray-800"
-                  }`}
-                >
-                  {t('open')}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("closed")}
-                  className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                    activeTab === "closed"
-                      ? "bg-white text-[#4082ea] shadow"
-                      : "text-gray-600 hover:text-gray-800"
-                  }`}
-                >
-                  {t('closed')}
-                </button>
+          <div className="flex items-center gap-4">
+            <div className="mt-3 inline-flex items-center rounded-lg bg-gray-100 p-1">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("open")}
+                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                      activeTab === "open"
+                        ? "bg-white text-[#4082ea] shadow"
+                        : "text-gray-600 hover:text-gray-800"
+                    }`}
+                  >
+                    {t('open')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("closed")}
+                    className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                      activeTab === "closed"
+                        ? "bg-white text-[#4082ea] shadow"
+                        : "text-gray-600 hover:text-gray-800"
+                    }`}
+                  >
+                    {t('closed')}
+                  </button>
+              </div>
+              <DateRangeFilter onDateRangeChange={handleDateRangeChange} />
             </div>
             <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />

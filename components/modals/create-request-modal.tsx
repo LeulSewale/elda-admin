@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Check, Upload, X, FileText, Image, FileArchive } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
+import { useTranslations } from 'next-intl'
 
 type CreateRequestModalProps = {
   open: boolean
@@ -16,13 +17,15 @@ type CreateRequestModalProps = {
   onSubmit?: (data: any) => void
 }
 
-const steps = [
-  { id: 1, name: "Personal Information" },
-  { id: 2, name: "Service Detail" },
-  { id: 3, name: "Additional Information" },
-]
-
 export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateRequestModalProps) {
+  const t = useTranslations('requests');
+  const tCommon = useTranslations('common');
+  
+  const steps = [
+    { id: 1, name: t('personalInformation') },
+    { id: 2, name: t('serviceDetail') },
+    { id: 3, name: t('additionalInformation') },
+  ]
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
     disability: "",
@@ -52,14 +55,14 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
       
       // Check if adding these files would exceed the 5 file limit
       if (files.length + newFiles.length > 5) {
-        alert(`You can only upload up to 5 files. Currently you have ${files.length} files selected.`);
+        alert(`${t('tooManyFiles')} ${files.length} ${t('filesSelectedCount')}`);
         return;
       }
       
       // Validate file sizes (max 10MB per file)
       const oversizedFiles = newFiles.filter(file => file.size > 10 * 1024 * 1024);
       if (oversizedFiles.length > 0) {
-        alert(`Some files are too large. Maximum file size is 10MB.`);
+        alert(t('filesTooLarge'));
         return;
       }
       
@@ -121,7 +124,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
           serviceType: formData.serviceType,
           issueDescription: formData.issueDescription
         });
-        alert("Please fill in all required fields before submitting.");
+        alert(t('fillRequiredFields'));
         return;
       }
       
@@ -159,7 +162,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="text-[#4082ea] font-semibold">Request Process</DialogTitle>
+          <DialogTitle className="text-[#4082ea] font-semibold">{t('requestProcess')}</DialogTitle>
         </DialogHeader>
 
         {/* Stepper */}
@@ -197,23 +200,23 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
           {currentStep === 1 && (
             <Card className="shadow-md">
               <CardContent className="p-6 space-y-4">
-                <h3 className="font-semibold text-[#4082ea]">Personal Information</h3>
+                <h3 className="font-semibold text-[#4082ea]">{t('personalInformation')}</h3>
                 <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <Label>Type of disability *</Label>
+                    <Label>{t('typeOfDisability')} *</Label>
                     <Select
                       value={formData.disability}
                       onValueChange={(value) => setFormData({ ...formData, disability: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select disability" />
+                        <SelectValue placeholder={t('selectDisability')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="visually_impaired">Visually Impaired</SelectItem>
-                        <SelectItem value="hearing_impaired">Hearing Impaired</SelectItem>
-                        <SelectItem value="mobility_impaired">Mobility Impaired</SelectItem>
-                        <SelectItem value="cognitive_impaired">Cognitive Impaired</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="visually_impaired">{t('visuallyImpaired')}</SelectItem>
+                        <SelectItem value="hearing_impaired">{t('hearingImpaired')}</SelectItem>
+                        <SelectItem value="mobility_impaired">{t('mobilityImpaired')}</SelectItem>
+                        <SelectItem value="cognitive_impaired">{t('cognitiveImpaired')}</SelectItem>
+                        <SelectItem value="other">{t('other')}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -226,29 +229,29 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
           {currentStep === 2 && (
             <Card className="shadow-md">
               <CardContent className="p-6 space-y-6">
-                <h3 className="font-semibold text-[#4082ea]">Service Details</h3>
+                <h3 className="font-semibold text-[#4082ea]">{t('serviceDetails')}</h3>
                 <div>
-                  <Label>Service Type *</Label>
+                  <Label>{t('serviceType')} *</Label>
                   <Select
                     value={formData.serviceType}
                     onValueChange={(value) => setFormData({ ...formData, serviceType: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select service type" />
+                      <SelectValue placeholder={t('selectServiceType')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="internet">Internet Service</SelectItem>
-                      <SelectItem value="phone">Phone Service</SelectItem>
-                      <SelectItem value="tv">TV Service</SelectItem>
-                      <SelectItem value="mobile">Mobile Service</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="internet">{t('internetService')}</SelectItem>
+                      <SelectItem value="phone">{t('phoneService')}</SelectItem>
+                      <SelectItem value="tv">{t('tvService')}</SelectItem>
+                      <SelectItem value="mobile">{t('mobileService')}</SelectItem>
+                      <SelectItem value="other">{t('other')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>Issue Description *</Label>
+                  <Label>{t('issueDescription')} *</Label>
                   <Textarea
-                    placeholder="Please describe your issue in detail."
+                    placeholder={t('describeIssueDetail')}
                     value={formData.issueDescription}
                     onChange={(e) => setFormData({ ...formData, issueDescription: e.target.value })}
                   />
@@ -266,10 +269,10 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                     accept="*/*"
                   />
                   <Upload className="mx-auto mb-2 text-[#4082ea]" size={32} />
-                  <p className="text-sm text-gray-600">Click to upload or drag & drop</p>
-                  <p className="text-xs text-gray-400">Any file type (max 5 files, 10MB each)</p>
+                  <p className="text-sm text-gray-600">{t('clickToUpload')}</p>
+                  <p className="text-xs text-gray-400">{t('anyFileType')}</p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Files selected: {files.length}/5
+                    {t('filesSelected')}: {files.length}/5
                   </p>
                 </div>
                 
@@ -308,48 +311,55 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
           {currentStep === 3 && (
             <Card className="shadow-md">
               <CardContent className="p-6 space-y-6">
-                <h3 className="font-semibold text-[#4082ea] mb-4">Additional Information</h3>
+                <h3 className="font-semibold text-[#4082ea] mb-4">{t('additionalInformation')}</h3>
                 
                 <div>
-                  <Label>Urgency Level</Label>
+                  <Label>{t('urgencyLevel')}</Label>
                   <Select
                     value={formData.urgency}
                     onValueChange={(value) => setFormData({ ...formData, urgency: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select urgency level" />
+                      <SelectValue placeholder={t('selectUrgencyLevel')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low - Not urgent</SelectItem>
-                      <SelectItem value="medium">Medium - Standard priority</SelectItem>
-                      <SelectItem value="high">High - Urgent attention needed</SelectItem>
-                      <SelectItem value="urgent">Urgent - Immediate attention</SelectItem>
+                      <SelectItem value="low">{t('notUrgent')}</SelectItem>
+                      <SelectItem value="medium">{t('standardPriority')}</SelectItem>
+                      <SelectItem value="high">{t('urgentAttentionNeeded')}</SelectItem>
+                      <SelectItem value="urgent">{t('immediateAttention')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label>Preferred Contact Method</Label>
+                  <Label>{t('preferredContactMethod')}</Label>
                   <Select
                     value={formData.preferredContact}
                     onValueChange={(value) => setFormData({ ...formData, preferredContact: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select preferred contact method" />
+                      <SelectValue placeholder={t('selectPreferredContactMethod')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="email">Email</SelectItem>
-                      <SelectItem value="phone">Phone Call</SelectItem>
-                      <SelectItem value="sms">SMS</SelectItem>
-                      <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                      <SelectItem value="email">{t('email')}</SelectItem>
+                      <SelectItem value="phone">{t('phoneCall')}</SelectItem>
+                      <SelectItem value="sms">{t('sms')}</SelectItem>
+                      <SelectItem value="whatsapp">{t('whatsapp')}</SelectItem>
+                      <SelectItem value="telegram">{t('telegram')}</SelectItem>
+                      <SelectItem value="messenger">{t('messenger')}</SelectItem>
+                      <SelectItem value="instagram">{t('instagram')}</SelectItem>
+                      <SelectItem value="twitter">{t('twitter')}</SelectItem>
+                      <SelectItem value="linkedin">{t('linkedin')}</SelectItem>
+                      <SelectItem value="facebook">{t('facebook')}</SelectItem>
+                      <SelectItem value="other">{t('other')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label>Additional Notes (Optional)</Label>
+                  <Label>{t('additionalNotes')}</Label>
                   <Textarea
-                    placeholder="Any other information that might be helpful..."
+                    placeholder={t('otherInformationHelpful')}
                     value={formData.additionalNotes}
                     onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
                     rows={4}
@@ -369,10 +379,10 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                     </div>
                     <div className="ml-3 text-sm">
                       <label htmlFor="terms" className="font-medium text-gray-700">
-                        I confirm that the information provided is accurate to the best of my knowledge
+                        {t('confirmInformationAccurate')}
                       </label>
                       <p className="text-gray-500">
-                        Your information will be kept confidential and used only for the purpose of processing your request.
+                        {t('informationConfidential')}
                       </p>
                     </div>
                   </div>
@@ -390,7 +400,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
               onClick={handlePrevious}
               className="border-[#4082ea] text-[#4082ea]"
             >
-              Previous
+              {tCommon('previous')}
             </Button>
           )}
           {currentStep < steps.length ? (
@@ -399,7 +409,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
               onClick={handleNext}
               disabled={!isStepValid(currentStep)}
             >
-              Next
+              {tCommon('next')}
             </Button>
           ) : (
             <Button
@@ -407,7 +417,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
               onClick={handleSubmit}
               disabled={!isStepValid(currentStep)}
             >
-              Submit
+              {tCommon('submit')}
             </Button>
           )}
         </div>

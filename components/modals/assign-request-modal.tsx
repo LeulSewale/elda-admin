@@ -61,7 +61,7 @@ export function AssignRequestModal({
 
   const handleAssign = async () => {
     if (!selectedLawyer || selectedLawyer === "no-lawyers") {
-      alert("Please select a lawyer to assign this request to.")
+      alert(t('pleaseSelectLawyer'))
       return
     }
 
@@ -81,7 +81,7 @@ export function AssignRequestModal({
       setRemarks("")
     } catch (error) {
       console.error("[Assign Request] Error:", error)
-      alert("Failed to assign request. Please try again.")
+      alert(t('failedToAssignRequest'))
     }
   }
 
@@ -104,7 +104,7 @@ export function AssignRequestModal({
               disabled={lawyersLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder={lawyersLoading ? tCommon('loading') : "Choose a lawyer"} />
+                <SelectValue placeholder={lawyersLoading ? tCommon('loading') : t('chooseLawyer')} />
               </SelectTrigger>
               <SelectContent>
                 {Array.isArray(lawyers) && lawyers.length > 0 ? (
@@ -118,7 +118,7 @@ export function AssignRequestModal({
                   })
                 ) : (
                   <SelectItem key="no-lawyers" value="no-lawyers" disabled>
-                    {lawyersError ? "Error loading lawyers" : lawyersLoading ? tCommon('loading') : "No lawyers available"}
+                    {lawyersError ? t('errorLoadingLawyers') : lawyersLoading ? tCommon('loading') : t('noLawyersAvailable')}
                   </SelectItem>
                 )}
               </SelectContent>
@@ -132,21 +132,21 @@ export function AssignRequestModal({
               onValueChange={setPriority}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select priority" />
+                <SelectValue placeholder={t('selectPriority')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem key="low" value="low">{t('low')}</SelectItem>
                 <SelectItem key="medium" value="medium">{t('medium')}</SelectItem>
                 <SelectItem key="high" value="high">{t('high')}</SelectItem>
-                <SelectItem key="urgent" value="urgent">Urgent</SelectItem>
+                <SelectItem key="urgent" value="urgent">{t('urgent')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div>
-            <Label>Remarks</Label>
+            <Label>{t('remarks')}</Label>
             <Textarea
-              placeholder="Add any remarks about this assignment..."
+              placeholder={t('addRemarksAboutAssignment')}
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
               rows={3}

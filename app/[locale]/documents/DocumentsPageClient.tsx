@@ -43,6 +43,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { UploadDocumentModal } from "@/components/modals/create-document-modal"
 import { CreateDocThreadModal } from "@/components/modals/create-doc-thread-modal"
+import { DateRangeFilter } from "@/components/ui/date-range-filter"
 import { docThreadsApi, type DocThread, type DocThreadsResponse } from "@/lib/api/docThreads"
 import { useAuth } from "@/hooks/use-auth"
 import { useRouter } from "next/navigation"
@@ -96,6 +97,10 @@ export default function DocumentsPageClient() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
   const [threads, setThreads] = useState<DocThread[]>([]);
+  const [dateRange, setDateRange] = useState<{ startDate: string | null; endDate: string | null }>({
+    startDate: null,
+    endDate: null
+  });
   
   // Translation hooks
   const t = useTranslations('documents');
@@ -104,11 +109,23 @@ export default function DocumentsPageClient() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [threadToDelete, setThreadToDelete] = useState<DocThread | null>(null);
 
+  // Handle date range changes
+  const handleDateRangeChange = useCallback((startDate: string | null, endDate: string | null) => {
+    setDateRange({ startDate, endDate });
+    setCursor(undefined); // Reset cursor when date range changes
+    setThreads([]); // Clear existing threads
+  }, []);
+
   // Fetch doc threads with ADVANCED PERFORMANCE OPTIMIZATIONS
   const { data, isLoading, refetch, isFetching, error } = useQuery({
-    queryKey: ["doc-threads", cursor],
+    queryKey: ["doc-threads", cursor, dateRange.startDate, dateRange.endDate],
     queryFn: async () => {
-      const res = await docThreadsApi.list(cursor ? { after: cursor, limit: 20 } : { limit: 20 })
+      const params: any = { limit: 20 };
+      if (cursor) params.after = cursor;
+      if (dateRange.startDate) params.startDate = dateRange.startDate;
+      if (dateRange.endDate) params.endDate = dateRange.endDate;
+      
+      const res = await docThreadsApi.list(params)
       const payload = (res as any)?.data as DocThreadsResponse
       return payload
     },
@@ -319,25 +336,28 @@ export default function DocumentsPageClient() {
              <h1 className="text-xl font-semibold">{t('pageTitle')}</h1>
             <p className="text-sm text-gray-400">{t('pageSubtitle')}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={handleRefresh}
-              disabled={isRefreshing || isLoading}
-              className="gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-              {tCommon('refresh')}
-            </Button>
-            <Button
-              onClick={() => setCreateThreadOpen(true)}
-              className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {t('uploadDocument')}
-            </Button>
+          <div className="flex items-center gap-4">
+            <DateRangeFilter onDateRangeChange={handleDateRangeChange} />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={handleRefresh}
+                disabled={isRefreshing || isLoading}
+                className="gap-2"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                {tCommon('refresh')}
+              </Button>
+              <Button
+                onClick={() => setCreateThreadOpen(true)}
+                className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {t('uploadDocument')}
+              </Button>
+            </div>
           </div>
-        </div>
+          </div>
         <hr></hr>
           <div className="px-2 pb-3 py-5">
             {isLoading ? (

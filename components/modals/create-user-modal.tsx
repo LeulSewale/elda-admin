@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 interface CreateUserModalProps {
   open: boolean
@@ -16,6 +17,9 @@ interface CreateUserModalProps {
 }
 
 export function CreateUserModal({ open, onOpenChange, onCreateUser, isLoading }: CreateUserModalProps) {
+  const t = useTranslations('users');
+  const tCommon = useTranslations('common');
+  
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -39,14 +43,14 @@ export function CreateUserModal({ open, onOpenChange, onCreateUser, isLoading }:
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New User</DialogTitle>
+          <DialogTitle>{t('createNewUser')}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{tCommon('name')}</Label>
             <Input
               id="name"
-              placeholder="Enter full name"
+              placeholder={t('enterFullName')}
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
               required
@@ -54,11 +58,11 @@ export function CreateUserModal({ open, onOpenChange, onCreateUser, isLoading }:
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{tCommon('email')}</Label>
             <Input
               id="email"
               type="email"
-              placeholder="Enter email address"
+              placeholder={t('enterEmail')}
               value={formData.email}
               onChange={(e) => handleInputChange("email", e.target.value)}
               required
@@ -66,22 +70,22 @@ export function CreateUserModal({ open, onOpenChange, onCreateUser, isLoading }:
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone</Label>
+            <Label htmlFor="phone">{tCommon('phone')}</Label>
             <Input
               id="phone"
               type="tel"
-              placeholder="Enter phone number"
+              placeholder={t('enterPhone')}
               value={formData.phone}
               onChange={(e) => handleInputChange("phone", e.target.value)}
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">{tCommon('password')}</Label>
             <Input
               id="password"
               type="password"
-              placeholder="Enter password"
+              placeholder={t('enterPassword')}
               value={formData.password}
               onChange={(e) => handleInputChange("password", e.target.value)}
               required
@@ -89,15 +93,15 @@ export function CreateUserModal({ open, onOpenChange, onCreateUser, isLoading }:
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
+            <Label htmlFor="role">{t('role')}</Label>
             <Select value={formData.role} onValueChange={(value) => handleInputChange("role", value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select role" />
+                <SelectValue placeholder={t('selectRole')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="lawyer">Lawyer</SelectItem>
+                <SelectItem value="user">{t('user')}</SelectItem>
+                <SelectItem value="admin">{t('admin')}</SelectItem>
+                <SelectItem value="lawyer">{t('lawyer')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -109,16 +113,16 @@ export function CreateUserModal({ open, onOpenChange, onCreateUser, isLoading }:
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating...
+                  {tCommon('loading')}
                 </>
               ) : (
-                "Create User"
+                tCommon('create')
               )}
             </Button>
           </div>

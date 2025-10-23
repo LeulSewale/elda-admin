@@ -19,6 +19,7 @@ import { NotificationsDropdown } from "@/components/modals/notifications-modal"
 import { useNotifications } from "@/hooks/use-notifications"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { useState } from "react"
+import { useTranslations } from 'next-intl'
 
 interface HeaderProps {
   title: string
@@ -29,6 +30,7 @@ export function Header({ title }: HeaderProps) {
   const { unreadCount } = useNotifications()
   const [profileOpen, setProfileOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const tCommon = useTranslations('common');
 
   return (
     <>
@@ -81,12 +83,12 @@ export function Header({ title }: HeaderProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setProfileOpen(true)}>
                   <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                  <span>{tCommon('profile')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => logout()}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>{tCommon('logout')}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

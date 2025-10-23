@@ -65,7 +65,7 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
   return (
     <div
       className={cn(
-        "flex h-full flex-col bg-white border-r border-gray-200 transition-all duration-300",
+        "flex h-full flex-col bg-white border-r border-gray-200 transition-all duration-300 shadow-sm",
         collapsed ? "w-16" : "w-64",
       )}
     >
@@ -87,7 +87,7 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
             .map((section) => (
               <div key={section.name}>
                 {!collapsed && (role === "admin" || section.name !== "ADMINISTRATION") && (
-                  <h3 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  <h3 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 border-b border-gray-100 pb-2">
                     {t(section.name.toLowerCase())}
                   </h3>
                 )}
@@ -96,23 +96,24 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
                     .filter(item => !item.roles || !role || item.roles.includes(role))
                     .map((item) => {
                       const computedHref = item.name === "ticketManagement" ? (role === "admin" ? "/tickets/admin" : "/tickets") : item.href
-                      const isActive = pathname === computedHref
+                      // Enhanced active state detection - check if current pathname starts with the item's href
+                      const isActive = pathname === computedHref || pathname.startsWith(computedHref + "/")
                       const linkContent = (
                         <Link
                           href={computedHref}
                           className={cn(
-                            "group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200",
+                            "group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 border",
                             collapsed ? "justify-center" : "",
                             isActive
-                              ? "bg-[#e7eeff] text-[#4082ea] shadow-sm"
-                              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
+                              ? "bg-[#4082ea] text-white border-[#4082ea] shadow-md font-semibold"
+                              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-transparent hover:border-gray-200",
                           )}
                         >
                           <item.icon
                             className={cn(
                               "h-5 w-5 flex-shrink-0 transition-colors",
                               collapsed ? "mr-0" : "mr-3",
-                              isActive ? "text-[#4082ea]" : "text-gray-500 group-hover:text-gray-700",
+                              isActive ? "text-white" : "text-gray-500 group-hover:text-gray-700",
                             )}
                           />
                           {!collapsed && t(item.name)}

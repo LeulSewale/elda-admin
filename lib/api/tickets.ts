@@ -59,6 +59,8 @@ export const ticketsApi = {
     status?: string
     priority?: string
     search?: string
+    startDate?: string
+    endDate?: string
   }) => {
     console.debug("[Tickets API] Getting all tickets with params:", params)
     return api.get<TicketsResponse>("/tickets", { params })
@@ -72,6 +74,8 @@ export const ticketsApi = {
     status?: string
     priority?: string
     search?: string
+    startDate?: string
+    endDate?: string
   }) => {
     console.debug("[Tickets API] Getting my tickets with params:", params)
     return api.get<TicketsResponse>("/tickets/mine", { params })
@@ -84,6 +88,8 @@ export const ticketsApi = {
     status?: string
     priority?: string
     search?: string
+    startDate?: string
+    endDate?: string
   }) => {
     console.debug("[Tickets API] Getting assigned tickets with params:", params)
     return api.get<TicketsResponse>("/tickets/assigned", { params })

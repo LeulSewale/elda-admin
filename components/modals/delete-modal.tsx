@@ -10,6 +10,7 @@ import {
 import { Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { GlobalModal } from "./global-modal"
+import { useTranslations } from 'next-intl'
 
 interface DeleteModalProps {
   open: boolean
@@ -28,6 +29,8 @@ export function DeleteModal({
   description,
   isLoading = false,
 }: DeleteModalProps) {
+  const tCommon = useTranslations('common');
+  
   return (
     <GlobalModal
       open={open}
@@ -35,13 +38,13 @@ export function DeleteModal({
       title={title}
       actions={
         <>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>{tCommon('cancel')}</Button>
           <Button
             onClick={onConfirm}
             disabled={isLoading}
             className="bg-red-600 hover:bg-red-700 text-white"
           >
-            {isLoading ? "Deleting..." : "Delete"}
+            {isLoading ? tCommon('loading') : tCommon('delete')}
           </Button>
         </>
       }

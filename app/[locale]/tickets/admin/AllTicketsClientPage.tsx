@@ -5,6 +5,7 @@ import { useTickets } from "@/hooks/use-tickets"
 import { ticketsApi } from "@/lib/api/tickets"
 import { CreateTicketModal } from "@/components/modals/create-ticket-modal-new"
 import { AssignTicketModal } from "@/components/modals/assign-ticket-modal"
+import { DateRangeFilter } from "@/components/ui/date-range-filter"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/data-table/data-table"
 import { Badge } from "@/components/ui/badge"
@@ -88,6 +89,10 @@ export default function AllTicketsClientPage() {
   const [createTicketModalOpen, setCreateTicketModalOpen] = useState(false);
   const [assignTicketModalOpen, setAssignTicketModalOpen] = useState(false);
   const [selectedTicketForAssignment, setSelectedTicketForAssignment] = useState<any | null>(null);
+  const [dateRange, setDateRange] = useState<{ startDate: string | null; endDate: string | null }>({
+    startDate: null,
+    endDate: null
+  });
   
   // Reply/Comment state
   const [replyText, setReplyText] = useState("");
@@ -103,8 +108,16 @@ export default function AllTicketsClientPage() {
   
   
   
-  // Fetch tickets with role-based logic
-  const { tickets, isLoading, refetch, isFetching, userRole } = useTickets()
+  // Handle date range changes
+  const handleDateRangeChange = useCallback((startDate: string | null, endDate: string | null) => {
+    setDateRange({ startDate, endDate });
+  }, []);
+
+  // Fetch tickets with role-based logic and date filtering
+  const { tickets, isLoading, refetch, isFetching, userRole } = useTickets({
+    startDate: dateRange.startDate || undefined,
+    endDate: dateRange.endDate || undefined
+  })
 
   // Update ticket status and priority mutation with OPTIMISTIC UPDATES
   const updateTicketMutation = useMutation({
@@ -497,15 +510,18 @@ export default function AllTicketsClientPage() {
              <h1 className="text-xl font-semibold">{t('pageTitle')}</h1>
             <p className="text-sm text-gray-400">{t('pageSubtitle')}</p>
           </div>
-          {userRole === "user" && (
-          <Button
-              onClick={() => setCreateTicketModalOpen(true)}
-            className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            {t('createTicket')}
-          </Button>
-          )}
+          <div className="flex items-center gap-4">
+            <DateRangeFilter onDateRangeChange={handleDateRangeChange} />
+            {userRole === "user" && (
+            <Button
+                onClick={() => setCreateTicketModalOpen(true)}
+              className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {t('createTicket')}
+            </Button>
+            )}
+          </div>
           </div>
           <hr></hr>
 

@@ -5,6 +5,7 @@ import { DataTable } from "@/components/data-table/data-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { dummyDocuments, dummyRequests, dummyUsers } from "@/lib/dummy-data"
 import { useAuth } from "@/hooks/use-auth"
@@ -15,44 +16,6 @@ import { useMemo, useCallback, useState, useEffect } from "react"
 import { useTabVisibility } from "@/hooks/use-tab-visibility"
 import { useTranslations } from 'next-intl'
 
-/**
- * ADVANCED PERFORMANCE OPTIMIZATIONS:
- * 
- * 1. STALE TIME OPTIMIZATION:
- *    - staleTime: 10 minutes - Dashboard data considered fresh for 10 minutes
- *    - gcTime: 20 minutes - Cache kept in memory for 20 minutes
- *    - Prevents unnecessary re-fetching of dashboard statistics
- * 
- * 2. TAB VISIBILITY OPTIMIZATION:
- *    - enabled: isVisible - Only fetch when tab is active
- *    - Prevents API calls when tab is inactive/background
- *    - Tracks user activity and tab focus state
- * 
- * 3. SMART REFRESH SYSTEM:
- *    - Debounced refresh (3-second minimum interval)
- *    - Activity-aware refresh (refresh if inactive >5 minutes)
- *    - Time-based refresh (refresh if last refresh >60 seconds ago)
- *    - Prevents excessive API calls for dashboard data
- * 
- * 4. REACT QUERY CONFIGURATION:
- *    - refetchOnWindowFocus: false - No fetch on window focus
- *    - refetchOnMount: false - No fetch on component mount if data exists
- *    - refetchOnReconnect: true - Fetch on network reconnect
- *    - refetchInterval: false - No automatic polling
- *    - retry: 2 - Retry failed requests twice
- *    - retryDelay: Exponential backoff with max 30s delay
- * 
- * 5. PERFORMANCE MONITORING:
- *    - Visual indicators for tab status
- *    - Cache size display for each data type
- *    - Syncing status indicators
- *    - Real-time performance feedback
- * 
- * 6. DASHBOARD-SPECIFIC OPTIMIZATIONS:
- *    - Role-based query enabling
- *    - Conditional data fetching
- *    - Efficient stat card rendering
- */
 
             // styles: subtle gradient, thin border, gentle hover, proper focus ring
             const statCardStyle =
@@ -72,6 +35,7 @@ export default function DashboardPageClient() {
   const companyId = user && typeof user === 'object' && '_id' in user ? (user as any)._id : undefined;
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(0);
+  const [selectedPeriod, setSelectedPeriod] = useState('daily');
   const { isVisible, lastActivity } = useTabVisibility();
   const t = useTranslations('dashboard');
   const tCommon = useTranslations('common');
@@ -193,15 +157,48 @@ export default function DashboardPageClient() {
     }
   }, [isVisible, lastActivity]);
 
+  // Filter requests based on selected time period
+  const filterRequestsByPeriod = useCallback((requestsArray: any[], period: string) => {
+    if (!Array.isArray(requestsArray)) return [];
+    
+    const now = new Date();
+    const filterDate = new Date();
+    
+    switch (period) {
+      case 'daily':
+        filterDate.setDate(now.getDate() - 1);
+        break;
+      case 'weekly':
+        filterDate.setDate(now.getDate() - 7);
+        break;
+      case 'monthly':
+        filterDate.setMonth(now.getMonth() - 1);
+        break;
+      case 'yearly':
+        filterDate.setFullYear(now.getFullYear() - 1);
+        break;
+      default:
+        return requestsArray;
+    }
+    
+    return requestsArray.filter((request: any) => {
+      const requestDate = new Date(request.created_at);
+      return requestDate >= filterDate;
+    });
+  }, []);
+
   // Stat cards config
   const statCards = useMemo(() => {
     const cards = [];
     
-    // Calculate request statistics from real data
-    const totalRequests = Array.isArray(requests) ? requests.length : 0;
-    const pendingRequests = Array.isArray(requests) ? requests.filter((r: any) => r.status === 'pending').length : 0;
-    const inProgressRequests = Array.isArray(requests) ? requests.filter((r: any) => r.status === 'in_progress').length : 0;
-    const completedRequests = Array.isArray(requests) ? requests.filter((r: any) => r.status === 'completed').length : 0;
+    // Calculate request statistics from real data filtered by period
+    const requestsArray = Array.isArray(requests) ? requests : [];
+    const filteredRequests = filterRequestsByPeriod(requestsArray, selectedPeriod);
+    
+    const totalRequests = filteredRequests.length;
+    const pendingRequests = filteredRequests.filter((r: any) => r.status === 'pending').length;
+    const inProgressRequests = filteredRequests.filter((r: any) => r.status === 'in_progress').length;
+    const completedRequests = filteredRequests.filter((r: any) => r.status === 'completed').length;
     
     cards.push(
       {
@@ -230,7 +227,7 @@ export default function DashboardPageClient() {
       }
     );
     return cards;
-  }, [requests, requestsLoading]);
+  }, [requests, requestsLoading, selectedPeriod, filterRequestsByPeriod, t]);
 
   // Flatten recent requests data for table and search
   const tableData = useMemo(() => {
@@ -351,79 +348,84 @@ export default function DashboardPageClient() {
   return (
     <DashboardLayout title={t('title')} isFetching={isRefreshing || requestsFetching}>
       <div className="p-0">
-        {/* Header with Refresh Button */}
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">{t('title')}</h1>
-          <Button 
-            onClick={handleRefresh} 
-            variant="outline" 
-            size="sm"
-            className="border-[#4082ea] text-[#4082ea] hover:bg-[#4082ea]/10 flex items-center gap-2 transition-all duration-200"
-            disabled={isRefreshing}
-            title={
-              isRefreshing 
-                ? t('refreshing') 
-                : t('refreshDashboard')
-            }
-          >
-            <RotateCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} /> 
-            {isRefreshing ? t('refreshing') : tCommon('refresh')}
-          </Button>
-        </div>
+        {/* Overview Card with Time Period Tabs */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>{t('overview')}</span>
+              <Button 
+                onClick={handleRefresh} 
+                variant="outline" 
+                size="sm"
+                className="border-[#4082ea] text-[#4082ea] hover:bg-[#4082ea]/10 flex items-center gap-2 transition-all duration-200"
+                disabled={isRefreshing}
+                title={
+                  isRefreshing 
+                    ? t('refreshing') 
+                    : t('refreshDashboard')
+                }
+              >
+                <RotateCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} /> 
+                {isRefreshing ? t('refreshing') : tCommon('refresh')}
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod} className="w-full">
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="daily">{t('daily')}</TabsTrigger>
+                <TabsTrigger value="weekly">{t('weekly')}</TabsTrigger>
+                <TabsTrigger value="monthly">{t('monthly')}</TabsTrigger>
+                <TabsTrigger value="yearly">{t('yearly')}</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value={selectedPeriod} className="mt-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {statCards.map((card) => (
+                    <Card key={card.label} className={statCardStyle}>
+                      {/* soft ambient glow (very subtle) */}
+                      <div
+                        aria-hidden
+                        className="pointer-events-none absolute -right-10 -top-10 size-24 rounded-full bg-[#4082ea]/5 blur-2xl"
+                      />
 
-        {/* Stat Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {statCards.map((card) => (
+                      {/* top row: icon + label */}
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={iconTileStyle}>
+                            <span className="inline-flex">{card.icon}</span>
+                          </div>
+                          <span className="truncate text-[15px] font-semibold text-slate-700 dark:text-zinc-100">
+                            {card.label}
+                          </span>
+                        </div>
+                      </div>
 
-<Card key={card.label} className={statCardStyle}>
-{/* soft ambient glow (very subtle) */}
-<div
-  aria-hidden
-  className="pointer-events-none absolute -right-10 -top-10 size-24 rounded-full bg-[#4082ea]/5 blur-2xl"
-/>
+                      {/* value on bottom-right (unchanged placement, improved typographic tone) */}
+                      <div className="flex-1 flex items-end justify-end">
+                        {card.loading ? (
+                          <div className="h-9 w-24 rounded bg-slate-100 animate-pulse dark:bg-zinc-800" />
+                        ) : (
+                          <div
+                            className="text-3xl sm:text-4xl font-extrabold tracking-tight tabular-nums text-[#4082ea] dark:text-sky-400"
+                            aria-live="polite"
+                          >
+                            {card.value}
+                          </div>
+                        )}
+                      </div>
 
-{/* top row: icon + label */}
-<div className="flex items-center justify-between w-full">
-  <div className="flex items-center gap-3 min-w-0">
-    <div className={iconTileStyle}>
-      <span className="inline-flex">{card.icon}</span>
-    </div>
-    <span className="truncate text-[15px] font-semibold text-slate-700 dark:text-zinc-100">
-      {card.label}
-    </span>
-  </div>
-</div>
+                      {/* subtle hover accent bar */}
+                      <div className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-transparent via-[#4082ea]/20 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
 
-{/* value on bottom-right (unchanged placement, improved typographic tone) */}
-<div className="flex-1 flex items-end justify-end">
-  {card.loading ? (
-    <div className="h-9 w-24 rounded bg-slate-100 animate-pulse dark:bg-zinc-800" />
-  ) : (
-    <div
-      className="text-3xl sm:text-4xl font-extrabold tracking-tight tabular-nums text-[#4082ea] dark:text-sky-400"
-      aria-live="polite"
-    >
-      {card.value}
-    </div>
-  )}
-</div>
-
-{/* subtle hover accent bar */}
-<div className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-transparent via-[#4082ea]/20 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
-</Card>
-
-          ))}
-        </div>
-
-        {/* Visual Separator
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-200 mb-4"></div>
-          </div>
-          
-        </div> */}
-
-        {/* Recent Bids Table */}
+        {/* Recent Requests Table */}
         <div className="p-0">
         <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
           <div className="flex justify-between items-center px-2 py-2">

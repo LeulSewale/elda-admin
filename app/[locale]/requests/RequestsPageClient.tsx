@@ -14,6 +14,7 @@ import { CreateRequestModal } from "@/components/modals/create-request-modal"
 import { AssignRequestModal } from "@/components/modals/assign-request-modal"
 import { ChangeStatusModal } from "@/components/modals/change-status-modal"
 import { RequestDetailModal } from "@/components/modals/request-detail-modal"
+import { DateRangeFilter } from "@/components/ui/date-range-filter"
 import { useAuth } from "@/hooks/use-auth"
 import { useRequests } from "@/hooks/use-requests"
 import { requestsApi } from "@/lib/api/requests"
@@ -67,6 +68,10 @@ export default function RequestsPageClient() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [dateRange, setDateRange] = useState<{ startDate: string | null; endDate: string | null }>({
+    startDate: null,
+    endDate: null
+  });
   
   // Translation hooks
   const t = useTranslations('requests');
@@ -85,8 +90,11 @@ export default function RequestsPageClient() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Use the custom hook for role-based request fetching
-  const { requests, isLoading, isFetching, refetch, userRole } = useRequests();
+  // Use the custom hook for role-based request fetching with date range
+  const { requests, isLoading, isFetching, refetch, userRole } = useRequests({
+    startDate: dateRange.startDate || undefined,
+    endDate: dateRange.endDate || undefined
+  });
 
   // Create request mutation for users
   const createRequestMutation = useMutation({
@@ -142,6 +150,11 @@ export default function RequestsPageClient() {
       setIsRefreshing(false);
     }
   }, [lastRefresh, lastActivity, refetch, isRefreshing]);
+
+  // Handle date range changes
+  const handleDateRangeChange = useCallback((startDate: string | null, endDate: string | null) => {
+    setDateRange({ startDate, endDate });
+  }, []);
 
   // Flatten data for table with proper error handling
   const tableData = React.useMemo(() => {
@@ -394,15 +407,17 @@ export default function RequestsPageClient() {
              <h1 className="text-xl font-semibold">{t('pageTitle')}</h1>
             <p className="text-sm text-gray-400">{t('pageSubtitle')}</p>
           </div>
-          {role === "user" && <Button
-          onClick={() => setOpenModal(true)}
-            className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            {t('createRequest')}
-          </Button>
-
-         }
+          <div className="flex items-center gap-4">
+            <DateRangeFilter onDateRangeChange={handleDateRangeChange} />
+            {role === "user" && <Button
+            onClick={() => setOpenModal(true)}
+              className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {t('createRequest')}
+            </Button>
+           }
+          </div>
           </div>
 
           <hr></hr>

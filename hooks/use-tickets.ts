@@ -10,7 +10,13 @@ import { useAuth } from "@/hooks/use-auth"
  * - user: GET /tickets/mine (user's own tickets)
  * - lower roles: GET /tickets/assigned (assigned tickets)
  */
-export function useTickets() {
+export function useTickets(params?: {
+  startDate?: string
+  endDate?: string
+  status?: string
+  priority?: string
+  search?: string
+}) {
   const { user } = useAuth({ redirectOnFail: false })
   
   const {
@@ -21,7 +27,7 @@ export function useTickets() {
     refetch,
     isFetching
   } = useQuery({
-    queryKey: ["tickets", user?.role],
+    queryKey: ["tickets", user?.role, params],
     queryFn: async () => {
       console.debug("[useTickets] Fetching tickets for role:", user?.role)
       
@@ -33,16 +39,16 @@ export function useTickets() {
       switch (user.role) {
         case "admin":
           console.debug("[useTickets] Using admin endpoint: /tickets")
-          response = await ticketsApi.getAllTickets()
+          response = await ticketsApi.getAllTickets(params)
           break
         case "user":
           console.debug("[useTickets] Using user endpoint: /tickets/mine")
-          response = await ticketsApi.getMyTickets()
+          response = await ticketsApi.getMyTickets(params)
           break
         default:
           // For lower roles (support, agent, etc.)
           console.debug("[useTickets] Using assigned endpoint: /tickets/assigned")
-          response = await ticketsApi.getAssignedTickets()
+          response = await ticketsApi.getAssignedTickets(params)
           break
       }
       

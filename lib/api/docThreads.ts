@@ -57,11 +57,19 @@ export interface DocumentsResponse {
 }
 
 export const docThreadsApi = {
-  list: (params?: { before?: string; after?: string; limit?: number }) => {
+  list: (params?: { 
+    before?: string; 
+    after?: string; 
+    limit?: number;
+    startDate?: string;
+    endDate?: string;
+  }) => {
     const searchParams = new URLSearchParams()
     if (params?.before) searchParams.set("before", params.before)
     if (params?.after) searchParams.set("after", params.after)
     if (params?.limit) searchParams.set("limit", String(params.limit))
+    if (params?.startDate) searchParams.set("startDate", params.startDate)
+    if (params?.endDate) searchParams.set("endDate", params.endDate)
     const qs = searchParams.toString()
     const url = qs ? `/doc-threads?${qs}` : `/doc-threads`
     console.debug("[DocThreads API] List request:", { url, params })

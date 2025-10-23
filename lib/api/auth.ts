@@ -5,7 +5,9 @@ import { config } from "@/lib/config"
 const DEBUG = config.features.debugLogging
 
 export const authApi = {
-  login: (data: { email: string; password: string }) => api.post("/auth/login", data),
+  login: (data: { phone: string; password: string }) => {
+    return api.post("/auth/login", { phone: data.phone, password: data.password })
+  },
   register: (data: { name: string; email: string; phone: string; password: string; role: string }) => 
     api.post("/users", data, { headers: { 'Content-Type': 'application/json' } }),
   logout: () => api.post("/auth/logout"),

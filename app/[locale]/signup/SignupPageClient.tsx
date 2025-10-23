@@ -154,9 +154,21 @@
                          rules={{
                            required: tValidation('required'),
                            pattern: {
-                             value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                             value: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
                              message: tValidation('emailInvalid'),
                            },
+                           validate: {
+                             notEmpty: (value) => value.trim().length > 0 || tValidation('required'),
+                             hasAtSymbol: (value) => value.includes('@') || tValidation('emailInvalid'),
+                             hasDomain: (value) => {
+                               const parts = value.split('@');
+                               return parts.length === 2 && parts[1].includes('.') || tValidation('emailInvalid');
+                             },
+                             validLength: (value) => {
+                               const parts = value.split('@');
+                               return parts[0].length >= 1 && parts[0].length <= 64 && parts[1].length >= 3 && parts[1].length <= 253 || tValidation('emailInvalid');
+                             }
+                           }
                          }}
                          render={({ field }) => (
                            <FormItem>
@@ -176,7 +188,19 @@
                        <FormField
                          control={form.control}
                          name="password"
-                         rules={{ required: tValidation('required') }}
+                         rules={{ 
+                           required: tValidation('required'),
+                           minLength: {
+                             value: 8,
+                             message: tValidation('passwordTooShort')
+                           },
+                           validate: {
+                             hasUpperCase: (value) => /[A-Z]/.test(value) || "Password must contain at least one uppercase letter",
+                             hasLowerCase: (value) => /[a-z]/.test(value) || "Password must contain at least one lowercase letter",
+                             hasNumber: (value) => /\d/.test(value) || "Password must contain at least one number",
+                             hasSpecialChar: (value) => /[!@#$%^&*(),.?":{}|<>]/.test(value) || "Password must contain at least one special character"
+                           }
+                         }}
                          render={({ field }) => (
                            <FormItem>
                              <FormLabel>{tCommon('password')}</FormLabel>

@@ -110,7 +110,7 @@ export function CreateTicketModal({
             <Label htmlFor="subject">{t('subject')} *</Label>
             <Input
               id="subject"
-              placeholder="Brief description of the issue"
+              placeholder={t('briefDescriptionOfIssue')}
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               required
@@ -121,7 +121,7 @@ export function CreateTicketModal({
             <Label htmlFor="priority">{t('priority')}</Label>
             <Select value={priority} onValueChange={(value: any) => setPriority(value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Select priority" />
+                <SelectValue placeholder={t('selectPriority')} />
               </SelectTrigger>
               <SelectContent>
                 {priorityOptions.map((option) => (
@@ -141,7 +141,7 @@ export function CreateTicketModal({
             <Label htmlFor="description">{t('message')} *</Label>
             <Textarea
               id="description"
-              placeholder="Detailed description of the issue or request"
+              placeholder={t('detailedDescriptionOfIssue')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="min-h-[120px]"
@@ -150,10 +150,10 @@ export function CreateTicketModal({
           </div>
 
           <div className="space-y-2">
-            <Label>{t('category')} (Optional)</Label>
+            <Label>{t('category')} ({tCommon('optional')})</Label>
             <div className="flex gap-2">
               <Input
-                placeholder="Add a tag"
+                placeholder={t('addTag')}
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyPress={handleKeyPress}

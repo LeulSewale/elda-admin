@@ -213,7 +213,7 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
   }, [isError, error, redirectOnFail, router, queryClient]);
 
   const loginMutation = useMutation({
-    mutationFn: authApi.login,
+    mutationFn: (data: { phone: string; password: string }) => authApi.login(data),
     onMutate: () => {
       setIsAuthenticating(true)
     },

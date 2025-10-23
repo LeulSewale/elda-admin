@@ -1,51 +1,55 @@
 
-  "use client"
+"use client"
+
+import { useForm as useReactHookForm } from "react-hook-form"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth } from "@/hooks/use-auth"
+import { toast } from "@/hooks/use-toast"
+import Link from "next/link"
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
+import { Logo } from "@/components/ui/logo"
+import { useTranslations } from 'next-intl'
+import { LanguageSwitcher } from '@/components/language-switcher'
+import { Phone } from "lucide-react"
+
+export default function LoginPage() {
+  const { login, isAuthenticating } = useAuth({ redirectOnFail: false })
+  const t = useTranslations('auth');
+  const tCommon = useTranslations('common');
+  const tValidation = useTranslations('validation');
   
-  import { useForm as useReactHookForm } from "react-hook-form"
-  import { Button } from "@/components/ui/button"
-  import { Input } from "@/components/ui/input"
-  import { Label } from "@/components/ui/label"
-  import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-  import { useAuth } from "@/hooks/use-auth"
-  import { toast } from "@/hooks/use-toast"
-  import Link from "next/link"
-  import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
-  import { Logo } from "@/components/ui/logo"
-  import { useTranslations } from 'next-intl'
-  import { LanguageSwitcher } from '@/components/language-switcher'
+  const form = useReactHookForm({
+    defaultValues: {
+      phone: "",
+      password: "",
+    },
+  })
   
-  export default function LoginPage() {
-    const { login, isAuthenticating } = useAuth({ redirectOnFail: false })
-    const t = useTranslations('auth');
-    const tCommon = useTranslations('common');
-    const tValidation = useTranslations('validation');
+  const onSubmit = (values: { phone: string; password: string }) => {
+    // Format phone number (remove spaces, dashes, etc.)
+    const formattedPhone = values.phone.replace(/[\s\-\(\)]/g, '')
     
-    const form = useReactHookForm({
-      defaultValues: {
-        email: "",
-        password: "",
+    login({ phone: formattedPhone, password: values.password }, {
+      onSuccess: () => {
+      },
+      onError: (error) => {
+        let message = t('loginError')
+        if (error?.response && typeof error.response.data === "object" && error.response.data !== null && "message" in error.response.data) {
+          message = (error.response.data as { message?: string }).message || error?.message || message
+        } else if (error?.message) {
+          message = error.message
+        }
+        toast({
+          title: t('loginError'),
+          description: message,
+          variant: "destructive",
+        })
       },
     })
-    
-    const onSubmit = (values: { email: string; password: string }) => {
-      login(values, {
-        onSuccess: () => {
-        },
-        onError: (error) => {
-          let message = t('loginError')
-          if (error?.response && typeof error.response.data === "object" && error.response.data !== null && "message" in error.response.data) {
-            message = (error.response.data as { message?: string }).message || error?.message || message
-          } else if (error?.message) {
-            message = error.message
-          }
-          toast({
-            title: t('loginError'),
-            description: message,
-            variant: "destructive",
-          })
-        },
-      })
-    }
+  }
   
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -95,21 +99,24 @@
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="email"
+                      name="phone"
                       rules={{
                         required: tValidation('required'),
                         pattern: {
-                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                          message: tValidation('emailInvalid'),
+                          value: /^[\+]?[0-9\s\-\(\)]{10,15}$/,
+                          message: tValidation('phoneInvalid'),
                         },
                       }}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{tCommon('email')}</FormLabel>
+                          <FormLabel className="flex items-center gap-2">
+                            <Phone className="h-4 w-4" />
+                            {tCommon('phone')}
+                          </FormLabel>
                           <FormControl>
                             <Input
-                              type="email"
-                              placeholder={tCommon('email')}
+                              type="tel"
+                              placeholder={t('enterPhone')}
                               disabled={isAuthenticating}
                               {...field}
                             />
