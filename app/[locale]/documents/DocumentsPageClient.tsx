@@ -93,6 +93,9 @@ export default function DocumentsPageClient() {
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
   const [createThreadOpen, setCreateThreadOpen] = useState(false);
+  
+  // Lawyers can only send/receive files, not create threads
+  const canCreateThread = role !== "lawyer";
   const [lastRefresh, setLastRefresh] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
@@ -348,13 +351,15 @@ export default function DocumentsPageClient() {
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
                 {tCommon('refresh')}
               </Button>
-              <Button
-                onClick={() => setCreateThreadOpen(true)}
-                className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                {t('uploadDocument')}
-              </Button>
+              {canCreateThread && (
+                <Button
+                  onClick={() => setCreateThreadOpen(true)}
+                  className="bg-[#4082ea] hover:bg-[#4082ea] text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  {t('uploadDocument')}
+                </Button>
+              )}
             </div>
           </div>
           </div>

@@ -32,7 +32,7 @@ const navigation = [
       { name: "dashboard", href: "/dashboard", icon: LayoutDashboard , roles: ["admin", "user","lawyer"] },
       { name: "requestManagement", href: "/requests", icon: FileText, roles: ["admin","user","lawyer"] },
       { name: "ticketManagement", href: "/tickets", icon: Ticket , roles: ["admin","user"] },  
-      { name: "documentManagement", href: "/documents", icon: BookText , roles: ["admin","user"] },   
+      { name: "documentManagement", href: "/documents", icon: BookText , roles: ["admin","user","lawyer"] },   
     ],
   },
   {
