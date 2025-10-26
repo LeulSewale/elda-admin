@@ -12,12 +12,16 @@
   import { toast } from "@/hooks/use-toast"
   import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
   import { useState } from "react"
-  import { Logo } from "@/components/ui/logo"
-  import { useTranslations } from 'next-intl'
-  import { LanguageSwitcher } from '@/components/language-switcher'
+import { Logo } from "@/components/ui/logo"
+import { useTranslations } from 'next-intl'
+import { LanguageSwitcher } from '@/components/language-switcher'
+import { usePathname } from 'next/navigation'
+import { getCurrentLocaleFromPath } from '@/lib/language-utils'
   
-  export default function SignupPageClient() {
+export default function SignupPageClient() {
   const router = useRouter()
+  const pathname = usePathname()
+  const currentLocale = getCurrentLocaleFromPath(pathname)
   const t = useTranslations('auth');
   const tCommon = useTranslations('common');
   const tValidation = useTranslations('validation');
@@ -229,7 +233,7 @@
                 </Form>
                 <div className="text-center text-xs lg:text-sm text-gray-600">
                   {t('alreadyHaveAccount')}{" "}
-                  <Link href="/login" className="text-blue-500 hover:underline font-semibold">
+                  <Link href={`/${currentLocale}/login`} className="text-blue-500 hover:underline font-semibold">
                     {tCommon('login')}
                   </Link>
                 </div>

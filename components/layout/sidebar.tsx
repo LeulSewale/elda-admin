@@ -23,6 +23,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { Logo } from "@/components/ui/logo"
 import { useTranslations } from 'next-intl'
 import { LanguageSwitcher } from '@/components/language-switcher'
+import { getCurrentLocaleFromPath } from '@/lib/language-utils'
 
 const navigation = [
   {
@@ -60,6 +61,9 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
   const t = useTranslations('navigation');
   const tCommon = useTranslations('common');
   
+  // Get current locale to construct proper links
+  const currentLocale = getCurrentLocaleFromPath(pathname)
+  
   if (isLoading) return null;
 
   return (
@@ -70,7 +74,7 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
       )}
     >
       <div className={cn("p-6 border-b border-gray-200", collapsed && "p-4")}> 
-        <Link href="/dashboard" className="flex items-center space-x-2">
+        <Link href={`/${currentLocale}/dashboard`} className="flex items-center space-x-2">
           <Logo 
             width={40}
             height={40}
@@ -96,11 +100,13 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
                     .filter(item => !item.roles || !role || item.roles.includes(role))
                     .map((item) => {
                       const computedHref = item.name === "ticketManagement" ? (role === "admin" ? "/tickets/admin" : "/tickets") : item.href
+                      // Add locale prefix to href
+                      const localizedHref = `/${currentLocale}${computedHref}`
                       // Enhanced active state detection - check if current pathname starts with the item's href
-                      const isActive = pathname === computedHref || pathname.startsWith(computedHref + "/")
+                      const isActive = pathname === localizedHref || pathname.startsWith(localizedHref + "/")
                       const linkContent = (
                         <Link
-                          href={computedHref}
+                          href={localizedHref}
                           className={cn(
                             "group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 border",
                             collapsed ? "justify-center" : "",

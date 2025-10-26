@@ -14,8 +14,12 @@ import { Logo } from "@/components/ui/logo"
 import { useTranslations } from 'next-intl'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { Phone } from "lucide-react"
+import { usePathname } from 'next/navigation'
+import { getCurrentLocaleFromPath } from '@/lib/language-utils'
 
 export default function LoginPage() {
+  const pathname = usePathname()
+  const currentLocale = getCurrentLocaleFromPath(pathname)
   const { login, isAuthenticating } = useAuth({ redirectOnFail: false })
   const t = useTranslations('auth');
   const tCommon = useTranslations('common');
@@ -157,7 +161,7 @@ export default function LoginPage() {
                 {/* Sign up link */}
                 <div className="text-center text-sm text-gray-600">
                   {t('dontHaveAccount')}{" "}
-                  <Link href="/signup" className="text-blue-500 hover:underline font-semibold">
+                  <Link href={`/${currentLocale}/signup`} className="text-blue-500 hover:underline font-semibold">
                     {tCommon('signup')}
                   </Link>
                 </div>
