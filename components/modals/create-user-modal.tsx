@@ -102,6 +102,7 @@ export function CreateUserModal({ open, onOpenChange, onCreateUser, isLoading }:
                 <SelectItem value="user">{t('user')}</SelectItem>
                 <SelectItem value="admin">{t('admin')}</SelectItem>
                 <SelectItem value="lawyer">{t('lawyer')}</SelectItem>
+                <SelectItem value="HR-manager">{t('HR-manager') || 'HR Manager'}</SelectItem>
               </SelectContent>
             </Select>
           </div>

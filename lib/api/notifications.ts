@@ -47,8 +47,16 @@ export const notificationsApi = {
       }
       
       eventSource.onerror = (error) => {
-        console.error('[SSE] Connection error:', error)
-        if (onError) onError(error)
+        // Only log error if EventSource is not in a connecting state
+        // EventSource fires error events during connection attempts, which is normal
+        if (eventSource.readyState === EventSource.CLOSED) {
+          // Connection was closed - this is expected in some cases (e.g., not authenticated)
+          // Don't log as error to avoid console noise
+          if (onError) onError(error)
+        } else if (eventSource.readyState === EventSource.CONNECTING) {
+          // Still connecting - this is normal, don't log
+          if (onError) onError(error)
+        }
       }
       
       eventSource.addEventListener('connected', (event: any) => {

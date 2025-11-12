@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react"
 import type { AxiosError } from "axios"
 import { getAccessToken } from "@/lib/token"
 import { config } from "@/lib/config"
+import { getErrorMessage, getErrorTitle } from "@/lib/error-utils"
 
 const DEBUG = config.features.debugLogging
 
@@ -103,7 +104,50 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
         
         return normalizedUser
       } catch (err: any) {
-        // Enhanced error logging with more details
+        const status = err?.response?.status
+        const is401 = status === 401
+        const is404 = status === 404
+        
+        // Handle 401/404 errors gracefully - these are expected on public pages
+        if (is401 || is404) {
+          if (DEBUG && redirectOnFail) {
+            // Only log detailed error info if we're on a protected page
+            console.warn("[Auth] Authentication error (expected on public pages):", {
+              status,
+              redirectOnFail,
+              message: is401 ? "User not authenticated" : "Profile endpoint not found",
+              hasAccessToken: typeof document !== 'undefined' ? document.cookie.includes('access_token') : false,
+              hasRefreshToken: typeof document !== 'undefined' ? document.cookie.includes('refresh_token') : false,
+            })
+          } else if (DEBUG && !redirectOnFail) {
+            // On public pages, just debug log (not error)
+            console.debug("[Auth] 401/404 (expected on public pages):", {
+              status,
+              redirectOnFail,
+              message: "User not authenticated - this is expected on login/signup pages"
+            })
+          }
+          
+          // Return null for 401/404 to indicate not authenticated
+          return null
+        }
+        
+        // Enhanced error logging for other errors
+        const isTimeout = err?.code === "ECONNABORTED" || err?.message?.toLowerCase().includes("timeout")
+        
+        // Handle timeout errors gracefully
+        if (isTimeout) {
+          if (DEBUG) {
+            console.warn("[Auth] Request timeout:", {
+              url: err?.config?.url,
+              method: err?.config?.method,
+              message: err?.message
+            })
+          }
+          return null
+        }
+        
+        // Log other unexpected errors
         if (DEBUG) {
           console.error("[Auth] Profile fetch error:", {
             error: err,
@@ -115,51 +159,11 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
             method: err?.config?.method,
             withCredentials: err?.config?.withCredentials,
             baseURL: err?.config?.baseURL,
-            request: err?.request ? { 
-              withCredentials: err?.request?.withCredentials, 
-              responseURL: err?.request?.responseURL 
-            } : undefined,
-            stack: err?.stack,
-            name: err?.name,
             timestamp: new Date().toISOString()
           })
-
-          // Additional debugging for 401 errors (only log if redirectOnFail is true)
-          if (err?.response?.status === 401 && redirectOnFail) {
-            console.error("[Auth] 401 Error Details:", {
-              cookies: typeof document !== 'undefined' ? document.cookie : 'no-document',
-              cookieList: typeof document !== 'undefined' ? document.cookie.split(';').map(c => c.trim()) : [],
-              hasAccessToken: typeof document !== 'undefined' ? document.cookie.includes('access_token') : false,
-              hasRefreshToken: typeof document !== 'undefined' ? document.cookie.includes('refresh_token') : false,
-              errorMessage: err?.response?.data?.message || err?.message,
-              errorCode: err?.response?.data?.code,
-              timestamp: new Date().toISOString()
-            })
-          } else if (err?.response?.status === 401 && !redirectOnFail) {
-            if (DEBUG) {
-              console.debug("[Auth] 401 Unauthorized (expected on public pages):", {
-                redirectOnFail,
-                message: "User not authenticated - this is expected on login/signup pages"
-              })
-            }
-          }
         }
         
-        const status = err?.response?.status
-        const isTimeout = err?.code === "ECONNABORTED" || err?.message?.toLowerCase().includes("timeout")
-        
-        // Handle timeout errors gracefully
-        if (isTimeout) {
-          if (DEBUG) console.warn("[Auth] Request timeout - returning null to prevent infinite retries")
-          return null
-        }
-        
-        if (status === 401 || status === 404) {
-          if (DEBUG) console.debug("[Auth] Returning null due to status:", status)
-          return null
-        }
-        
-        if (DEBUG) console.error("[Auth] Re-throwing error")
+        // Re-throw only unexpected errors
         throw err
       }
     },
@@ -188,19 +192,37 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
     }
   }, [isLoading])
 
-  // Monitor error state for debugging
+  // Monitor error state for debugging (suppress 401/404 errors as they're expected)
   useEffect(() => {
     if (DEBUG && isError && error) {
+      const status = (error as any)?.response?.status
+      const is401 = status === 401
+      const is404 = status === 404
+      
+      // Suppress 401/404 errors - they're expected when not authenticated
+      if (is401 || is404) {
+        if (redirectOnFail) {
+          // Only log as warning on protected pages
+          console.warn("[Auth] Authentication error (expected):", {
+            status,
+            message: is401 ? "User not authenticated" : "Profile endpoint not found"
+          })
+        }
+        // Don't log 401/404 errors on public pages
+        return
+      }
+      
+      // Log other unexpected errors
       console.error("[Auth] useQuery error detected:", {
         error,
         message: error?.message,
-        status: (error as any)?.response?.status,
+        status,
         data: (error as any)?.response?.data,
         stack: error?.stack,
         timestamp: new Date().toISOString()
-      });
+      })
     }
-  }, [isError, error]);
+  }, [isError, error, redirectOnFail]);
 
   useEffect(() => {
     // Only redirect on 401, not 404 (which means profile endpoint doesn't exist)
@@ -244,10 +266,10 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
         const effectiveUser = data || normalizedLoginUser
 
         // Check role
-        if (effectiveUser?.role !== 'admin' && effectiveUser?.role !== 'lawyer' && effectiveUser?.role !== 'user') {
+        if (effectiveUser?.role !== 'admin' && effectiveUser?.role !== 'lawyer' && effectiveUser?.role !== 'user' && effectiveUser?.role !== 'HR-manager') {
           toast({
             title: "Login Error",
-            description: "Your account does not have access. Only admin, lawyer or user roles are allowed.",
+            description: "Your account does not have access. Only admin, lawyer, user, or HR-manager roles are allowed.",
             variant: "destructive",
           })
           setIsAuthenticating(false)
@@ -261,12 +283,18 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
           queryClient.setQueryData(["auth", "me"], effectiveUser)
         }
 
-        // Navigate to dashboard after login (uniform for all roles)
-        router.replace("/dashboard")
-      } catch (err) {
+        // Navigate based on role after login
+        if (effectiveUser?.role === "HR-manager") {
+          router.replace("/employees")
+        } else {
+          router.replace("/dashboard")
+        }
+      } catch (err: any) {
+        const errorTitle = getErrorTitle(err)
+        const errorMessage = getErrorMessage(err) || "Login succeeded, but failed to load profile."
         toast({
-          title: "Login Error",
-          description: "Login succeeded, but failed to load profile.",
+          title: errorTitle,
+          description: errorMessage,
           variant: "destructive",
         })
       } finally {
@@ -274,12 +302,13 @@ export function useAuth(options: UseAuthOptions = { redirectOnFail: true }) {
       }
     },
     onError: (error: AxiosError) => {
-      let message = "Login failed"
-      if (error?.response && typeof error.response.data === "object" && error.response.data !== null && "message" in error.response.data) {
-        message = (error.response.data as { message?: string }).message || error?.message || message
-      } else if (error?.message) {
-        message = error.message
-      }
+      const errorTitle = getErrorTitle(error)
+      const errorMessage = getErrorMessage(error)
+      toast({
+        title: errorTitle,
+        description: errorMessage,
+        variant: "destructive",
+      })
       setIsAuthenticating(false)
     },
   })

@@ -13,9 +13,11 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Logo } from "@/components/ui/logo"
 import { useTranslations } from 'next-intl'
 import { LanguageSwitcher } from '@/components/language-switcher'
-import { Phone } from "lucide-react"
+import { Phone, Eye, EyeOff } from "lucide-react"
 import { usePathname } from 'next/navigation'
 import { getCurrentLocaleFromPath } from '@/lib/language-utils'
+import { useState } from "react"
+import { getErrorMessage, getErrorTitle } from '@/lib/error-utils'
 
 export default function LoginPage() {
   const pathname = usePathname()
@@ -24,6 +26,8 @@ export default function LoginPage() {
   const t = useTranslations('auth');
   const tCommon = useTranslations('common');
   const tValidation = useTranslations('validation');
+  const tErrors = useTranslations('errors');
+  const [showPassword, setShowPassword] = useState(false)
   
   const form = useReactHookForm({
     defaultValues: {
@@ -40,15 +44,11 @@ export default function LoginPage() {
       onSuccess: () => {
       },
       onError: (error) => {
-        let message = t('loginError')
-        if (error?.response && typeof error.response.data === "object" && error.response.data !== null && "message" in error.response.data) {
-          message = (error.response.data as { message?: string }).message || error?.message || message
-        } else if (error?.message) {
-          message = error.message
-        }
+        const errorTitle = getErrorTitle(error, tErrors)
+        const errorMessage = getErrorMessage(error, tErrors)
         toast({
-          title: t('loginError'),
-          description: message,
+          title: errorTitle,
+          description: errorMessage,
           variant: "destructive",
         })
       },
@@ -137,12 +137,27 @@ export default function LoginPage() {
                         <FormItem>
                           <FormLabel>{tCommon('password')}</FormLabel>
                           <FormControl>
-                            <Input
-                              type="password"
-                              placeholder={tCommon('password')}
-                              disabled={isAuthenticating}
-                              {...field}
-                            />
+                            <div className="relative">
+                              <Input
+                                type={showPassword ? "text" : "password"}
+                                placeholder={tCommon('password')}
+                                disabled={isAuthenticating}
+                                {...field}
+                                className="pr-10"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                                disabled={isAuthenticating}
+                              >
+                                {showPassword ? (
+                                  <EyeOff className="h-4 w-4" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
+                              </button>
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>

@@ -8,13 +8,16 @@ import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query"
 import { employeesApi, type Employee, type EmployeesResponse } from "@/lib/api/employees"
 import { useAuth } from "@/hooks/use-auth"
 import { useState, useCallback, useEffect, useMemo } from "react"
-import { Plus, Edit, Trash2, Package as PackageIcon } from "lucide-react"
+import { Plus, Edit, Trash2, Package as PackageIcon, Upload, Eye } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { useTabVisibility } from "@/hooks/use-tab-visibility"
 import { CreateEmployeeModal } from "@/components/modals/create-employee-modal"
 import { EditEmployeeModal } from "@/components/modals/edit-employee-modal"
 import { DeleteModal } from "@/components/modals/delete-modal"
+import { UploadEmployeeFilesModal } from "@/components/modals/upload-employee-files-modal"
+import { EmployeeDetailModal } from "@/components/modals/employee-detail-modal"
 import { useTranslations } from 'next-intl'
+import { getErrorMessage, getErrorTitle } from "@/lib/error-utils"
 
 
 export function EmployeesPageClient() {
@@ -22,6 +25,8 @@ export function EmployeesPageClient() {
   const [createEmployeeModalOpen, setCreateEmployeeModalOpen] = useState(false);
   const [editEmployeeModalOpen, setEditEmployeeModalOpen] = useState(false);
   const [deleteEmployeeModalOpen, setDeleteEmployeeModalOpen] = useState(false);
+  const [uploadFilesModalOpen, setUploadFilesModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(0);
   
@@ -33,6 +38,7 @@ export function EmployeesPageClient() {
   // Translation hooks
   const t = useTranslations('employees');
   const tCommon = useTranslations('common');
+  const tErrors = useTranslations('errors');
 
   // Debug authentication state
   console.debug("[Employees] Auth state:", {
@@ -101,7 +107,7 @@ export function EmployeesPageClient() {
     refetchInterval: false,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    enabled: isVisible && role === "admin" && isAuthenticated,
+    enabled: isVisible && (role === "admin" || role === "HR-manager") && isAuthenticated,
   });
 
   // Monitor error state for debugging
@@ -138,30 +144,30 @@ export function EmployeesPageClient() {
     onError: (err: any) => {
       console.error("[Update Employee] Error:", err);
       console.error("[Update Employee] Error response:", err?.response?.data);
+      console.error("[Update Employee] Error status:", err?.response?.status);
       console.error("[Update Employee] Error details:", err?.response?.data?.error?.details);
+      console.error("[Update Employee] Full error data:", JSON.stringify(err?.response?.data, null, 2));
       
-      let errorMessage = "Failed to update employee.";
+      const errorTitle = getErrorTitle(err, tErrors);
+      let errorMessage = getErrorMessage(err, tErrors);
       
-      if (err?.response?.data?.error) {
-        const error = err.response.data.error;
-        if (error.details && Array.isArray(error.details) && error.details.length > 0) {
-          // Show specific validation errors
-          errorMessage = error.details.map((d: any) => `${d.field}: ${d.message}`).join(', ');
-        } else if (error.message) {
-          errorMessage = error.message;
-        } else if (typeof error === 'string') {
-          errorMessage = error;
-        } else {
-          errorMessage = JSON.stringify(error);
+      // Try to extract detailed error message from response
+      const errorData = err?.response?.data;
+      if (errorData) {
+        // Check for validation errors
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          errorMessage = errorData.errors.map((e: any) => e.message || e).join(', ');
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = typeof errorData.error === 'string' ? errorData.error : (errorData.error.message || errorMessage);
+        } else if (typeof errorData === 'string') {
+          errorMessage = errorData;
         }
-      } else if (err?.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err?.message) {
-        errorMessage = err.message;
       }
       
       toast({
-        title: "Update failed",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
       });
@@ -190,29 +196,8 @@ export function EmployeesPageClient() {
       console.error("[Delete Employee] Error response:", err?.response?.data);
       console.error("[Delete Employee] Error details:", err?.response?.data?.error?.details);
       
-      let errorMessage = "Failed to delete employee.";
-      let errorTitle = "Delete failed";
-      
-      // Handle 409 Conflict errors specifically
-      if (err?.response?.status === 409) {
-        errorTitle = "Cannot delete employee";
-        errorMessage = "This employee cannot be deleted because they have associated records (tickets, documents, or other data). Please reassign or remove these records first.";
-      } else if (err?.response?.data?.error) {
-        const error = err.response.data.error;
-        if (error.details && Array.isArray(error.details) && error.details.length > 0) {
-          errorMessage = error.details.map((d: any) => `${d.field}: ${d.message}`).join(', ');
-        } else if (error.message) {
-          errorMessage = error.message;
-        } else if (typeof error === 'string') {
-          errorMessage = error;
-        } else {
-          errorMessage = JSON.stringify(error);
-        }
-      } else if (err?.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err?.message) {
-        errorMessage = err.message;
-      }
+      const errorTitle = getErrorTitle(err, tErrors);
+      const errorMessage = getErrorMessage(err, tErrors);
       
       toast({
         title: errorTitle,
@@ -239,23 +224,32 @@ export function EmployeesPageClient() {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
     },
     onError: (err: any) => {
+      console.error("[Create Employee] Error:", err);
+      console.error("[Create Employee] Error response:", err?.response?.data);
+      console.error("[Create Employee] Error status:", err?.response?.status);
+      console.error("[Create Employee] Error details:", err?.response?.data?.error?.details);
+      console.error("[Create Employee] Full error data:", JSON.stringify(err?.response?.data, null, 2));
       
-      let errorMessage = "Failed to create employee.";
+      const errorTitle = getErrorTitle(err, tErrors);
+      let errorMessage = getErrorMessage(err, tErrors);
       
-      if (err?.response?.data?.error) {
-        if (typeof err.response.data.error === 'object') {
-          errorMessage = err.response.data.error.message || err.response.data.error.details || JSON.stringify(err.response.data.error);
-        } else {
-          errorMessage = err.response.data.error;
+      // Try to extract detailed error message from response
+      const errorData = err?.response?.data;
+      if (errorData) {
+        // Check for validation errors
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          errorMessage = errorData.errors.map((e: any) => e.message || e).join(', ');
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = typeof errorData.error === 'string' ? errorData.error : (errorData.error.message || errorMessage);
+        } else if (typeof errorData === 'string') {
+          errorMessage = errorData;
         }
-      } else if (err?.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err?.message) {
-        errorMessage = err.message;
       }
       
       toast({
-        title: "Create failed",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
       });
@@ -445,6 +439,20 @@ export function EmployeesPageClient() {
                 e.preventDefault();
                 e.stopPropagation();
                 setSelectedEmployee(employee);
+                setDetailModalOpen(true);
+              }}
+              className="p-2 hover:bg-purple-50 hover:text-purple-600 rounded-md transition-colors cursor-pointer"
+              title="View details"
+              type="button"
+              style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
+            >
+              <Eye className="h-4 w-4" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setSelectedEmployee(employee);
                 setEditEmployeeModalOpen(true);
               }}
               className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors cursor-pointer"
@@ -453,6 +461,20 @@ export function EmployeesPageClient() {
               style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
             >
               <Edit className="h-4 w-4" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setSelectedEmployee(employee);
+                setUploadFilesModalOpen(true);
+              }}
+              className="p-2 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors cursor-pointer"
+              title="Upload files"
+              type="button"
+              style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
+            >
+              <Upload className="h-4 w-4" />
             </button>
             <button
               onClick={(e) => {
@@ -473,9 +495,9 @@ export function EmployeesPageClient() {
       },
       enableSorting: false,
     },
-  ], [setSelectedEmployee, setEditEmployeeModalOpen, setDeleteEmployeeModalOpen]);
+  ], [setSelectedEmployee, setEditEmployeeModalOpen, setDeleteEmployeeModalOpen, setUploadFilesModalOpen, setDetailModalOpen]);
 
-  if (role !== "admin") {
+  if (role !== "admin" && role !== "HR-manager") {
     return (
       <DashboardLayout title="Packages">
         <div className="text-center py-10 text-gray-500">
@@ -584,6 +606,18 @@ export function EmployeesPageClient() {
         onUpdateEmployee={handleUpdateEmployee}
         employee={selectedEmployee}
         isLoading={updateEmployeeMutation.isPending}
+      />
+
+      <UploadEmployeeFilesModal
+        open={uploadFilesModalOpen}
+        onOpenChange={setUploadFilesModalOpen}
+        employee={selectedEmployee}
+      />
+
+      <EmployeeDetailModal
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        employee={selectedEmployee}
       />
 
       <DeleteModal

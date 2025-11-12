@@ -86,7 +86,7 @@ export const config = {
   
   // File Upload Configuration
   upload: {
-    maxFileSize: getEnvNumber('NEXT_PUBLIC_MAX_FILE_SIZE', 10485760), // 10MB
+    maxFileSize: getEnvNumber('NEXT_PUBLIC_MAX_FILE_SIZE', 41943040), // 40MB
     maxFilesPerUpload: getEnvNumber('NEXT_PUBLIC_MAX_FILES_PER_UPLOAD', 5),
     allowedFileTypes: getEnvVar('NEXT_PUBLIC_ALLOWED_FILE_TYPES', 'pdf,doc,docx,txt,jpg,jpeg,png,gif,webp,xls,xlsx,zip,rar,json,csv').split(','),
   },

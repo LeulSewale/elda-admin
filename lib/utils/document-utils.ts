@@ -5,13 +5,22 @@ import { config } from "../config"
 import { Document } from "../api/docThreads"
 import { api } from "../axios"
 
+// Type declaration for File System Access API
+// Note: FileSystemDirectoryHandle and FileSystemFileHandle are already defined in TypeScript's DOM types
+declare global {
+  interface FileSystemWritableFileStream extends WritableStream {
+    write(data: Blob | string): Promise<void>
+    close(): Promise<void>
+  }
+}
+
 /**
  * Downloads a document file with proper file extension handling
  * @param doc - The document object
- * @param customDestination - Optional custom destination folder path
+ * @param customDestination - Optional custom destination folder (FileSystemDirectoryHandle or string path)
  * @returns Promise that resolves when download is initiated
  */
-export const downloadDocument = async (doc: Document, customDestination?: string): Promise<void> => {
+export const downloadDocument = async (doc: Document, customDestination?: FileSystemDirectoryHandle | string | null): Promise<void> => {
   try {
     const downloadUrl = config.documents.getDownloadUrl(doc.download_path)
     
@@ -35,14 +44,28 @@ export const downloadDocument = async (doc: Document, customDestination?: string
       
       const blob = response.data
       
-      // Create blob URL and download
+      // If customDestination is a FileSystemDirectoryHandle, write directly to the folder
+      if (customDestination && typeof customDestination === 'object' && 'kind' in customDestination) {
+        try {
+          const fileHandle = await (customDestination as FileSystemDirectoryHandle).getFileHandle(fileName, { create: true })
+          const writable = await fileHandle.createWritable()
+          await writable.write(blob)
+          await writable.close()
+          return // Successfully written to selected folder
+        } catch (error) {
+          console.error('Error writing to selected folder:', error)
+          throw new Error(`Failed to save file to selected folder: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        }
+      }
+      
+      // Create blob URL and download (for default location or string path)
       const blobUrl = globalThis.URL.createObjectURL(blob)
       const link = globalThis.document.createElement('a')
       link.href = blobUrl
       
       // Set download path based on custom destination
-      if (customDestination && customDestination.trim()) {
-        // For custom destination, we'll use the full path
+      if (customDestination && typeof customDestination === 'string' && customDestination.trim()) {
+        // For custom destination string path, we'll use the full path
         link.download = `${customDestination}/${fileName}`
       } else {
         // For default location, just use the filename
@@ -52,7 +75,7 @@ export const downloadDocument = async (doc: Document, customDestination?: string
       link.style.display = 'none'
       
       // Ensure download attribute is set
-      link.setAttribute('download', customDestination && customDestination.trim() ? `${customDestination}/${fileName}` : fileName)
+      link.setAttribute('download', customDestination && typeof customDestination === 'string' && customDestination.trim() ? `${customDestination}/${fileName}` : fileName)
       
       globalThis.document.body.appendChild(link)
       link.click()
@@ -81,13 +104,27 @@ export const downloadDocument = async (doc: Document, customDestination?: string
         
         const blob = await response.blob()
         
-        // Create blob URL and download
+        // If customDestination is a FileSystemDirectoryHandle, write directly to the folder
+        if (customDestination && typeof customDestination === 'object' && 'kind' in customDestination) {
+          try {
+            const fileHandle = await (customDestination as FileSystemDirectoryHandle).getFileHandle(fileName, { create: true })
+            const writable = await fileHandle.createWritable()
+            await writable.write(blob)
+            await writable.close()
+            return // Successfully written to selected folder
+          } catch (error) {
+            console.error('Error writing to selected folder:', error)
+            throw new Error(`Failed to save file to selected folder: ${error instanceof Error ? error.message : 'Unknown error'}`)
+          }
+        }
+        
+        // Create blob URL and download (for default location or string path)
         const blobUrl = globalThis.URL.createObjectURL(blob)
         const link = globalThis.document.createElement('a')
         link.href = blobUrl
         
         // Set download path based on custom destination
-        if (customDestination && customDestination.trim()) {
+        if (customDestination && typeof customDestination === 'string' && customDestination.trim()) {
           link.download = `${customDestination}/${fileName}`
         } else {
           link.download = fileName
@@ -96,7 +133,7 @@ export const downloadDocument = async (doc: Document, customDestination?: string
         link.style.display = 'none'
         
         // Ensure download attribute is set
-        link.setAttribute('download', customDestination && customDestination.trim() ? `${customDestination}/${fileName}` : fileName)
+        link.setAttribute('download', customDestination && typeof customDestination === 'string' && customDestination.trim() ? `${customDestination}/${fileName}` : fileName)
         
         globalThis.document.body.appendChild(link)
         link.click()
@@ -109,11 +146,13 @@ export const downloadDocument = async (doc: Document, customDestination?: string
         // Method 3: Final fallback to direct link download
         console.warn('Fetch download failed, trying direct link:', fetchError)
         
+        // For direct link fallback, we can't use FileSystemDirectoryHandle
+        // So we'll just download to default location
         const link = globalThis.document.createElement('a')
         link.href = downloadUrl
         
         // Set download path based on custom destination
-        if (customDestination && customDestination.trim()) {
+        if (customDestination && typeof customDestination === 'string' && customDestination.trim()) {
           link.download = `${customDestination}/${fileName}`
         } else {
           link.download = fileName
@@ -122,7 +161,7 @@ export const downloadDocument = async (doc: Document, customDestination?: string
         link.style.display = 'none'
         
         // Add proper attributes to force download
-        link.setAttribute('download', customDestination && customDestination.trim() ? `${customDestination}/${fileName}` : fileName)
+        link.setAttribute('download', customDestination && typeof customDestination === 'string' && customDestination.trim() ? `${customDestination}/${fileName}` : fileName)
         link.setAttribute('type', doc.mime_type)
         
         globalThis.document.body.appendChild(link)

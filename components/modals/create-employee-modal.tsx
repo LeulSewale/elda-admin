@@ -1,14 +1,15 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useForm as useReactHookForm, Controller } from "react-hook-form"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { GlobalModal } from "./global-modal"
 import { useEffect } from "react"
+import { User, Mail, Phone, Briefcase, Building2, MapPin, DollarSign, UserPlus, Loader2 } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 interface CreateEmployeeModalProps {
   open: boolean
@@ -17,17 +18,19 @@ interface CreateEmployeeModalProps {
   isLoading?: boolean
 }
 
-function EmployeeFormFields({ control, isLoading }: { control: any; isLoading?: boolean }) {
+function PersonalInfoFields({ control, isLoading }: { control: any; isLoading?: boolean }) {
   return (
     <>
-      <div className="grid grid-cols-2 gap-4">
         <FormField
           control={control}
           name="user.name"
           rules={{ required: "Name is required" }}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name</FormLabel>
+            <FormLabel className="flex items-center gap-2">
+              <User className="w-4 h-4 text-gray-400" />
+              Full Name
+            </FormLabel>
               <FormControl>
                 <Input {...field} disabled={isLoading} placeholder="Enter full name" />
               </FormControl>
@@ -47,7 +50,10 @@ function EmployeeFormFields({ control, isLoading }: { control: any; isLoading?: 
           }}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+            <FormLabel className="flex items-center gap-2">
+              <Mail className="w-4 h-4 text-gray-400" />
+              Email
+            </FormLabel>
               <FormControl>
                 <Input type="email" {...field} disabled={isLoading} placeholder="Enter email" />
               </FormControl>
@@ -61,108 +67,12 @@ function EmployeeFormFields({ control, isLoading }: { control: any; isLoading?: 
           rules={{ required: "Phone is required" }}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone</FormLabel>
+            <FormLabel className="flex items-center gap-2">
+              <Phone className="w-4 h-4 text-gray-400" />
+              Phone
+            </FormLabel>
               <FormControl>
                 <Input {...field} disabled={isLoading} placeholder="+251900000000" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="job_title"
-          rules={{ required: "Job title is required" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Job Title</FormLabel>
-              <FormControl>
-                <Input {...field} disabled={isLoading} placeholder="Software Engineer" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="department"
-          rules={{ required: "Department is required" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Department</FormLabel>
-              <FormControl>
-                <Controller
-                  control={control}
-                  name="department"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange} disabled={isLoading}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select department" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="R&D">R&D</SelectItem>
-                        <SelectItem value="Engineering">Engineering</SelectItem>
-                        <SelectItem value="Marketing">Marketing</SelectItem>
-                        <SelectItem value="Sales">Sales</SelectItem>
-                        <SelectItem value="HR">HR</SelectItem>
-                        <SelectItem value="Finance">Finance</SelectItem>
-                        <SelectItem value="Operations">Operations</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="employment_type"
-          rules={{ required: "Employment type is required" }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Employment Type</FormLabel>
-              <FormControl>
-                <Controller
-                  control={control}
-                  name="employment_type"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange} disabled={isLoading}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select employment type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="full_time">Full Time</SelectItem>
-                        <SelectItem value="part_time">Part Time</SelectItem>
-                        <SelectItem value="contractual">Contractual</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={control}
-          name="salary"
-          rules={{ 
-            required: "Salary is required",
-            min: { value: 1, message: "Salary must be greater than 0" }
-          }}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Salary (Birr)</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  {...field} 
-                  disabled={isLoading} 
-                  placeholder="372928"
-                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -174,7 +84,10 @@ function EmployeeFormFields({ control, isLoading }: { control: any; isLoading?: 
           rules={{ required: "District is required" }}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>District</FormLabel>
+            <FormLabel className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-gray-400" />
+              District
+            </FormLabel>
               <FormControl>
                 <Controller
                   control={control}
@@ -202,13 +115,97 @@ function EmployeeFormFields({ control, isLoading }: { control: any; isLoading?: 
             </FormItem>
           )}
         />
-       
-      </div>
+    </>
+  )
+}
+
+function EmploymentInfoFields({ control, isLoading }: { control: any; isLoading?: boolean }) {
+  return (
+    <>
+      <FormField
+        control={control}
+        name="job_title"
+        rules={{ required: "Job title is required" }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="flex items-center gap-2">
+              <Briefcase className="w-4 h-4 text-gray-400" />
+              Job Title
+            </FormLabel>
+            <FormControl>
+              <Input {...field} disabled={isLoading} placeholder="Software Engineer" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name="department"
+        rules={{ required: "Department is required" }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-gray-400" />
+              Department
+            </FormLabel>
+            <FormControl>
+              <Input {...field} disabled={isLoading} placeholder="Enter department" />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name="employment_type"
+        rules={{ required: "Employment type is required" }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-gray-400" />
+              Employment Type
+            </FormLabel>
+            <FormControl>
+              <Input {...field} disabled={isLoading} placeholder="full_time, part_time, etc." />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={control}
+        name="salary"
+        rules={{ 
+          required: "Salary is required",
+          min: { value: 1, message: "Salary must be greater than 0" }
+        }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-gray-400" />
+              Salary (ETB)
+            </FormLabel>
+            <FormControl>
+              <Input 
+                type="number" 
+                {...field} 
+                disabled={isLoading} 
+                placeholder="372928"
+                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </>
   )
 }
 
 export function CreateEmployeeModal({ open, onOpenChange, onCreateEmployee, isLoading = false }: CreateEmployeeModalProps) {
+  const t = useTranslations('employees')
+  const tCommon = useTranslations('common')
   
   const form = useReactHookForm<{
     user: {
@@ -238,7 +235,6 @@ export function CreateEmployeeModal({ open, onOpenChange, onCreateEmployee, isLo
     },
   })
 
-
   useEffect(() => {
     if (open) {
       form.reset({
@@ -261,41 +257,116 @@ export function CreateEmployeeModal({ open, onOpenChange, onCreateEmployee, isLo
     <GlobalModal
       open={open}
       onOpenChange={onOpenChange}
-      title="Create New Employee"
-      description="Fill in the employee details to create a new employee record"
+      title={t('createEmployee') || "Create New Employee"}
+      maxWidth="4xl"
       actions={
         <>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-            Cancel
+            {tCommon('cancel') || "Cancel"}
           </Button>
           <Button type="submit" form="create-employee-form" disabled={isLoading}>
-            {isLoading ? "Creating..." : "Create Employee"}
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                {tCommon('creating') || "Creating..."}
+              </>
+            ) : (
+              <>
+                <UserPlus className="w-4 h-4 mr-2" />
+                {t('createEmployee') || "Create Employee"}
+              </>
+            )}
           </Button>
         </>
       }
     >
+      <div className="space-y-6">
+        {/* Header Info */}
+        <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-600 rounded-lg">
+              <UserPlus className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Creating New Employee</p>
+              <p className="text-base font-semibold text-gray-900">Fill in the details below to create a new employee record</p>
+            </div>
+          </div>
+        </div>
+
       <Form {...form}>
         <form
           id="create-employee-form"
           onSubmit={form.handleSubmit((data) => {
             console.debug("[Create Employee] Form data:", data);
-            // Clean up the data before sending
+              
+              // Validate required fields
+              if (!data.user.name?.trim() || !data.user.email?.trim() || !data.user.phone?.trim()) {
+                console.error("[Create Employee] Missing required user fields");
+                return;
+              }
+              if (!data.job_title?.trim() || !data.department?.trim() || !data.employment_type?.trim() || !data.district?.trim()) {
+                console.error("[Create Employee] Missing required employee fields");
+                return;
+              }
+              if (!data.salary || data.salary <= 0) {
+                console.error("[Create Employee] Invalid salary");
+                return;
+              }
+              
+              // Clean up the data before sending - match API structure exactly
             const payload: any = {
-              ...data,
-              salary: parseInt(data.salary.toString()), // Convert back to number
-            }
-            // Don't include manager_id if it's empty or null
-            // The backend doesn't require it and will fail validation with empty string
-            console.debug("[Create Employee] Final payload:", payload);
+                user: {
+                  email: data.user.email.trim(),
+                  name: data.user.name.trim(),
+                  phone: data.user.phone.trim(),
+                  is_active: data.user.is_active ?? true, // Default to true if not set
+                },
+                job_title: data.job_title.trim(),
+                salary: parseInt(data.salary.toString()), // Convert to number (already validated > 0)
+                district: data.district.trim(),
+                department: data.department.trim(),
+                employment_type: data.employment_type.trim(),
+                status: "active", // Default status as per API requirement
+              }
+              
+              console.debug("[Create Employee] Final payload:", JSON.stringify(payload, null, 2));
             onCreateEmployee(payload)
           })}
-          className="space-y-4"
-        >
-          <div className="space-y-4">
-            <EmployeeFormFields control={form.control} isLoading={isLoading} />
+            className="space-y-6"
+          >
+            {/* Personal Information Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <User className="w-5 h-5 text-[#4082ea]" />
+                  Personal Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <PersonalInfoFields control={form.control} isLoading={isLoading} />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Employment Information Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Briefcase className="w-5 h-5 text-[#4082ea]" />
+                  Employment Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <EmploymentInfoFields control={form.control} isLoading={isLoading} />
           </div>
+              </CardContent>
+            </Card>
         </form>
       </Form>
+      </div>
     </GlobalModal>
   )
 }

@@ -32,6 +32,8 @@ interface DataTableProps<TData, TValue> {
   // Export functionality
   onExportCSV?: () => void
   showExportButton?: boolean
+  // Refresh functionality
+  onRefresh?: () => void | Promise<void>
   // Server-side pagination support
   pageIndex?: number
   pageSize?: number
@@ -53,6 +55,7 @@ export function DataTable<TData, TValue>({
   quickFilterLimit = 5,
   onExportCSV,
   showExportButton = false,
+  onRefresh,
   pageIndex,
   pageSize,
   pageCount,
@@ -227,7 +230,14 @@ export function DataTable<TData, TValue>({
               variant="outline"
               size="sm"
               className="h-10 border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
-              onClick={() => table.reset()}
+              onClick={async () => {
+                if (onRefresh) {
+                  await onRefresh();
+                } else {
+                  table.reset();
+                }
+              }}
+              title={onRefresh ? tCommon('refresh') : tCommon('reset')}
             >
               <RefreshCw className="h-4 w-4" />
             </Button>

@@ -18,45 +18,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useTabVisibility } from "@/hooks/use-tab-visibility"
 import { useAuth } from "@/hooks/use-auth"
 import { useTranslations } from 'next-intl'
-
-/**
- * ADVANCED PERFORMANCE OPTIMIZATIONS:
- * 
- * 1. STALE TIME OPTIMIZATION:
- *    - staleTime: 15 minutes - Data considered fresh for 15 minutes
- *    - gcTime: 30 minutes - Cache kept in memory for 30 minutes
- *    - Prevents unnecessary re-fetching of recent data
- * 
- * 2. TAB VISIBILITY OPTIMIZATION:
- *    - enabled: isVisible - Only fetch when tab is active
- *    - Prevents API calls when tab is inactive/background
- *    - Tracks user activity and tab focus state
- * 
- * 3. SMART REFRESH SYSTEM:
- *    - Debounced refresh (2-second minimum interval)
- *    - Activity-aware refresh (refresh if inactive >5 minutes)
- *    - Time-based refresh (refresh if last refresh >30 seconds ago)
- *    - Prevents excessive API calls
- * 
- * 4. REACT QUERY CONFIGURATION:
- *    - refetchOnWindowFocus: false - No fetch on window focus
- *    - refetchOnMount: false - No fetch on component mount if data exists
- *    - refetchOnReconnect: true - Fetch on network reconnect
- *    - refetchInterval: false - No automatic polling
- *    - retry: 2 - Retry failed requests twice
- *    - retryDelay: Exponential backoff with max 30s delay
- * 
- * 5. PERFORMANCE MONITORING:
- *    - Visual indicators for tab status
- *    - Cache size display
- *    - Syncing status indicators
- *    - Real-time performance feedback
- * 
- * 6. OPTIMISTIC UPDATES:
- *    - Immediate UI feedback for user actions
- *    - Rollback on error
- *    - Better user experience
- */
+import { getErrorMessage, getErrorTitle } from "@/lib/error-utils"
 
 export function UsersPageClient() {
   const [detailModalOpen, setDetailModalOpen] = useState(false)
@@ -77,6 +39,7 @@ export function UsersPageClient() {
   // Translation hooks
   const t = useTranslations('users');
   const tCommon = useTranslations('common');
+  const tErrors = useTranslations('errors');
 
   // Server provides: { status, message, data: User[], paging }
   
@@ -192,24 +155,11 @@ export function UsersPageClient() {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
     onError: (err: any) => {
-      // Try to get error message from various possible locations
-      let errorMessage = "Failed to create user.";
-      
-      if (err?.response?.data?.error) {
-        // If error is an object, try to extract message
-        if (typeof err.response.data.error === 'object') {
-          errorMessage = err.response.data.error.message || err.response.data.error.details || JSON.stringify(err.response.data.error);
-        } else {
-          errorMessage = err.response.data.error;
-        }
-      } else if (err?.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err?.message) {
-        errorMessage = err.message;
-      }
+      const errorTitle = getErrorTitle(err, tErrors);
+      const errorMessage = getErrorMessage(err, tErrors);
       
       toast({
-        title: "Create failed",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
       });

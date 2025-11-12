@@ -9,6 +9,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import React, { useState, useEffect, useCallback } from "react"
 import { Eye, Plus, UserPlus, Edit } from "lucide-react"
 import { useTranslations } from 'next-intl'
+import { useRouter, usePathname } from "next/navigation"
+import { getCurrentLocaleFromPath, getPreferredLanguage } from "@/lib/language-utils"
 
 import { CreateRequestModal } from "@/components/modals/create-request-modal"
 import { AssignRequestModal } from "@/components/modals/assign-request-modal"
@@ -21,6 +23,7 @@ import { requestsApi } from "@/lib/api/requests"
 import { toast } from "@/hooks/use-toast"
 import { useQuery } from "@tanstack/react-query"
 import { Request } from "@/lib/types/requests"
+import { getErrorMessage, getErrorTitle } from "@/lib/error-utils"
 
 function useTabVisibility() {
   const [isVisible, setIsVisible] = useState(true);
@@ -59,6 +62,8 @@ function useTabVisibility() {
 
 export default function RequestsPageClient() {
   const queryClient = useQueryClient();
+  const router = useRouter();
+  const pathname = usePathname();
   const { isVisible, lastActivity } = useTabVisibility();
   const [selectedRequest, setSelectedRequest] = useState<any | null>(null);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
@@ -76,7 +81,16 @@ export default function RequestsPageClient() {
   // Translation hooks
   const t = useTranslations('requests');
   const tCommon = useTranslations('common');
-  const { role } = useAuth();
+  const tErrors = useTranslations('errors');
+  const { role, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  
+  // Redirect to login if not authenticated (after loading completes)
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) {
+      const currentLocale = getCurrentLocaleFromPath(pathname) || getPreferredLanguage();
+      router.replace(`/${currentLocale}/login`);
+    }
+  }, [isAuthenticated, isAuthLoading, router, pathname]);
 
   // Fetch request details by ID
   const { data: requestDetail, isLoading: isLoadingDetail } = useQuery({
@@ -91,35 +105,70 @@ export default function RequestsPageClient() {
   });
 
   // Use the custom hook for role-based request fetching with date range
-  const { requests, isLoading, isFetching, refetch, userRole } = useRequests({
+  const { requests, isLoading: isRequestsLoading, isFetching, refetch, userRole } = useRequests({
     startDate: dateRange.startDate || undefined,
     endDate: dateRange.endDate || undefined
   });
 
   // Create request mutation for users
   const createRequestMutation = useMutation({
-    mutationFn: ({ data, files }: { data: any, files: File[] }) => {
-      console.debug("[Requests] Mutation received data:", data);
-      console.debug("[Requests] Mutation received files:", files);
-      return requestsApi.createRequest(data, files);
+    mutationFn: ({ data, files, titles }: { data: any, files: File[], titles?: string[] }) => {
+      if (process.env.NODE_ENV === 'development') {
+        console.debug("[Requests] Mutation received data:", data);
+        console.debug("[Requests] Mutation received files:", files);
+        console.debug("[Requests] Mutation received titles:", titles);
+      }
+      return requestsApi.createRequest(data, files, titles);
     },
-    onSuccess: () => {
+    onSuccess: async (response) => {
       toast({
         title: "Request Created",
         description: "Your request has been submitted successfully.",
       });
-      queryClient.invalidateQueries({ queryKey: ["requests", userRole] });
+      
+      // Close modal first
       setOpenModal(false);
+      
+      // Invalidate all request queries to ensure fresh data
+      await queryClient.invalidateQueries({ 
+        queryKey: ["requests"],
+        refetchType: 'active' // Only refetch active queries
+      });
+      
+      // Explicitly refetch the current query to get updated data
+      await refetch();
     },
     onError: (error: any) => {
       console.error("[Requests] Create request error:", error);
       console.error("[Requests] Error response:", error?.response?.data);
+      console.error("[Requests] Error response (full):", JSON.stringify(error?.response?.data, null, 2));
       console.error("[Requests] Error status:", error?.response?.status);
-      console.error("[Requests] Request data:", error?.config?.data);
+      console.error("[Requests] Error headers:", error?.response?.headers);
+      
+      // Get base error message first
+      const errorTitle = getErrorTitle(error, tErrors);
+      const baseErrorMessage = getErrorMessage(error, tErrors);
+      
+      // Try to extract detailed error message from response
+      const errorData = error?.response?.data;
+      let errorMessage = baseErrorMessage;
+      
+      if (errorData) {
+        // Check for validation errors
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          errorMessage = errorData.errors.map((e: any) => e.message || e).join(', ');
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.error) {
+          errorMessage = typeof errorData.error === 'string' ? errorData.error : (errorData.error.message || baseErrorMessage);
+        } else if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        }
+      }
       
       toast({
-        title: "Error",
-        description: error?.response?.data?.message || error?.message || "Failed to create request.",
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -246,11 +295,23 @@ export default function RequestsPageClient() {
     },
     { 
       accessorKey: "service_type", 
-      header: "Service",
+      header: t('serviceType'),
       size: 100,
-      cell: ({ row }: any) => (
-        <div className="text-gray-600 capitalize text-sm">{row.original.service_type}</div>
-      )
+      cell: ({ row }: any) => {
+        const formatServiceType = (type: string) => {
+          const types: Record<string, string> = {
+            inperson_conusltation: t('inpersonConsultation'),
+            phone: t('phoneService'),
+            court_apperance: t('courtAppearance'),
+            hotline: t('hotline'),
+            other: t('other'),
+          }
+          return types[type] || type
+        }
+        return (
+          <div className="text-gray-600 text-sm">{formatServiceType(row.original.service_type)}</div>
+        )
+      }
     },
     { 
       accessorKey: "priority", 
@@ -356,15 +417,15 @@ export default function RequestsPageClient() {
 
 
 
-  // Show loading state
-  if (isLoading) {
+  // Show loading state while checking authentication
+  if (isAuthLoading) {
     return (
       <DashboardLayout title="Request Management" isFetching={true}>
         <div className="p-6">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4082ea] mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading requests...</p>
+              <p className="text-gray-600">Loading...</p>
             </div>
           </div>
         </div>
@@ -372,24 +433,31 @@ export default function RequestsPageClient() {
     );
   }
 
-  // Show error state if authentication fails
-  if (!role) {
+  // If not authenticated, the useEffect will redirect, but show loading in the meantime
+  if (!isAuthenticated) {
     return (
       <DashboardLayout title="Request Management" isFetching={false}>
         <div className="p-6">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center">
-              <div className="text-red-600">
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4082ea] mx-auto mb-4"></div>
+              <p className="text-gray-600">Redirecting to login...</p>
+            </div>
               </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Authentication Required</h3>
-                <p className="text-sm text-red-700 mt-1">
-                  Please log in to view requests. You will be redirected to the login page.
-                </p>
               </div>
+      </DashboardLayout>
+    );
+  }
+
+  // Show loading state for requests
+  if (isRequestsLoading) {
+    return (
+      <DashboardLayout title="Request Management" isFetching={true}>
+        <div className="p-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#4082ea] mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading requests...</p>
             </div>
           </div>
         </div>
@@ -428,13 +496,21 @@ export default function RequestsPageClient() {
               quickFilterKey="status"
               searchKey="description"
               searchPlaceholder={t('searchPlaceholder')}
+              onRefresh={async () => {
+                await refetch();
+              }}
             />
           </div>
         </div>
         <CreateRequestModal
                   open={openModal}
                   onOpenChange={(open) => setOpenModal(open)}
-                  onSubmit={(payload) => createRequestMutation.mutate(payload)}
+                  onSubmit={(payload) => {
+                    // Prevent double submission - only submit if mutation is not already pending
+                    if (!createRequestMutation.isPending) {
+                      createRequestMutation.mutate(payload)
+                    }
+                  }}
                 />
         
         {/* Admin-only modals */}

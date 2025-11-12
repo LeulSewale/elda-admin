@@ -39,7 +39,13 @@ const navigation = [
     name: "ADMINISTRATION",
     items: [
       { name: "userManagement", href: "/users", icon: User, roles: ["admin"] },
-      { name: "employeeManagement", href: "/employees", icon: Users , roles: ["admin"] },
+      { name: "employeeManagement", href: "/employees", icon: Users , roles: ["admin", "HR-manager"] },
+    ],
+  },
+  {
+    name: "HR_MENU",
+    items: [
+      { name: "employeeManagement", href: "/employees", icon: Users , roles: ["HR-manager"] },
     ],
   },
  
@@ -90,15 +96,30 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
           {navigation
             .map((section) => (
               <div key={section.name}>
-                {!collapsed && (role === "admin" || section.name !== "ADMINISTRATION") && (
-                  <h3 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 border-b border-gray-100 pb-2">
-                    {t(section.name.toLowerCase())}
-                  </h3>
-                )}
-                <div className="space-y-1">
-                  {section.items
-                    .filter(item => !item.roles || !role || item.roles.includes(role))
-                    .map((item) => {
+                {(() => {
+                  // Filter items first to see if section has any visible items
+                  const visibleItems = section.items.filter(item => {
+                    // For HR-manager: only show items from HR_MENU section
+                    if (role === "HR-manager") {
+                      return section.name === "HR_MENU" && (!item.roles || item.roles.includes(role))
+                    }
+                    // For others: filter by role as normal
+                    return !item.roles || !role || item.roles.includes(role)
+                  })
+                  
+                  // Only show section if it has visible items
+                  if (visibleItems.length === 0) return null
+                  
+                  // Show section header
+                  return (
+                    <>
+                      {!collapsed && (
+                        <h3 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 border-b border-gray-100 pb-2">
+                          {t(section.name.toLowerCase())}
+                        </h3>
+                      )}
+                      <div className="space-y-1">
+                        {visibleItems.map((item) => {
                       const computedHref = item.name === "ticketManagement" ? (role === "admin" ? "/tickets/admin" : "/tickets") : item.href
                       // Add locale prefix to href
                       const localizedHref = `/${currentLocale}${computedHref}`
@@ -138,8 +159,11 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
                       }
 
                       return <div key={item.name}>{linkContent}</div>
-                    })}
-                </div>
+                        })}
+                      </div>
+                    </>
+                  )
+                })()}
               </div>
             ))}
         </TooltipProvider>

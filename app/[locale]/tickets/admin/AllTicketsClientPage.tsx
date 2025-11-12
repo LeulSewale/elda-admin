@@ -28,6 +28,7 @@ import {
   Check
 } from "lucide-react"
 import { useTranslations } from 'next-intl'
+import { getErrorMessage, getErrorTitle } from "@/lib/error-utils"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/hooks/use-auth"
@@ -102,6 +103,7 @@ export default function AllTicketsClientPage() {
   // Translation hooks
   const t = useTranslations('tickets');
   const tCommon = useTranslations('common');
+  const tErrors = useTranslations('errors');
 
 
   
@@ -161,7 +163,9 @@ export default function AllTicketsClientPage() {
       if (context?.previousData) {
         queryClient.setQueryData(["tickets", userRole], context.previousData);
       }
-      toast({ title: "Error", description: err?.response?.data?.message || "Failed to update ticket.", variant: "destructive" });
+      const errorTitle = getErrorTitle(err, tErrors);
+      const errorMessage = getErrorMessage(err, tErrors);
+      toast({ title: errorTitle, description: errorMessage, variant: "destructive" });
     },
     onSettled: () => {
       // Always refetch after error or success to ensure data consistency
@@ -202,7 +206,9 @@ export default function AllTicketsClientPage() {
     },
     onError: (error: any) => {
       console.error("[Admin Tickets] Create ticket error:", error);
-      toast({ title: "Failed to create ticket", description: error?.response?.data?.message || "An error occurred while creating the ticket.", variant: "destructive" });
+      const errorTitle = getErrorTitle(error, tErrors);
+      const errorMessage = getErrorMessage(error, tErrors);
+      toast({ title: errorTitle, description: errorMessage, variant: "destructive" });
     }
   });
 

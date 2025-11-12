@@ -9,7 +9,7 @@ import { getPreferredLanguage, getCurrentLocaleFromPath } from "@/lib/language-u
 export function HomePageClient() {
   const router = useRouter()
   const pathname = usePathname()
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, role } = useAuth({ redirectOnFail: false })
 
   useEffect(() => {
     if (!isLoading) {
@@ -17,12 +17,17 @@ export function HomePageClient() {
       const currentLocale = getCurrentLocaleFromPath(pathname) || getPreferredLanguage()
       
       if (isAuthenticated) {
-        router.push(`/${currentLocale}/dashboard`)
+        // Redirect based on role
+        if (role === "HR-manager") {
+          router.push(`/${currentLocale}/employees`)
+        } else {
+          router.push(`/${currentLocale}/dashboard`)
+        }
       } else {
         router.push(`/${currentLocale}/login`)
       }
     }
-  }, [isAuthenticated, isLoading, router, pathname])
+  }, [isAuthenticated, isLoading, role, router, pathname])
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -31,4 +36,4 @@ export function HomePageClient() {
       </div>
     </div>
   )
-} 
+}

@@ -4,11 +4,12 @@ export type RequestStatus = 'pending' | 'in_progress' | 'completed' | 'rejected'
 export type RequestPriority = 'low' | 'medium' | 'high' | 'critical'
 
 export interface RequestDocument {
+  id?: string
   name: string
-  url: string
-  publicId: string
-  type: string
-  size: number
+  url?: string
+  publicId?: string
+  type?: string
+  size?: number
 }
 
 export interface RequestNote {
@@ -35,13 +36,32 @@ export interface Request extends BaseDocument {
   description: string
   contact_method: string
   remarks: string | null
-  is_confidential: boolean
+  is_confidential?: boolean
+  is_for_other?: boolean
+  // Self person details (when is_for_other is false)
+  sex?: string
+  region?: string
+  city?: string
+  sub_city?: string
+  kebele?: string
+  age?: number | null
+  // Other person details (when is_for_other is true)
+  other_name?: string | null
+  other_sex?: string | null
+  other_age?: number | null
+  other_phone_1?: string | null
+  other_phone_2?: string | null
+  other_region?: string | null
+  other_city?: string | null
+  other_subcity?: string | null
+  other_kebele?: string | null
   created_at: string
   updated_at: string
   created_by_name: string
   created_by_email: string
   assigned_to_name: string | null
   assigned_to_email: string | null
+  attachment_count?: string | number
   rep_attachment_id: string | null
   // Legacy fields for backward compatibility
   title?: string

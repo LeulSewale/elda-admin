@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Dialog,
@@ -11,15 +10,32 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { FolderOpen, Download, FileText } from "lucide-react"
+import { FolderOpen, Download } from "lucide-react"
 import { Document } from "@/lib/api/docThreads"
+
+// Type declaration for File System Access API
+// Note: FileSystemDirectoryHandle and FileSystemFileHandle are already defined in TypeScript's DOM types
+// We only need to extend them with additional methods if needed
+declare global {
+  interface FileSystemWritableFileStream extends WritableStream {
+    write(data: Blob | string): Promise<void>
+    close(): Promise<void>
+  }
+  
+  function showDirectoryPicker(options?: { mode?: 'read' | 'readwrite' }): Promise<FileSystemDirectoryHandle>
+}
 
 interface DownloadDestinationDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   document: Document | null
-  onDownload: (destination: string) => void
+  onDownload: (destination: FileSystemDirectoryHandle | null) => void
   isLoading?: boolean
+}
+
+// Check if File System Access API is supported
+const isFileSystemAccessSupported = () => {
+  return 'showDirectoryPicker' in globalThis
 }
 
 export function DownloadDestinationDialog({ 
@@ -29,14 +45,39 @@ export function DownloadDestinationDialog({
   onDownload, 
   isLoading = false 
 }: DownloadDestinationDialogProps) {
-  const [destination, setDestination] = useState("")
+  const [selectedFolder, setSelectedFolder] = useState<FileSystemDirectoryHandle | null>(null)
   const [useDefaultLocation, setUseDefaultLocation] = useState(true)
+  const [isSelectingFolder, setIsSelectingFolder] = useState(false)
+
+  const handleSelectFolder = async () => {
+    if (!isFileSystemAccessSupported()) {
+      alert("Folder selection is not supported in your browser. Please use a modern browser like Chrome or Edge.")
+      return
+    }
+
+    try {
+      setIsSelectingFolder(true)
+      const directoryHandle = await (globalThis as any).showDirectoryPicker({
+        mode: 'readwrite'
+      })
+      setSelectedFolder(directoryHandle)
+      setUseDefaultLocation(false)
+    } catch (error: any) {
+      // User cancelled or error occurred
+      if (error.name !== 'AbortError') {
+        console.error('Error selecting folder:', error)
+        alert("Failed to select folder. Please try again.")
+      }
+    } finally {
+      setIsSelectingFolder(false)
+    }
+  }
 
   const handleDownload = () => {
     if (useDefaultLocation) {
-      onDownload("")
-    } else if (destination.trim()) {
-      onDownload(destination.trim())
+      onDownload(null)
+    } else {
+      onDownload(selectedFolder)
     }
   }
 
@@ -44,7 +85,7 @@ export function DownloadDestinationDialog({
     onOpenChange(newOpen)
     if (!newOpen) {
       // Reset form when closing
-      setDestination("")
+      setSelectedFolder(null)
       setUseDefaultLocation(true)
     }
   }
@@ -97,38 +138,51 @@ export function DownloadDestinationDialog({
             </div>
 
             {/* Custom Location Option */}
-            <div className="flex items-center space-x-3">
-              <input
-                type="radio"
-                id="custom-location"
-                name="download-location"
-                checked={!useDefaultLocation}
-                onChange={() => setUseDefaultLocation(false)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-              />
-              <Label htmlFor="custom-location" className="cursor-pointer">
-                Choose custom location
-              </Label>
-            </div>
-
-            {/* Custom Path Input */}
-            {!useDefaultLocation && (
-              <div className="ml-7 space-y-2">
-                <Label htmlFor="destination-path" className="text-sm text-gray-600">
-                  Enter folder path (e.g., C:\Users\YourName\Documents)
-                </Label>
-                <Input
-                  id="destination-path"
-                  placeholder="Enter destination folder path..."
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  className="font-mono text-sm"
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="radio"
+                  id="custom-location"
+                  name="download-location"
+                  checked={!useDefaultLocation}
+                  onChange={() => setUseDefaultLocation(false)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                 />
-                <p className="text-xs text-gray-500">
-                  Note: The file will be saved with its original name in the specified folder
-                </p>
+                <Label htmlFor="custom-location" className="cursor-pointer">
+                  Choose custom location
+                </Label>
               </div>
-            )}
+
+              {/* Folder Selection Button */}
+              {!useDefaultLocation && (
+                <div className="ml-7 space-y-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSelectFolder}
+                    disabled={isSelectingFolder || !isFileSystemAccessSupported()}
+                    className="w-full justify-start"
+                  >
+                    <FolderOpen className="h-4 w-4 mr-2" />
+                    {isSelectingFolder 
+                      ? "Selecting folder..." 
+                      : selectedFolder 
+                        ? `Selected: ${selectedFolder.name}` 
+                        : "Select folder"}
+                  </Button>
+                  {selectedFolder && (
+                    <p className="text-xs text-gray-500">
+                      File will be saved to: <span className="font-mono">{selectedFolder.name}</span>
+                    </p>
+                  )}
+                  {!isFileSystemAccessSupported() && (
+                    <p className="text-xs text-yellow-600">
+                      Folder selection is not supported in your browser. Please use Chrome or Edge.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -142,7 +196,7 @@ export function DownloadDestinationDialog({
           </Button>
           <Button 
             onClick={handleDownload}
-            disabled={isLoading || (!useDefaultLocation && !destination.trim())}
+            disabled={isLoading || (!useDefaultLocation && !selectedFolder)}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             {isLoading ? (

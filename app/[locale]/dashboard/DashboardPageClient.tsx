@@ -288,9 +288,21 @@ export default function DashboardPageClient() {
         <div className="text-xs text-gray-500">{row.original.created_by_email}</div>
       </div>
     )},
-    { accessorKey: "service_type", header: tRequests('serviceType'), cell: ({ row }: any) => (
-      <div className="text-gray-600 capitalize">{row.original.service_type}</div>
-    )},
+    { accessorKey: "service_type", header: tRequests('serviceType'), cell: ({ row }: any) => {
+      const formatServiceType = (type: string) => {
+        const types: Record<string, string> = {
+          inperson_conusltation: tRequests('inpersonConsultation'),
+          phone: tRequests('phoneService'),
+          court_apperance: tRequests('courtAppearance'),
+          hotline: tRequests('hotline'),
+          other: tRequests('other'),
+        }
+        return types[type] || type
+      }
+      return (
+        <div className="text-gray-600">{formatServiceType(row.original.service_type)}</div>
+      )
+    }},
     { accessorKey: "priority", header: tRequests('priority'), cell: ({ row }: any) => {
       const priority = row.original.priority;
       const priorityColors: Record<string, string> = {

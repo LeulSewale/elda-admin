@@ -118,8 +118,8 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
   }, [notifications])
 
   const connectToSSE = useCallback(() => {
-    // Don't connect if already connected or in SSR
-    if (eventSourceRef.current || typeof window === 'undefined') return
+    // Don't connect if already connected, in SSR, or not authenticated
+    if (eventSourceRef.current || typeof window === 'undefined' || !isAuthenticated) return
 
     console.log('[SSE] Connecting to notification stream...')
 
@@ -129,13 +129,26 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
         addNotification(notification)
       },
       (error) => {
-        console.error('[SSE] Connection error:', error)
+        // Only log errors if we're actually authenticated and should be connected
+        // Suppress errors when not authenticated (expected behavior)
+        const eventSource = error?.target as EventSource
+        const wasConnected = isConnected
+        
+        // Only log errors if authenticated and we were previously connected
+        // This suppresses initial connection failures (network issues, server down, etc.)
+        if (isAuthenticated && wasConnected) {
+          console.error('[SSE] Connection error (was connected):', error)
+        }
+        
         setIsConnected(false)
         
-        // Attempt to reconnect with exponential backoff
-        if (reconnectAttemptsRef.current < maxReconnectAttempts) {
+        // Attempt to reconnect if authenticated (even on initial failures)
+        if (isAuthenticated && reconnectAttemptsRef.current < maxReconnectAttempts) {
           const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000)
-          console.log(`[SSE] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`)
+          // Only log reconnection attempts if we were previously connected
+          if (wasConnected) {
+            console.log(`[SSE] Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`)
+          }
           
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectAttemptsRef.current += 1
@@ -145,7 +158,8 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
             }
             connectToSSE()
           }, delay)
-        } else {
+        } else if (isAuthenticated && wasConnected) {
+          // Only log max attempts if we were previously connected
           console.error('[SSE] Max reconnection attempts reached')
         }
       }
@@ -165,7 +179,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
         setIsConnected(false)
       })
     }
-  }, [addNotification])
+  }, [addNotification, isAuthenticated])
 
   const disconnectFromSSE = useCallback(() => {
     if (reconnectTimeoutRef.current) {

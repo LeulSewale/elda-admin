@@ -12,7 +12,7 @@ export interface BaseDocument {
 export type StatusType = "Active" | "Suspended" | "Locked";
 export type RequestType = "Company Verification" | "Tender Request"
 export type RequestStatus = "Pending" | "Approved" | "Rejected"
-export type UserRole = "admin" | "lawyer" | "user";
+export type UserRole = "admin" | "lawyer" | "user" | "HR-manager";
 
 // ✅ Document type
 export interface Document {

@@ -2,6 +2,7 @@
 import axios, { AxiosError, AxiosRequestConfig, InternalAxiosRequestConfig } from "axios"
 import { getAccessToken } from "./token"
 import { config } from "./config"
+import { getErrorMessage } from "./error-utils"
 
 const DEBUG = config.features.debugLogging
 
@@ -14,7 +15,7 @@ export const api = axios.create({
   },
 })
 
-// 🔧 Request Interceptor: Ensure cookies are sent
+// 🔧 Request Interceptor: Ensure cookies are sent and add Authorization header if token available
 api.interceptors.request.use(
   (config) => {
     // Debug: Log request details for authentication debugging
@@ -34,8 +35,15 @@ api.interceptors.request.use(
       })
     }
     
-    // Note: We rely on cookies for authentication, not Authorization headers
-    // The backend should set cookies on login and we send them with withCredentials: true
+    // Add Authorization header if access token is available in cookies
+    // This supports backends that expect Bearer token in Authorization header
+    const accessToken = getAccessToken()
+    if (accessToken && !config.headers['Authorization']) {
+      config.headers['Authorization'] = `Bearer ${accessToken}`
+    }
+    
+    // Note: We use both cookies (withCredentials: true) and Authorization header
+    // for maximum compatibility with different backend configurations
     return config
   },
   (error) => {
@@ -60,14 +68,8 @@ api.interceptors.response.use(
         });
       }
       
-      // Provide more specific error messages based on the request type
-      if (originalRequest.url?.includes('/users/me')) {
-        error.message = "Authentication request timed out. Please check your connection and try again.";
-      } else if (originalRequest.url?.includes('/auth/refresh')) {
-        error.message = "Token refresh timed out. Please log in again.";
-      } else {
-        error.message = "Request timed out. Please check your connection and try again.";
-      }
+      // Use user-friendly error message
+      error.message = getErrorMessage(error);
     }
     
     // Handle network errors
@@ -79,7 +81,7 @@ api.interceptors.response.use(
           message: error.message
         });
       }
-      error.message = "Network error. Please check your internet connection.";
+      error.message = getErrorMessage(error);
     }
 
     // 🔁 Prevent infinite retry loop
@@ -137,6 +139,11 @@ api.interceptors.response.use(
           }
         }
 
+        // Update Authorization header for retry
+        if (originalRequest.headers && refreshResponse.data?.accessToken) {
+          originalRequest.headers['Authorization'] = `Bearer ${refreshResponse.data.accessToken}`
+        }
+
         // Retry original request
         return api(originalRequest)
       } catch (refreshError: any) {
@@ -161,14 +168,8 @@ api.interceptors.response.use(
           });
         }
 
-        // Provide more specific error information
-        if (refreshError?.response?.status === 401) {
-          if (DEBUG) console.warn("[Axios] Refresh token expired - user needs to login again")
-          error.message = "Session expired. Please log in again."
-        } else if (refreshError?.response?.status === 403) {
-          if (DEBUG) console.warn("[Axios] Refresh token invalid - user needs to login again")
-          error.message = "Invalid session. Please log in again."
-        }
+        // Use user-friendly error message
+        error.message = getErrorMessage(refreshError || error);
 
         // Refresh failed - log but don't redirect automatically
         if (DEBUG) console.warn("[Axios] Token refresh failed - letting component handle the error")

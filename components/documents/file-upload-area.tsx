@@ -40,12 +40,12 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
       return
     }
     
-    // Validate file sizes (10MB limit per file)
-    const oversizedFiles = files.filter(file => file.size > 10 * 1024 * 1024)
+    // Validate file sizes (40MB limit per file)
+    const oversizedFiles = files.filter(file => file.size > 40 * 1024 * 1024)
     if (oversizedFiles.length > 0) {
       toast({
         title: t('fileTooLarge'),
-        description: t('pleaseSelectFilesSmallerThan10MB'),
+        description: t('pleaseSelectFilesSmallerThan40MB'),
         variant: "destructive",
       })
       return
@@ -169,7 +169,7 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
               📁 {t('chooseUpTo5Files')}
             </div>
             <div className="text-xs text-gray-500">
-              {selectedFiles.length}/5 {t('filesSelected')} • {t('max10MBPerFile')}
+              {selectedFiles.length}/5 {t('filesSelected')} • {t('max40MBPerFile')}
             </div>
           </div>
         </div>

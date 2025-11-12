@@ -40,12 +40,15 @@ import { FileUploadArea } from "@/components/documents/file-upload-area"
 import { DownloadDestinationDialog } from "@/components/modals/download-destination-dialog"
 import { config } from "@/lib/config"
 import { downloadDocument, previewDocument, formatFileSize, getFileIcon, formatRelativeDate, getDocumentDisplayName } from "@/lib/utils/document-utils"
+import { getErrorMessage, getErrorTitle } from "@/lib/error-utils"
+import { useTranslations } from 'next-intl'
 
 
 export default function DocumentThreadPageClient() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { isAuthenticated, user, role } = useAuth({ redirectOnFail: false })
+  const tErrors = useTranslations('errors')
   const [threadId, setThreadId] = useState<string>("")
   const [isUploading, setIsUploading] = useState(false)
   const [downloadedFiles, setDownloadedFiles] = useState<Set<string>>(new Set())
@@ -124,22 +127,11 @@ export default function DocumentThreadPageClient() {
       console.error("[Document Upload] Error status:", error?.response?.status)
       console.error("[Document Upload] Request data:", error?.config?.data)
       
-      let errorMessage = "Failed to upload documents"
-      
-      if (error?.response?.data?.error) {
-        if (typeof error.response.data.error === 'object') {
-          errorMessage = error.response.data.error.message || error.response.data.error.details || JSON.stringify(error.response.data.error)
-        } else {
-          errorMessage = error.response.data.error
-        }
-      } else if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message
-      } else if (error?.message) {
-        errorMessage = error.message
-      }
+      const errorTitle = getErrorTitle(error, tErrors)
+      const errorMessage = getErrorMessage(error, tErrors)
       
       toast({
-        title: "Upload failed",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
       })
@@ -168,22 +160,11 @@ export default function DocumentThreadPageClient() {
       console.error("[Delete Folder] Error response:", error?.response?.data)
       console.error("[Delete Folder] Error status:", error?.response?.status)
       
-      let errorMessage = "Failed to delete folder"
-      
-      if (error?.response?.data?.error) {
-        if (typeof error.response.data.error === 'object') {
-          errorMessage = error.response.data.error.message || error.response.data.error.details || JSON.stringify(error.response.data.error)
-        } else {
-          errorMessage = error.response.data.error
-        }
-      } else if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message
-      } else if (error?.message) {
-        errorMessage = error.message
-      }
+      const errorTitle = getErrorTitle(error, tErrors)
+      const errorMessage = getErrorMessage(error, tErrors)
       
       toast({
-        title: "Delete failed",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
       })
@@ -209,22 +190,11 @@ export default function DocumentThreadPageClient() {
       console.error("[Delete Document] Error response:", error?.response?.data)
       console.error("[Delete Document] Error status:", error?.response?.status)
       
-      let errorMessage = "Failed to delete document"
-      
-      if (error?.response?.data?.error) {
-        if (typeof error.response.data.error === 'object') {
-          errorMessage = error.response.data.error.message || error.response.data.error.details || JSON.stringify(error.response.data.error)
-        } else {
-          errorMessage = error.response.data.error
-        }
-      } else if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message
-      } else if (error?.message) {
-        errorMessage = error.message
-      }
+      const errorTitle = getErrorTitle(error, tErrors)
+      const errorMessage = getErrorMessage(error, tErrors)
       
       toast({
-        title: "Delete failed",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
       })
@@ -273,7 +243,7 @@ export default function DocumentThreadPageClient() {
     setShowDownloadDialog(true)
   }
 
-  const handleDownloadWithDestination = async (destination: string) => {
+  const handleDownloadWithDestination = async (destination: FileSystemDirectoryHandle | null) => {
     if (!documentToDownload) return
 
     try {
@@ -290,9 +260,10 @@ export default function DocumentThreadPageClient() {
         return newSet
       })
       
+      const destinationName = destination ? destination.name : 'default location'
       toast({
-        title: "Download started",
-        description: `${getDocumentDisplayName(documentToDownload)} is being downloaded${destination ? ` to ${destination}` : ''}`,
+        title: "Download completed",
+        description: `${getDocumentDisplayName(documentToDownload)} has been saved${destination ? ` to ${destinationName}` : ' to default location'}`,
       })
       
       // Close dialog
@@ -307,9 +278,11 @@ export default function DocumentThreadPageClient() {
       })
       
       console.error('Download error:', error)
+      const errorTitle = getErrorTitle(error, tErrors)
+      const errorMessage = getErrorMessage(error, tErrors)
       toast({
-        title: "Download failed",
-        description: error instanceof Error ? error.message : "Failed to download the file. Please try again.",
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive",
       })
     }
@@ -483,7 +456,7 @@ export default function DocumentThreadPageClient() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem 
+                              {/* <DropdownMenuItem 
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   previewDocument(doc)
@@ -492,7 +465,7 @@ export default function DocumentThreadPageClient() {
                               >
                                 <Eye className="w-4 h-4 mr-2" />
                                 Preview Document
-                              </DropdownMenuItem>
+                              </DropdownMenuItem> */}
                               
                               {!isDownloaded && !isDownloading && (
                                 <DropdownMenuItem 

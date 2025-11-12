@@ -17,6 +17,7 @@ import { useTranslations } from 'next-intl'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { usePathname } from 'next/navigation'
 import { getCurrentLocaleFromPath } from '@/lib/language-utils'
+import { getErrorMessage, getErrorTitle } from '@/lib/error-utils'
   
 export default function SignupPageClient() {
   const router = useRouter()
@@ -25,8 +26,9 @@ export default function SignupPageClient() {
   const t = useTranslations('auth');
   const tCommon = useTranslations('common');
   const tValidation = useTranslations('validation');
+  const tErrors = useTranslations('errors');
   const registerMutation = useMutation({
-    mutationFn: async (userData: { name: string; email: string; phone: string; password: string; role: string }) => 
+    mutationFn: async (userData: { name: string; email?: string; phone: string; password: string }) => 
       authApi.register(userData),
     onSuccess: (response) => {
       toast({
@@ -39,9 +41,11 @@ export default function SignupPageClient() {
       }, 1000)
     },
     onError: (error: any) => {
+      const errorTitle = getErrorTitle(error, tErrors)
+      const errorMessage = getErrorMessage(error, tErrors)
       toast({
-        title: tCommon('error'),
-        description: error?.response?.data?.message || error?.message || t('signupError') || "Registration failed",
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive",
         duration: 3000,
       })
@@ -58,12 +62,15 @@ export default function SignupPageClient() {
   })
 
   const onSubmit = (values: any) => {
-    const userData = {
+    const userData: { name: string; email?: string; phone: string; password: string } = {
       name: values.fullName,
-      email: values.email,
       phone: values.phoneNumber,
-      password: values.password,
-      role: "user" // Always set role to "user" for signup
+      password: values.password
+    }
+    
+    // Only include email if provided and not empty
+    if (values.email && values.email.trim() !== "") {
+      userData.email = values.email.trim()
     }
     
     registerMutation.mutate(userData)
@@ -156,27 +163,28 @@ export default function SignupPageClient() {
                          control={form.control}
                          name="email"
                          rules={{
-                           required: tValidation('required'),
                            pattern: {
                              value: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/,
                              message: tValidation('emailInvalid'),
                            },
                            validate: {
-                             notEmpty: (value) => value.trim().length > 0 || tValidation('required'),
-                             hasAtSymbol: (value) => value.includes('@') || tValidation('emailInvalid'),
-                             hasDomain: (value) => {
+                             // Only validate email format if email is provided
+                             emailFormat: (value) => {
+                               if (!value || value.trim().length === 0) return true; // Email is optional
                                const parts = value.split('@');
-                               return parts.length === 2 && parts[1].includes('.') || tValidation('emailInvalid');
-                             },
-                             validLength: (value) => {
-                               const parts = value.split('@');
-                               return parts[0].length >= 1 && parts[0].length <= 64 && parts[1].length >= 3 && parts[1].length <= 253 || tValidation('emailInvalid');
+                               if (parts.length !== 2 || !parts[1].includes('.')) {
+                                 return tValidation('emailInvalid');
+                               }
+                               if (parts[0].length < 1 || parts[0].length > 64 || parts[1].length < 3 || parts[1].length > 253) {
+                                 return tValidation('emailInvalid');
+                               }
+                               return true;
                              }
                            }
                          }}
                          render={({ field }) => (
                            <FormItem>
-                             <FormLabel>{tCommon('email')}</FormLabel>
+                             <FormLabel>{tCommon('email')} ({tCommon('optional') || 'Optional'})</FormLabel>
                              <FormControl>
                                <Input
                                  type="email"
@@ -195,14 +203,8 @@ export default function SignupPageClient() {
                          rules={{ 
                            required: tValidation('required'),
                            minLength: {
-                             value: 8,
-                             message: tValidation('passwordTooShort')
-                           },
-                           validate: {
-                             hasUpperCase: (value) => /[A-Z]/.test(value) || "Password must contain at least one uppercase letter",
-                             hasLowerCase: (value) => /[a-z]/.test(value) || "Password must contain at least one lowercase letter",
-                             hasNumber: (value) => /\d/.test(value) || "Password must contain at least one number",
-                             hasSpecialChar: (value) => /[!@#$%^&*(),.?":{}|<>]/.test(value) || "Password must contain at least one special character"
+                             value: 4,
+                             message: tValidation('passwordTooShort') || "Password must be at least 4 characters"
                            }
                          }}
                          render={({ field }) => (
