@@ -312,33 +312,32 @@ export const requestsApi = {
   
   // Download attachment by path (from API response)
   downloadAttachmentByPath: (downloadPath: string) => {
-    // download_path is like "/api/v1/requests/.../attachments/.../download"
+    // download_path from backend: "/api/v1/requests/{requestId}/attachments/{attachmentId}/download"
     // axios baseURL is "https://elda-backend.onrender.com/api/v1"
-    // When path starts with /, axios treats it as absolute and ignores baseURL
-    // So we need to remove /api/v1 from the path to make it relative to baseURL
+    // We need to remove /api/v1 from the path to make it relative to baseURL
     let path = downloadPath
     
     if (downloadPath.startsWith('/api/v1/')) {
       // Remove /api/v1 prefix since api instance already has baseURL with /api/v1
-      // This makes it relative to baseURL: /requests/.../attachments/.../download
+      // "/api/v1/requests/.../attachments/.../download" -> "/requests/.../attachments/.../download"
       path = downloadPath.replace('/api/v1', '')
     } else if (downloadPath.startsWith('/')) {
-      // Path starts with /, use as is
+      // Path starts with / but no /api/v1, use as is
       path = downloadPath
     } else {
       // Relative path, add leading slash
       path = `/${downloadPath}`
     }
     
-    console.debug("[Requests API] Download path:", { 
+    const expectedFullURL = `${api.defaults.baseURL}${path}`
+    
+    console.debug("[Requests API] Download path processing:", { 
       original: downloadPath, 
       processed: path, 
       baseURL: api.defaults.baseURL,
-      expectedFullURL: path.startsWith('/') && !path.startsWith('/api/v1')
-        ? `${api.defaults.baseURL}${path}`
-        : (path.startsWith('/api/v1')
-          ? `https://elda-backend.onrender.com${path}`
-          : `${api.defaults.baseURL}${path}`)
+      expectedFullURL,
+      method: 'GET',
+      responseType: 'blob'
     })
     
     return api.get(path, {

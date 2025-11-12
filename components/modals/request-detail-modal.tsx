@@ -293,39 +293,56 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
         console.warn("[Request Detail] Invalid download_path, trying fallback method")
         
         // Fallback: Try direct attachment download by ID
-        if (request?.id) {
-          console.debug("[Request Detail] Using fallback: /requests/:requestId/attachments/:attachmentId/download")
-          const response = await requestsApi.downloadDocument(request.id, attachmentId)
-          const blob = response.data
-          
-          // Create download link
-          const url = window.URL.createObjectURL(blob)
-          const link = document.createElement('a')
-          link.href = url
-          link.download = originalName
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-          window.URL.revokeObjectURL(url)
-          
-          // Save the download location
-          const downloadLocation = `Downloads/${originalName}`
-          setDownloadedFiles(prev => new Map(prev).set(attachmentId, downloadLocation))
-          
-          toast({
-            title: tCommon('success') || "Success",
-            description: `Document downloaded successfully. Location: ${downloadLocation}`,
-          })
-          return
-        }
+        console.debug("[Request Detail] Using fallback: /requests/attachments/:attachmentId/download")
+        const response = await requestsApi.downloadAttachment(attachmentId)
+        const blob = response.data
         
-        throw new Error("Cannot download: invalid download path and no request ID available")
+        // Create download link
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = originalName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+        
+        // Save the download location
+        const downloadLocation = `Downloads/${originalName}`
+        setDownloadedFiles(prev => new Map(prev).set(attachmentId, downloadLocation))
+        
+        toast({
+          title: tCommon('success') || "Success",
+          description: `Document downloaded successfully. Location: ${downloadLocation}`,
+        })
+        return
       }
       
-      // Use axios to download with proper authentication
-      // download_path is like "/api/v1/requests/.../attachments/.../download"
-      // The API function will handle the path correctly
-      const response = await requestsApi.downloadAttachmentByPath(downloadPath)
+      let response
+      let usedFallback = false
+      
+      try {
+        console.debug("[Request Detail] Attempting download with provided path:", downloadPath)
+        response = await requestsApi.downloadAttachmentByPath(downloadPath)
+        console.debug("[Request Detail] ✅ Download successful using provided path")
+      } catch (pathError: any) {
+        // If the provided path returns 404, try the simpler endpoint format
+        if (pathError?.response?.status === 404) {
+          console.warn("[Request Detail] ⚠️ Path download failed with 404, trying simpler endpoint")
+          console.debug("[Request Detail] Fallback attempt: /requests/attachments/:attachmentId/download")
+          try {
+            response = await requestsApi.downloadAttachment(attachmentId)
+            usedFallback = true
+            console.debug("[Request Detail] ✅ Download successful using fallback endpoint")
+          } catch (fallbackError: any) {
+            console.error("[Request Detail] ❌ Fallback also failed:", fallbackError)
+            throw fallbackError
+          }
+        } else {
+          throw pathError
+        }
+      }
+      
       const blob = response.data
       
       // Create download link
@@ -344,7 +361,9 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
       
       toast({
         title: tCommon('success') || "Success",
-        description: `Document downloaded successfully. Location: ${downloadLocation}`,
+        description: usedFallback 
+          ? `Document downloaded successfully using fallback method. Location: ${downloadLocation}`
+          : `Document downloaded successfully. Location: ${downloadLocation}`,
       })
     } catch (error: any) {
       console.error("[Request Detail] Download attachment error:", error)
@@ -363,7 +382,7 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
       
       // Add more helpful error message for 404
       if (error?.response?.status === 404) {
-        errorMessage = `File not found. The download link may be invalid or the file may have been deleted. (Path: ${downloadPath})`
+        errorMessage = `File not found. The attachment may have been deleted or does not exist. (ID: ${attachmentId})`
       }
       
       toast({
