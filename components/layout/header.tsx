@@ -18,6 +18,7 @@ import { ProfileModal } from "@/components/modals/profile-modal"
 import { NotificationsDropdown } from "@/components/modals/notifications-modal"
 import { useNotifications } from "@/hooks/use-notifications"
 import { LanguageSwitcher } from "@/components/language-switcher"
+import { AppearanceSettings } from "@/components/settings/appearance-settings"
 import { useState } from "react"
 import { useTranslations } from 'next-intl'
 
@@ -34,15 +35,18 @@ export function Header({ title }: HeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-4 lg:px-6">
+      <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-4 lg:px-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Sidebar />
             <SidebarToggle />
-            <h1 className="text-xl font-semibold text-gray-900 ml-2">{title}</h1>
+            <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 ml-2">{title}</h1>
           </div>
 
           <div className="flex items-center space-x-4">
+            {/* Appearance Settings */}
+            <AppearanceSettings />
+            
             {/* Language Switcher */}
             <LanguageSwitcher />
             

@@ -309,7 +309,7 @@ export default function DocumentThreadPageClient() {
     return (
       <DashboardLayout title="Thread Not Found" isFetching={false}>
         <div className="p-4 text-center">
-          <h2 className="text-xl font-semibold mb-2">Thread not found</h2>
+          <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Thread not found</h2>
           <Button onClick={() => router.push("/documents")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Documents
@@ -321,9 +321,9 @@ export default function DocumentThreadPageClient() {
 
   return (
     <DashboardLayout title={`Thread: ${thread.subject}`} isFetching={false}>
-      <div className="flex flex-col h-screen bg-gray-50">
+      <div className="flex flex-col h-screen bg-gray-50 dark:bg-gray-900">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 p-4">
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Button
@@ -335,13 +335,13 @@ export default function DocumentThreadPageClient() {
                 <ArrowLeft className="w-4 h-4" />
               </Button>
               <div>
-                <h1 className="text-lg font-semibold">{thread.subject}</h1>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
+                <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{thread.subject}</h1>
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                   <span>with {thread.user_name}</span>
                   <Badge className={`text-xs ${
                     thread.status === 'open' 
-                      ? 'bg-emerald-100 text-emerald-800' 
-                      : 'bg-gray-100 text-gray-800'
+                      ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300' 
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
                   }`}>
                     {thread.status}
                   </Badge>
@@ -370,7 +370,7 @@ export default function DocumentThreadPageClient() {
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-gray-50 to-white">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
           {documentsLoading ? (
             <div className="space-y-4">
               {Array.from({ length: 3 }).map((_, idx) => (
@@ -381,8 +381,8 @@ export default function DocumentThreadPageClient() {
             </div>
           ) : documents.length === 0 ? (
             <div className="flex items-center justify-center h-64">
-              <div className="text-center text-gray-500">
-                <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <div className="text-center text-gray-500 dark:text-gray-400">
+                <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
                 <p>No documents yet</p>
                 <p className="text-sm">Start the conversation by uploading a document</p>
               </div>
@@ -406,14 +406,14 @@ export default function DocumentThreadPageClient() {
                     </div>
                     
                     {/* Message Bubble */}
-                    <div className={`${isOwnMessage ? 'bg-blue-500 text-white' : 'bg-white border border-gray-200'} rounded-2xl px-4 py-3 shadow-sm max-w-sm hover:shadow-md transition-shadow duration-200`}>
+                    <div className={`${isOwnMessage ? 'bg-blue-500 text-white' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100'} rounded-2xl px-4 py-3 shadow-sm max-w-sm hover:shadow-md transition-shadow duration-200`}>
                       {/* Document Title */}
                       <div className="mb-2">
                         <div className="font-semibold text-sm mb-1">
                           {getDocumentDisplayName(doc)}
                         </div>
                         {doc.title && doc.title.trim() !== '' && (
-                          <div className="text-xs opacity-75 italic">
+                          <div className="text-xs opacity-75 dark:opacity-60 italic">
                             {doc.original_name}
                           </div>
                         )}
@@ -423,12 +423,12 @@ export default function DocumentThreadPageClient() {
                       <div className="flex items-center gap-2 mb-3">
                         <span className="text-lg">{getFileIcon(doc.mime_type)}</span>
                         <div className="flex-1 min-w-0">
-                          <div className="text-xs opacity-75">{formatFileSize(doc.size)}</div>
+                          <div className="text-xs opacity-75 dark:opacity-60">{formatFileSize(doc.size)}</div>
                         </div>
                       </div>
                       
                       {/* Actions and Time */}
-                      <div className="flex items-center justify-between text-xs opacity-75">
+                      <div className="flex items-center justify-between text-xs opacity-75 dark:opacity-60">
                         <span>{formatRelativeDate(doc.created_at)}</span>
                         <div className="flex items-center gap-1">
                           {/* Download status indicators */}
@@ -449,7 +449,7 @@ export default function DocumentThreadPageClient() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-6 w-6 p-0 hover:bg-white/20"
+                                className="h-6 w-6 p-0 hover:bg-white/20 dark:hover:bg-gray-700/50"
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <MoreVertical className="w-3 h-3" />

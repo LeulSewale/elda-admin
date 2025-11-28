@@ -381,42 +381,42 @@ export default function AllTicketsClientPage() {
     { accessorKey: "user", header: t('createdBy'), cell: ({ row }: any) => <div className="font-medium">{row.original.user}</div> },
     { accessorKey: "priority", header: t('priority'), cell: ({ row }: any) => {
       const priority = row.original.priority;
-      const priorityColors: Record<string, string> = {
-        low: "bg-gray-100 text-gray-800",
+        const priorityColors: Record<string, string> = {
+          low: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200",
         medium: "bg-yellow-100 text-yellow-800",
         high: "bg-orange-100 text-orange-800",
         urgent: "bg-red-100 text-red-800",
       };
-      return <Badge className={priorityColors[priority] || "bg-gray-100 text-gray-800"}>{t(priority)}</Badge>;
+      return <Badge className={priorityColors[priority] || "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"}>{t(priority)}</Badge>;
     } },
    { accessorKey: "status", header: t('status'), cell: ({ row }: any) => {
       const status = row.original.status;
-      const statusColors: Record<string, string> = {
-        open: "bg-blue-100 text-blue-800",
-        closed: "bg-green-100 text-green-800",
-        in_progress: "bg-yellow-100 text-yellow-800",
-        pending: "bg-gray-100 text-gray-800",
-      };
-      return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{t(status)}</Badge>;
+        const statusColors: Record<string, string> = {
+          open: "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
+          closed: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
+          in_progress: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
+          pending: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200",
+        };
+        return <Badge className={statusColors[status] || "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"}>{t(status)}</Badge>;
     } },
     { accessorKey: "assignee_name", header: t('assignedTo'), cell: ({ row }: any) => {
       const assigneeName = row.original.assignee_name;
       if (!assigneeName) {
-        return <span className="text-gray-400 text-sm italic">{t('unassigned')}</span>;
+        return <span className="text-gray-400 dark:text-gray-500 text-sm italic">{t('unassigned')}</span>;
       }
       return (
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-white text-xs font-semibold">
             {assigneeName.charAt(0).toUpperCase()}
           </div>
-          <span className="text-sm font-medium text-gray-700">{assigneeName}</span>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{assigneeName}</span>
         </div>
       );
     } },
     { accessorKey: "date",
        header: t('createdAt'), 
        cell: ({ row }: any) => (
-        <div className="text-gray-600">
+        <div className="text-gray-600 dark:text-gray-300">
           {new Date(row.original.date).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
@@ -487,34 +487,34 @@ export default function AllTicketsClientPage() {
   // Get priority color for modal
   const getPriorityColor = (priority: string) => {
     const colors: Record<string, string> = {
-      low: "bg-gray-100 text-gray-800 border-gray-200",
-      medium: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      high: "bg-orange-100 text-orange-800 border-orange-200",
-      urgent: "bg-red-100 text-red-800 border-red-200",
+      low: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600",
+      medium: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800",
+      high: "bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 border-orange-200 dark:border-orange-800",
+      urgent: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800",
     }
-    return colors[priority] || "bg-gray-100 text-gray-800 border-gray-200"
+    return colors[priority] || "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600"
   }
 
   // Get status color for modal
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      open: "bg-blue-100 text-blue-800 border-blue-200",
-      closed: "bg-green-100 text-green-800 border-green-200",
-      in_progress: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      pending: "bg-gray-100 text-gray-800 border-gray-200",
+      open: "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800",
+      closed: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800",
+      in_progress: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800",
+      pending: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600",
     }
-    return colors[status] || "bg-gray-100 text-gray-800 border-gray-200"
+    return colors[status] || "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600"
   }
 
   return (
     <DashboardLayout title={t('title')} isFetching={isFetching}>
       <div className="p-0"> 
         
-        <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <div className="flex justify-between items-center px-2 py-2">
           <div>
              <h1 className="text-xl font-semibold">{t('pageTitle')}</h1>
-            <p className="text-sm text-gray-400">{t('pageSubtitle')}</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">{t('pageSubtitle')}</p>
           </div>
           <div className="flex items-center gap-4">
             <DateRangeFilter onDateRangeChange={handleDateRangeChange} />
@@ -553,7 +553,7 @@ export default function AllTicketsClientPage() {
             {selectedCompany && (
               <div className="space-y-6">
                 {/* Ticket Information Card */}
-                <Card className="border-l-4" style={{
+                <Card className="border-l-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" style={{
                   borderLeftColor: selectedCompany.priority === 'urgent' ? '#ef4444' : 
                                   selectedCompany.priority === 'high' ? '#f97316' :
                                   selectedCompany.priority === 'medium' ? '#eab308' : '#6b7280'
@@ -592,15 +592,15 @@ export default function AllTicketsClientPage() {
                   
                   <CardContent className="space-y-4">
                     <div>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('description')}</h4>
-                      <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('description')}</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
                         {selectedCompany.description || t('noDescription')}
                       </p>
                 </div>
                 
                 {selectedCompany.tags && selectedCompany.tags.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('tags')}</h4>
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('tags')}</h4>
                         <div className="flex flex-wrap gap-2">
                       {selectedCompany.tags.map((tag: string, index: number) => (
                         <Badge key={index} variant="secondary" className="text-xs">
@@ -614,14 +614,14 @@ export default function AllTicketsClientPage() {
                     {/* Assignee Information */}
                     {selectedCompany.assignee_name && (
                       <div className="border-t border-gray-200 pt-4">
-                        <h4 className="text-sm font-semibold text-gray-700 mb-3">{t('assignment')}</h4>
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{t('assignment')}</h4>
                         <div className="flex items-center gap-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
                           <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white text-sm font-semibold shadow-md">
                             {selectedCompany.assignee_name.charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1">
-                            <p className="text-xs text-gray-600">{t('assignedTo')}</p>
-                            <p className="text-sm font-semibold text-gray-900">{selectedCompany.assignee_name}</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-400">{t('assignedTo')}</p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{selectedCompany.assignee_name}</p>
                             <p className="text-xs text-gray-500">{selectedCompany.assignee_email}</p>
                           </div>
                           <Badge variant="secondary" className="bg-purple-100 text-purple-900 border-purple-200">
@@ -636,7 +636,7 @@ export default function AllTicketsClientPage() {
                 {/* Comments/Replies Section */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                    <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                       <FileText className="w-4 h-4" />
                       {t('replies')} & {t('comments')} {comments.length > 0 && `(${comments.length})`}
                     </h4>
@@ -654,19 +654,19 @@ export default function AllTicketsClientPage() {
                                   {comment.author_name?.charAt(0).toUpperCase() || 'U'}
                                 </div>
                                 <div>
-                                  <p className="text-sm font-semibold text-gray-900">{comment.author_name || 'Unknown'}</p>
-                                  <p className="text-xs text-gray-500">
+                                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{comment.author_name || 'Unknown'}</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
                                     {new Date(comment.created_at).toLocaleString()}
                                   </p>
                                 </div>
                               </div>
                               {comment.is_internal && (
-                                <Badge variant="secondary" className="text-xs bg-amber-200 text-amber-900">
+                                <Badge variant="secondary" className="text-xs bg-amber-200 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300">
                                   {t('internal')}
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{comment.body}</p>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{comment.body}</p>
                           </CardContent>
                         </Card>
                       ))}

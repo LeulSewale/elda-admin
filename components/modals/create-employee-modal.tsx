@@ -27,12 +27,12 @@ function PersonalInfoFields({ control, isLoading }: { control: any; isLoading?: 
           rules={{ required: "Name is required" }}
           render={({ field }) => (
             <FormItem>
-            <FormLabel className="flex items-center gap-2">
-              <User className="w-4 h-4 text-gray-400" />
+            <FormLabel className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+              <User className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               Full Name
             </FormLabel>
               <FormControl>
-                <Input {...field} disabled={isLoading} placeholder="Enter full name" />
+                <Input {...field} disabled={isLoading} placeholder="Enter full name" className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -50,12 +50,12 @@ function PersonalInfoFields({ control, isLoading }: { control: any; isLoading?: 
           }}
           render={({ field }) => (
             <FormItem>
-            <FormLabel className="flex items-center gap-2">
-              <Mail className="w-4 h-4 text-gray-400" />
+            <FormLabel className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+              <Mail className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               Email
             </FormLabel>
               <FormControl>
-                <Input type="email" {...field} disabled={isLoading} placeholder="Enter email" />
+                <Input type="email" {...field} disabled={isLoading} placeholder="Enter email" className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -67,12 +67,12 @@ function PersonalInfoFields({ control, isLoading }: { control: any; isLoading?: 
           rules={{ required: "Phone is required" }}
           render={({ field }) => (
             <FormItem>
-            <FormLabel className="flex items-center gap-2">
-              <Phone className="w-4 h-4 text-gray-400" />
+            <FormLabel className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+              <Phone className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               Phone
             </FormLabel>
               <FormControl>
-                <Input {...field} disabled={isLoading} placeholder="+251900000000" />
+                <Input {...field} disabled={isLoading} placeholder="+251900000000" className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600" />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -84,8 +84,8 @@ function PersonalInfoFields({ control, isLoading }: { control: any; isLoading?: 
           rules={{ required: "District is required" }}
           render={({ field }) => (
             <FormItem>
-            <FormLabel className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-gray-400" />
+            <FormLabel className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+              <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               District
             </FormLabel>
               <FormControl>
@@ -128,12 +128,12 @@ function EmploymentInfoFields({ control, isLoading }: { control: any; isLoading?
         rules={{ required: "Job title is required" }}
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-gray-400" />
+            <FormLabel className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+              <Briefcase className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               Job Title
             </FormLabel>
             <FormControl>
-              <Input {...field} disabled={isLoading} placeholder="Software Engineer" />
+              <Input {...field} disabled={isLoading} placeholder="Software Engineer" className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -145,12 +145,12 @@ function EmploymentInfoFields({ control, isLoading }: { control: any; isLoading?
         rules={{ required: "Department is required" }}
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-gray-400" />
+            <FormLabel className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+              <Building2 className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               Department
             </FormLabel>
             <FormControl>
-              <Input {...field} disabled={isLoading} placeholder="Enter department" />
+              <Input {...field} disabled={isLoading} placeholder="Enter department" className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -162,12 +162,12 @@ function EmploymentInfoFields({ control, isLoading }: { control: any; isLoading?
         rules={{ required: "Employment type is required" }}
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-gray-400" />
+            <FormLabel className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+              <Building2 className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               Employment Type
             </FormLabel>
             <FormControl>
-              <Input {...field} disabled={isLoading} placeholder="full_time, part_time, etc." />
+              <Input {...field} disabled={isLoading} placeholder="full_time, part_time, etc." className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600" />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -182,8 +182,8 @@ function EmploymentInfoFields({ control, isLoading }: { control: any; isLoading?
         }}
         render={({ field }) => (
           <FormItem>
-            <FormLabel className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-gray-400" />
+            <FormLabel className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+              <DollarSign className="w-4 h-4 text-gray-400 dark:text-gray-500" />
               Salary (ETB)
             </FormLabel>
             <FormControl>
@@ -193,6 +193,7 @@ function EmploymentInfoFields({ control, isLoading }: { control: any; isLoading?
                 disabled={isLoading} 
                 placeholder="372928"
                 onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
               />
             </FormControl>
             <FormMessage />
@@ -282,14 +283,14 @@ export function CreateEmployeeModal({ open, onOpenChange, onCreateEmployee, isLo
     >
       <div className="space-y-6">
         {/* Header Info */}
-        <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100">
+        <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg border border-green-100 dark:border-green-800">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-green-600 rounded-lg">
+            <div className="p-2 bg-green-600 dark:bg-green-700 rounded-lg">
               <UserPlus className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Creating New Employee</p>
-              <p className="text-base font-semibold text-gray-900">Fill in the details below to create a new employee record</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Creating New Employee</p>
+              <p className="text-base font-semibold text-gray-900 dark:text-gray-100">Fill in the details below to create a new employee record</p>
             </div>
           </div>
         </div>
@@ -336,10 +337,10 @@ export function CreateEmployeeModal({ open, onOpenChange, onCreateEmployee, isLo
             className="space-y-6"
           >
             {/* Personal Information Card */}
-            <Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <User className="w-5 h-5 text-[#4082ea]" />
+                <CardTitle className="text-base font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                  <User className="w-5 h-5 text-[#4082ea] dark:text-blue-400" />
                   Personal Information
                 </CardTitle>
               </CardHeader>
@@ -351,10 +352,10 @@ export function CreateEmployeeModal({ open, onOpenChange, onCreateEmployee, isLo
             </Card>
 
             {/* Employment Information Card */}
-            <Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-[#4082ea]" />
+                <CardTitle className="text-base font-semibold flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                  <Briefcase className="w-5 h-5 text-[#4082ea] dark:text-blue-400" />
                   Employment Information
                 </CardTitle>
               </CardHeader>

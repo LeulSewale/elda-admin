@@ -39,7 +39,7 @@ export function DashboardLayout({ children, title, isFetching }: DashboardLayout
   const { collapsed } = useSidebar()
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className={`transition-all duration-300 ${collapsed ? "lg:pl-16" : "lg:pl-64"}`}>
         <Header title={title} />
         {typeof isFetching !== 'undefined' && <ProgressBar isFetching={isFetching} />}

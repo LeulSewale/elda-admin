@@ -274,9 +274,9 @@ export default function RequestsPageClient() {
       header: t('createdBy'),
       size: 180,
       cell: ({ row }: any) => (
-        <div className="text-gray-600 text-sm">
+        <div className="text-gray-600 dark:text-gray-300 text-sm">
           <div className="font-medium">{row.original.created_by_name}</div>
-          <div className="text-xs text-gray-500 truncate max-w-[150px]">{row.original.created_by_email}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]">{row.original.created_by_email}</div>
         </div>
       )
     },
@@ -288,7 +288,7 @@ export default function RequestsPageClient() {
         <div className="text-gray-600 text-sm">
           <div className="font-medium">{row.original.assigned_to_name || "Unassigned"}</div>
           {row.original.assigned_to_email && (
-            <div className="text-xs text-gray-500 truncate max-w-[150px]">{row.original.assigned_to_email}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[150px]">{row.original.assigned_to_email}</div>
           )}
         </div>
       )
@@ -309,7 +309,7 @@ export default function RequestsPageClient() {
           return types[type] || type
         }
         return (
-          <div className="text-gray-600 text-sm">{formatServiceType(row.original.service_type)}</div>
+          <div className="text-gray-600 dark:text-gray-300 text-sm">{formatServiceType(row.original.service_type)}</div>
         )
       }
     },
@@ -320,12 +320,12 @@ export default function RequestsPageClient() {
       cell: ({ row }: any) => {
         const priority = row.original.priority;
         const priorityColors: Record<string, string> = {
-          low: "bg-green-100 text-green-800",
-          medium: "bg-yellow-100 text-yellow-800",
-          high: "bg-red-100 text-red-800",
-          critical: "bg-red-100 text-red-800",
+          low: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
+          medium: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
+          high: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300",
+          critical: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300",
         };
-        return <Badge className={`${priorityColors[priority] || "bg-gray-100 text-gray-800"} text-xs px-2 py-1`}>{t(priority)}</Badge>;
+        return <Badge className={`${priorityColors[priority] || "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"} text-xs px-2 py-1`}>{t(priority)}</Badge>;
       }
     },
     { 
@@ -335,13 +335,13 @@ export default function RequestsPageClient() {
       cell: ({ row }: any) => {
         const status = row.original.status;
         const statusColors: Record<string, string> = {
-          pending: "bg-yellow-100 text-yellow-800",
-          in_progress: "bg-blue-100 text-blue-800",
-          completed: "bg-green-100 text-green-800",
-          rejected: "bg-red-100 text-red-800",
-          cancelled: "bg-gray-100 text-gray-800",
+          pending: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
+          in_progress: "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
+          completed: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
+          rejected: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300",
+          cancelled: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200",
         };
-        return <Badge className={`${statusColors[status] || "bg-gray-100 text-gray-800"} text-xs px-2 py-1`}>{t(status)}</Badge>;
+        return <Badge className={`${statusColors[status] || "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"} text-xs px-2 py-1`}>{t(status)}</Badge>;
       }
     },
     { 
@@ -349,7 +349,7 @@ export default function RequestsPageClient() {
       header: t('createdAt'),
       size: 100,
       cell: ({ row }: any) => (
-        <div className="text-gray-600 text-sm">
+        <div className="text-gray-600 dark:text-gray-300 text-sm">
           {new Date(row.original.created_at).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
@@ -469,11 +469,11 @@ export default function RequestsPageClient() {
     <DashboardLayout title={t('title')} isFetching={isFetching}>
       <div className="p-0"> 
         
-        <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <div className="flex justify-between items-center px-2 py-2">
           <div>
-             <h1 className="text-xl font-semibold">{t('pageTitle')}</h1>
-            <p className="text-sm text-gray-400">{t('pageSubtitle')}</p>
+             <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('pageTitle')}</h1>
+            <p className="text-sm text-gray-400 dark:text-gray-500">{t('pageSubtitle')}</p>
           </div>
           <div className="flex items-center gap-4">
             <DateRangeFilter onDateRangeChange={handleDateRangeChange} />

@@ -105,7 +105,8 @@
     "viewAndManage": "View and manage request management",
     "refreshDashboard": "Refresh dashboard data",
     "refreshing": "Refreshing...",
-    "noRecentActivity": "No recent activity"
+    "noRecentActivity": "No recent activity",
+    "totalVolume": "Total Volume"
   },
   "requests": {
     "title": "Request Management",
@@ -210,6 +211,12 @@
     "urgent": "Urgent",
     "remarks": "Remarks",
     "addRemarksAboutAssignment": "Add any remarks about this assignment...",
+    "currentStatus": "Current Status",
+    "newStatus": "New Status",
+    "selectNewStatus": "Select new status",
+    "pleaseSelectStatus": "Please select a status.",
+    "failedToChangeStatus": "Failed to change status. Please try again.",
+    "addRemarksAboutStatusChange": "Add any remarks about this status change...",
     "selectDateRange": "Select date range",
     "selectEndDate": "Select end date",
     "requestFor": "Request For",

@@ -5,7 +5,6 @@ import { DataTable } from "@/components/data-table/data-table"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { dummyDocuments, dummyRequests, dummyUsers } from "@/lib/dummy-data"
 import { useAuth } from "@/hooks/use-auth"
@@ -15,20 +14,6 @@ import { Users, Building2, Gavel, FileText, RotateCcw, Eye, User, ListOrderedIco
 import { useMemo, useCallback, useState, useEffect } from "react"
 import { useTabVisibility } from "@/hooks/use-tab-visibility"
 import { useTranslations } from 'next-intl'
-
-
-            // styles: subtle gradient, thin border, gentle hover, proper focus ring
-            const statCardStyle =
-            "relative flex flex-col justify-between gap-4 rounded-2xl p-5 sm:p-6 " +
-            "bg-gradient-to-br from-[#f1f6ff] via-white to-white " +
-            "border border-slate-200/80 shadow-sm hover:shadow-md " +
-            "transition-all duration-200 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4082ea]/30 " +
-            "dark:bg-zinc-900/70 dark:border-zinc-800";
-            
-            const iconTileStyle =
-            "grid size-10 place-items-center rounded-lg bg-[#4082ea]/10 text-[#4082ea] " +
-            "ring-1 ring-[#4082ea]/20 shadow-sm transition-colors group-hover:bg-[#4082ea]/15";
-            const iconStyle = "w-14 h-14 p-3 rounded-xl bg-[#4082ea]/20 text-[#4082ea] shadow group-hover:bg-[#4082ea]/30 transition-all duration-200"
 
 export default function DashboardPageClient() {
   const { role, user } = useAuth();
@@ -195,35 +180,51 @@ export default function DashboardPageClient() {
     const requestsArray = Array.isArray(requests) ? requests : [];
     const filteredRequests = filterRequestsByPeriod(requestsArray, selectedPeriod);
     
-    const totalRequests = filteredRequests.length;
     const pendingRequests = filteredRequests.filter((r: any) => r.status === 'pending').length;
     const inProgressRequests = filteredRequests.filter((r: any) => r.status === 'in_progress').length;
     const completedRequests = filteredRequests.filter((r: any) => r.status === 'completed').length;
+    const totalRequests = filteredRequests.length;
     
     cards.push(
       {
-        label: t('totalRequests'),
-        value: totalRequests,
-        loading: requestsLoading,
-        icon: <ListOrderedIcon />,
-      },
-      {
         label: t('pendingRequests'),
         value: pendingRequests,
+        percentage: totalRequests > 0 ? ((pendingRequests / totalRequests) * 100).toFixed(1) : '0',
         loading: requestsLoading,
         icon: <FileText />,
+        bgColor: 'from-blue-50 via-blue-50/50 to-white',
+        textColor: 'text-blue-900 dark:text-blue-300',
+        valueColor: 'text-blue-700 dark:text-blue-400',
       },
       {
         label: t('inProgressRequests'),
         value: inProgressRequests,
+        percentage: totalRequests > 0 ? ((inProgressRequests / totalRequests) * 100).toFixed(1) : '0',
         loading: requestsLoading,
         icon: <User />,
+        bgColor: 'from-green-50 via-green-50/50 to-white',
+        textColor: 'text-green-900 dark:text-green-300',
+        valueColor: 'text-green-700 dark:text-green-400',
       },
       {
         label: t('completedRequests'),
         value: completedRequests,
+        percentage: totalRequests > 0 ? ((completedRequests / totalRequests) * 100).toFixed(1) : '0',
         loading: requestsLoading,
         icon: <FileText />,
+        bgColor: 'from-purple-50 via-purple-50/50 to-white',
+        textColor: 'text-purple-900 dark:text-purple-300',
+        valueColor: 'text-purple-700 dark:text-purple-400',
+      },
+      {
+        label: t('totalRequests'),
+        value: totalRequests,
+        percentage: '100',
+        loading: requestsLoading,
+        icon: <ListOrderedIcon />,
+        bgColor: 'from-gray-50 via-gray-50/50 to-white',
+        textColor: 'text-gray-900 dark:text-gray-100',
+        valueColor: 'text-gray-700 dark:text-gray-300',
       }
     );
     return cards;
@@ -283,9 +284,9 @@ export default function DashboardPageClient() {
       </div>
     )},
     { accessorKey: "created_by_name", header: tRequests('createdBy'), cell: ({ row }: any) => (
-      <div className="text-gray-600">
+      <div className="text-gray-600 dark:text-gray-300">
         <div className="font-medium">{row.original.created_by_name}</div>
-        <div className="text-xs text-gray-500">{row.original.created_by_email}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">{row.original.created_by_email}</div>
       </div>
     )},
     { accessorKey: "service_type", header: tRequests('serviceType'), cell: ({ row }: any) => {
@@ -300,31 +301,31 @@ export default function DashboardPageClient() {
         return types[type] || type
       }
       return (
-        <div className="text-gray-600">{formatServiceType(row.original.service_type)}</div>
+        <div className="text-gray-600 dark:text-gray-300">{formatServiceType(row.original.service_type)}</div>
       )
     }},
     { accessorKey: "priority", header: tRequests('priority'), cell: ({ row }: any) => {
       const priority = row.original.priority;
       const priorityColors: Record<string, string> = {
-        low: "bg-green-100 text-green-800",
-        medium: "bg-yellow-100 text-yellow-800",
-        high: "bg-red-100 text-red-800",
+        low: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
+        medium: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
+        high: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300",
       };
-      return <Badge className={priorityColors[priority] || "bg-gray-100 text-gray-800"}>{tRequests(priority)}</Badge>;
+      return <Badge className={priorityColors[priority] || "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"}>{tRequests(priority)}</Badge>;
     }},
     { accessorKey: "status", header: tRequests('status'), cell: ({ row }: any) => {
       const status = row.original.status;
       const statusColors: Record<string, string> = {
-        pending: "bg-yellow-100 text-yellow-800",
-        in_progress: "bg-blue-100 text-blue-800",
-        completed: "bg-green-100 text-green-800",
-        rejected: "bg-red-100 text-red-800",
-        cancelled: "bg-gray-100 text-gray-800",
+        pending: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300",
+        in_progress: "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300",
+        completed: "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300",
+        rejected: "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300",
+        cancelled: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200",
       };
-      return <Badge className={statusColors[status] || "bg-gray-100 text-gray-800"}>{tRequests(status)}</Badge>;
+      return <Badge className={statusColors[status] || "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"}>{tRequests(status)}</Badge>;
     }},
     { accessorKey: "created_at", header: tRequests('createdAt'), cell: ({ row }: any) => (
-        <div className="text-gray-600">
+        <div className="text-gray-600 dark:text-gray-300">
         {new Date(row.original.created_at).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
@@ -361,89 +362,132 @@ export default function DashboardPageClient() {
     <DashboardLayout title={t('title')} isFetching={isRefreshing || requestsFetching}>
       <div className="p-0">
         {/* Overview Card with Time Period Tabs */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>{t('overview')}</span>
-              <Button 
-                onClick={handleRefresh} 
-                variant="outline" 
-                size="sm"
-                className="border-[#4082ea] text-[#4082ea] hover:bg-[#4082ea]/10 flex items-center gap-2 transition-all duration-200"
-                disabled={isRefreshing}
-                title={
-                  isRefreshing 
-                    ? t('refreshing') 
-                    : t('refreshDashboard')
-                }
-              >
-                <RotateCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} /> 
-                {isRefreshing ? t('refreshing') : tCommon('refresh')}
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={selectedPeriod} onValueChange={setSelectedPeriod} className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="daily">{t('daily')}</TabsTrigger>
-                <TabsTrigger value="weekly">{t('weekly')}</TabsTrigger>
-                <TabsTrigger value="monthly">{t('monthly')}</TabsTrigger>
-                <TabsTrigger value="yearly">{t('yearly')}</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value={selectedPeriod} className="mt-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {statCards.map((card) => (
-                    <Card key={card.label} className={statCardStyle}>
-                      {/* soft ambient glow (very subtle) */}
-                      <div
-                        aria-hidden
-                        className="pointer-events-none absolute -right-10 -top-10 size-24 rounded-full bg-[#4082ea]/5 blur-2xl"
-                      />
-
-                      {/* top row: icon + label */}
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={iconTileStyle}>
-                            <span className="inline-flex">{card.icon}</span>
-                          </div>
-                          <span className="truncate text-[15px] font-semibold text-slate-700 dark:text-zinc-100">
-                            {card.label}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* value on bottom-right (unchanged placement, improved typographic tone) */}
-                      <div className="flex-1 flex items-end justify-end">
-                        {card.loading ? (
-                          <div className="h-9 w-24 rounded bg-slate-100 animate-pulse dark:bg-zinc-800" />
-                        ) : (
-                          <div
-                            className="text-3xl sm:text-4xl font-extrabold tracking-tight tabular-nums text-[#4082ea] dark:text-sky-400"
-                            aria-live="polite"
-                          >
-                            {card.value}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* subtle hover accent bar */}
-                      <div className="absolute inset-x-0 bottom-0 h-[3px] bg-gradient-to-r from-transparent via-[#4082ea]/20 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
-                    </Card>
-                  ))}
+        <Card className="mb-8 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+          <CardHeader className="pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                  <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
                 </div>
-              </TabsContent>
-            </Tabs>
+                <span className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('overview')}</span>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                {/* Time Period Tabs */}
+                <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+                  <button
+                    onClick={() => setSelectedPeriod('daily')}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                      selectedPeriod === 'daily'
+                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                    }`}
+                  >
+                    {t('daily')}
+                  </button>
+                  <button
+                    onClick={() => setSelectedPeriod('weekly')}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                      selectedPeriod === 'weekly'
+                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                    }`}
+                  >
+                    {t('weekly')}
+                  </button>
+                  <button
+                    onClick={() => setSelectedPeriod('monthly')}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                      selectedPeriod === 'monthly'
+                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                    }`}
+                  >
+                    {t('monthly')}
+                  </button>
+                  <button
+                    onClick={() => setSelectedPeriod('yearly')}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                      selectedPeriod === 'yearly'
+                        ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                    }`}
+                  >
+                    {t('yearly')}
+                  </button>
+                </div>
+
+                {/* Refresh Button */}
+                <Button 
+                  onClick={handleRefresh} 
+                  variant="outline" 
+                  size="sm"
+                  className="border-[#4082ea] text-[#4082ea] hover:bg-[#4082ea]/10 flex items-center gap-2 transition-all duration-200"
+                  disabled={isRefreshing}
+                  title={
+                    isRefreshing 
+                      ? t('refreshing') 
+                      : t('refreshDashboard')
+                  }
+                >
+                  <RotateCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} /> 
+                  {isRefreshing ? t('refreshing') : tCommon('refresh')}
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {statCards.map((card) => (
+                <Card 
+                  key={card.label} 
+                  className={`relative overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200 bg-gradient-to-br ${card.bgColor} dark:from-gray-800 dark:via-gray-800 dark:to-gray-800`}
+                >
+                  <CardContent className="pt-6 pb-6 px-6 flex flex-col items-center text-center space-y-3">
+                    {/* Label/Title */}
+                    <h3 className={`text-sm font-semibold uppercase tracking-wide ${card.textColor}`}>
+                      {card.label}
+                    </h3>
+                    
+                    {/* Main Value */}
+                    {card.loading ? (
+                      <div className="h-12 w-32 rounded bg-gray-200/50 dark:bg-gray-700/50 animate-pulse" />
+                    ) : (
+                      <div className={`text-5xl font-bold tabular-nums ${card.valueColor}`}>
+                        {card.value.toLocaleString()}
+                      </div>
+                    )}
+                    
+                    {/* Subtitle */}
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                      {t('totalVolume')}
+                    </p>
+                    
+                    {/* Percentage or Additional Info */}
+                    {!card.loading && (
+                      <div className="pt-2 border-t border-gray-200 w-full">
+                        <p className={`text-sm font-semibold ${card.valueColor}`}>
+                          {card.percentage}% {tCommon('of')} {t('totalRequests')}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
         {/* Recent Requests Table */}
         <div className="p-0">
-        <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <div className="flex justify-between items-center px-2 py-2">
           <div>
-             <h1 className="text-xl font-semibold">{tRequests('title')}</h1>
-            <p className="text-sm text-gray-400">{t('viewAndManage')}</p>
+             <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{tRequests('title')}</h1>
+            <p className="text-sm text-gray-400 dark:text-gray-500">{t('viewAndManage')}</p>
           </div>
           {/* <Button
             className="bg-[#4082ea] hover:bg-[#4082ea] text-white"

@@ -56,7 +56,7 @@ const TicketDetails = ({ ticket, onClose }: { ticket: Ticket | null, onClose: ()
             ticket.status === "open" ? "bg-blue-100 text-blue-800" :
             ticket.status === "closed" ? "bg-green-100 text-green-800" :
             ticket.status === "in_progress" ? "bg-yellow-100 text-yellow-800" :
-            "bg-gray-100 text-gray-800"
+            "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
           }`}>
             {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
           </Badge>
@@ -64,7 +64,7 @@ const TicketDetails = ({ ticket, onClose }: { ticket: Ticket | null, onClose: ()
             ticket.priority === "urgent" ? "bg-red-100 text-red-800" :
             ticket.priority === "high" ? "bg-orange-100 text-orange-800" :
             ticket.priority === "medium" ? "bg-yellow-100 text-yellow-800" :
-            "bg-gray-100 text-gray-800"
+            "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
           }`}>
             {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
           </Badge>
@@ -72,15 +72,15 @@ const TicketDetails = ({ ticket, onClose }: { ticket: Ticket | null, onClose: ()
       </div>
       
       <div className="space-y-2">
-        <h4 className="font-medium text-gray-700">Description</h4>
-        <p className="text-gray-600 bg-gray-50 p-3 rounded-lg">
+        <h4 className="font-medium text-gray-700 dark:text-gray-300">Description</h4>
+        <p className="text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
           {ticket.description}
         </p>
       </div>
       
       {ticket.tags && ticket.tags.length > 0 && (
         <div className="space-y-2">
-          <h4 className="font-medium text-gray-700">Tags</h4>
+          <h4 className="font-medium text-gray-700 dark:text-gray-300">Tags</h4>
           <div className="flex flex-wrap gap-1">
             {ticket.tags.map((tag: string, index: number) => (
               <Badge key={index} variant="secondary" className="text-xs">
@@ -186,18 +186,18 @@ export default function MyTicketsClientPage() {
   return (
     <DashboardLayout title={t('title')} isFetching={isLoading || isFetching}>
       <div className="p-0">  
-      <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
       <div className="flex justify-between items-center px-2 py-2">
           <div>
           <div className="relative inline-block">
-                <h2 className="text-lg font-semibold text-gray-800">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                   {activeTab === "open" ? t('myTickets') : t('allTickets')}
                 </h2>
-                <span className="absolute -top-2 -right-3 px-2 py-0.5 text-[10px] font-medium rounded-full bg-[#e7eeff] text-[#4082ea]">
+                <span className="absolute -top-2 -right-3 px-2 py-0.5 text-[10px] font-medium rounded-full bg-[#e7eeff] dark:bg-blue-900/30 text-[#4082ea] dark:text-blue-300">
                   {tabTotal}
                 </span>
               </div>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {activeTab === "open" ? t('ticketsRequireAttention') : t('resolvedCompletedTickets')}
               </p>          
               
@@ -215,14 +215,14 @@ export default function MyTicketsClientPage() {
           <hr />
           <div className="flex justify-between items-center px-2 py-2">
           <div className="flex items-center gap-4">
-            <div className="mt-3 inline-flex items-center rounded-lg bg-gray-100 p-1">
+            <div className="mt-3 inline-flex items-center rounded-lg bg-gray-100 dark:bg-gray-700 p-1">
                   <button
                     type="button"
                     onClick={() => setActiveTab("open")}
                     className={`px-3 py-1 text-sm rounded-md transition-colors ${
                       activeTab === "open"
-                        ? "bg-white text-[#4082ea] shadow"
-                        : "text-gray-600 hover:text-gray-800"
+                        ? "bg-white dark:bg-gray-600 text-[#4082ea] dark:text-blue-400 shadow"
+                        : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                     }`}
                   >
                     {t('open')}
@@ -232,8 +232,8 @@ export default function MyTicketsClientPage() {
                     onClick={() => setActiveTab("closed")}
                     className={`px-3 py-1 text-sm rounded-md transition-colors ${
                       activeTab === "closed"
-                        ? "bg-white text-[#4082ea] shadow"
-                        : "text-gray-600 hover:text-gray-800"
+                        ? "bg-white dark:bg-gray-600 text-[#4082ea] dark:text-blue-400 shadow"
+                        : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                     }`}
                   >
                     {t('closed')}
@@ -255,8 +255,8 @@ export default function MyTicketsClientPage() {
           
 
           {visibleTickets.length === 0 ? (
-            <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg p-6">
-              <FileText className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+              <FileText className="w-8 h-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
               <p>{t('noTicketsFound')}</p>
               <p className="text-sm mt-1">{t('tryAdjustingFilters')}</p>
             </div>

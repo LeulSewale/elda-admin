@@ -207,19 +207,19 @@ export function DataTable<TData, TValue>({
           {/* Right group: Search and actions */}
           <div className="flex items-center gap-2">
             <div className="relative w-72">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
               <Input
                 placeholder={searchPlaceholder}
                 value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
                 onChange={(event) => table.getColumn(searchKey)?.setFilterValue(event.target.value)}
-                className="pl-10 h-10 text-sm border-[#e7eeff] focus-visible:ring-1 focus-visible:ring-[#e7eeff]"
+                className="pl-10 h-10 text-sm border-[#e7eeff] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 focus-visible:ring-1 focus-visible:ring-[#e7eeff] dark:focus-visible:ring-gray-600"
               />
             </div>
             {showExportButton && (
               <Button
                 variant="outline"
                 size="sm"
-                className="h-10 border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
+                className="h-10 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200"
                 onClick={handleExportCSV}
               >
                 <FileDown className="h-4 w-4 mr-2" />
@@ -245,11 +245,11 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      <div className="rounded-md border bg-white overflow-x-auto">
+      <div className="rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="bg-gray-100">
+              <TableRow key={headerGroup.id} className="bg-gray-100 dark:bg-gray-700">
                 {headerGroup.headers.map((header) => {
                   const isSorted = header.column.getIsSorted();
                   const canSort = header.column.getCanSort();
@@ -257,7 +257,7 @@ export function DataTable<TData, TValue>({
                     <TableHead
                       key={header.id}
                       className={
-                        `font-semibold text-gray-700 select-none group ${canSort ? 'cursor-pointer' : ''}`
+                        `font-semibold text-gray-700 dark:text-gray-300 select-none group ${canSort ? 'cursor-pointer' : ''}`
                       }
                       onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
                     >
@@ -289,7 +289,7 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                   className={
-                    `hover:bg-[#F6FAF0] transition-colors ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'} border-b border-gray-200 ${
+                    `hover:bg-[#F6FAF0] dark:hover:bg-gray-700 transition-colors ${i % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'} border-b border-gray-200 dark:border-gray-700 ${
                       getRowClassName ? getRowClassName(row.original, i) : ''
                     }`
                   }
@@ -297,7 +297,7 @@ export function DataTable<TData, TValue>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      className={`py-4 px-4 text-[13px] font-semibold`}
+                      className={`py-4 px-4 text-[13px] font-semibold text-gray-900 dark:text-gray-100`}
                       data-cell-id={cell.column.id}
                     >
                       {flexRender(cell.column.columnDef.cell, { ...cell.getContext(), visibleIndex: i })}

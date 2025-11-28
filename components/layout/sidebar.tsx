@@ -23,6 +23,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { Logo } from "@/components/ui/logo"
 import { useTranslations } from 'next-intl'
 import { LanguageSwitcher } from '@/components/language-switcher'
+import { AppearanceSettings } from '@/components/settings/appearance-settings'
 import { getCurrentLocaleFromPath } from '@/lib/language-utils'
 
 const navigation = [
@@ -75,7 +76,7 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
   return (
     <div
       className={cn(
-        "flex h-full flex-col bg-white border-r border-gray-200 transition-all duration-300 shadow-sm",
+        "flex h-full flex-col bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 shadow-sm",
         collapsed ? "w-16" : "w-64",
       )}
     >
@@ -87,7 +88,7 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
             className="drop-shadow-md"
             fallbackText="E"
           />
-          {!collapsed && <span className="text-xl font-bold text-gray-900">ELDA</span>}
+          {!collapsed && <span className="text-xl font-bold text-gray-900 dark:text-gray-100">ELDA</span>}
         </Link>
       </div>
 
@@ -114,7 +115,7 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
                   return (
                     <>
                       {!collapsed && (
-                        <h3 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 border-b border-gray-100 pb-2">
+                        <h3 className="px-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 border-b border-gray-100 dark:border-gray-800 pb-2">
                           {t(section.name.toLowerCase())}
                         </h3>
                       )}
@@ -133,14 +134,14 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
                             collapsed ? "justify-center" : "",
                             isActive
                               ? "bg-[#4082ea] text-white border-[#4082ea] shadow-md font-semibold"
-                              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-transparent hover:border-gray-200",
+                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 border-transparent hover:border-gray-200 dark:hover:border-gray-700",
                           )}
                         >
                           <item.icon
                             className={cn(
                               "h-5 w-5 flex-shrink-0 transition-colors",
                               collapsed ? "mr-0" : "mr-3",
-                              isActive ? "text-white" : "text-gray-500 group-hover:text-gray-700",
+                              isActive ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300",
                             )}
                           />
                           {!collapsed && t(item.name)}
@@ -169,9 +170,20 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
         </TooltipProvider>
       </nav>
       
-      {/* Language Switcher */}
-      <div className={cn("px-4 pb-2", collapsed && "px-2")}>
-        <LanguageSwitcher />
+      {/* Settings and Language Switcher */}
+      <div className={cn("px-4 pb-2 space-y-2", collapsed && "px-2")}>
+        {!collapsed && (
+          <div className="flex items-center gap-2">
+            <AppearanceSettings />
+            <LanguageSwitcher />
+          </div>
+        )}
+        {collapsed && (
+          <div className="flex flex-col items-center gap-2">
+            <AppearanceSettings />
+            <LanguageSwitcher />
+          </div>
+        )}
       </div>
       
       {/* Log Out at the bottom */}

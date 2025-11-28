@@ -15,6 +15,7 @@
 import { Logo } from "@/components/ui/logo"
 import { useTranslations } from 'next-intl'
 import { LanguageSwitcher } from '@/components/language-switcher'
+import { AppearanceSettings } from '@/components/settings/appearance-settings'
 import { usePathname } from 'next/navigation'
 import { getCurrentLocaleFromPath } from '@/lib/language-utils'
 import { getErrorMessage, getErrorTitle } from '@/lib/error-utils'
@@ -77,9 +78,10 @@ export default function SignupPageClient() {
   }
   
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-2 sm:p-4">
-        {/* Language Switcher - Top Right */}
-        <div className="absolute top-4 right-4 z-10">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-2 sm:p-4">
+        {/* Settings and Language Switcher - Top Right */}
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          <AppearanceSettings />
           <LanguageSwitcher />
         </div>
         
@@ -103,14 +105,19 @@ export default function SignupPageClient() {
           </div>
                      {/* Right side - Register Form */}
            <div className="w-full max-w-lg lg:max-w-2xl mx-auto">
-             <Card className="bg-gradient-to-br from-white via-blue-50 to-blue-100 shadow-md rounded-xl lg:rounded-2xl border-0 transition-transform duration-300 hover:scale-[1.02] animate-fade-in">
+             <Card className="bg-gradient-to-br from-white dark:from-gray-800 via-blue-50 dark:via-gray-800 to-blue-100 dark:to-gray-800 shadow-md rounded-xl lg:rounded-2xl border-0 dark:border-gray-700 transition-transform duration-300 hover:scale-[1.02] animate-fade-in">
                                <CardHeader className="text-center px-4 lg:px-6">
                   <CardTitle className="text-2xl lg:text-3xl text-blue-500 font-extrabold tracking-tight">ELDA SYSTEM</CardTitle>
-                  <div className="mt-2 text-gray-500 text-base lg:text-lg font-medium">{t('signupTitle')}</div>
-                  <div className="mt-1 text-gray-400 text-xs lg:text-sm">{t('signupSubtitle')}</div>
+                  <div className="mt-2 text-gray-500 dark:text-gray-400 text-base lg:text-lg font-medium">{t('signupTitle')}</div>
+                  <div className="mt-1 text-gray-400 dark:text-gray-500 text-xs lg:text-sm">{t('signupSubtitle')}</div>
                 </CardHeader>
                <div className="border-b border-gray-200 mx-4 lg:mx-6 mb-4 lg:mb-6" />
                <CardContent className="space-y-4 lg:space-y-6 px-4 lg:px-6">
+                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-center">
+                   <p className="text-xs lg:text-sm text-amber-800">
+                     Make sure you enter the correct information of the user, as it will be used
+                   </p>
+                 </div>
                                  <Form {...form}>
                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                      {/* First four fields in two columns */}
@@ -233,7 +240,7 @@ export default function SignupPageClient() {
                     </Button>
                   </form>
                 </Form>
-                <div className="text-center text-xs lg:text-sm text-gray-600">
+                <div className="text-center text-xs lg:text-sm text-gray-600 dark:text-gray-400">
                   {t('alreadyHaveAccount')}{" "}
                   <Link href={`/${currentLocale}/login`} className="text-blue-500 hover:underline font-semibold">
                     {tCommon('login')}

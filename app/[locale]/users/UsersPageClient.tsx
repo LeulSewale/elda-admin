@@ -250,22 +250,22 @@ export function UsersPageClient() {
     {
       accessorKey: "name",
       header: tCommon('name'),
-      cell: ({ row }: any) => <span>{row.original.name}</span>,
+      cell: ({ row }: any) => <span className="text-gray-900 dark:text-gray-100">{row.original.name}</span>,
     },
     {
       accessorKey: "email",
       header: tCommon('email'),
-      cell: ({ row }: any) => <span>{row.original.email}</span>,
+      cell: ({ row }: any) => <span className="text-gray-900 dark:text-gray-100">{row.original.email}</span>,
     },
     {
       accessorKey: "phone",
       header: tCommon('phone'),
-      cell: ({ row }: any) => <span>{row.original.phone || "-"}</span>,
+      cell: ({ row }: any) => <span className="text-gray-900 dark:text-gray-100">{row.original.phone || "-"}</span>,
     },
     {
       accessorKey: "role",
       header: t('role'),
-      cell: ({ row }: any) => <span className="capitalize">{t(row.original.role)}</span>,
+      cell: ({ row }: any) => <span className="capitalize text-gray-900 dark:text-gray-100">{t(row.original.role)}</span>,
     },
     {
       accessorKey: "is_active",
@@ -273,15 +273,15 @@ export function UsersPageClient() {
       cell: ({ row }: any) => {
         const active = !!row.original.is_active
         if (active) {
-          return <Badge className="bg-blue-500 text-white">{t('active')}</Badge>
+          return <Badge className="bg-blue-500 dark:bg-blue-600 text-white">{t('active')}</Badge>
         } 
-        return <Badge className="bg-[#FACC15] text-white">{t('inactive')}</Badge>
+        return <Badge className="bg-[#FACC15] dark:bg-yellow-600 text-white">{t('inactive')}</Badge>
       },
     },
     { accessorKey: "created_at",
       header: t('joinedAt'), 
       cell: ({ row }: any) => (
-       <div className="text-gray-600">
+       <div className="text-gray-600 dark:text-gray-300">
          {row.original.created_at ? new Date(row.original.created_at).toLocaleDateString("en-US", {
            month: "short",
            day: "numeric",
@@ -304,7 +304,7 @@ export function UsersPageClient() {
                 setSelectedUser(user)
                 setDetailModalOpen(true)
               }}
-              className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors cursor-pointer"
+              className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 rounded-md transition-colors cursor-pointer"
               title="View user"
               type="button"
               style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
@@ -318,7 +318,7 @@ export function UsersPageClient() {
                 setSelectedUser(user)
                 setEditUserModalOpen(true)
               }}
-              className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors cursor-pointer"
+              className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 rounded-md transition-colors cursor-pointer"
               title="Edit user"
               type="button"
               style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
@@ -335,7 +335,7 @@ export function UsersPageClient() {
                 setSelectedUser(user)
                 setDeleteModalOpen(true)
               }}
-              className={`p-2 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors ${role !== "admin" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+              className={`p-2 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 rounded-md transition-colors ${role !== "admin" ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
               title={role !== "admin" ? "Only admins can delete users" : "Delete user"}
               type="button"
               style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
@@ -412,11 +412,11 @@ export function UsersPageClient() {
   return (
     <DashboardLayout title={t('pageTitle')} isFetching={isFetching}>
       <div className="p-0">
-      <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
         <div className="flex justify-between items-center px-2 py-2">
           <div>
-             <h1 className="text-xl font-semibold">{t('pageTitle')}</h1>
-            <p className="text-sm text-gray-400">{t('pageSubtitle')}</p>
+             <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('pageTitle')}</h1>
+            <p className="text-sm text-gray-400 dark:text-gray-500">{t('pageSubtitle')}</p>
           </div>
           {role === "admin" && (
           <Button
@@ -433,8 +433,8 @@ export function UsersPageClient() {
 
         {error ? (
           <div className="text-center py-10">
-            <div className="text-red-500 mb-2">{t('failedToLoad')}</div>
-            <div className="text-sm text-gray-500">Check console for details</div>
+            <div className="text-red-500 dark:text-red-400 mb-2">{t('failedToLoad')}</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Check console for details</div>
             <Button 
               onClick={() => refetch()} 
               className="mt-4"
@@ -446,8 +446,8 @@ export function UsersPageClient() {
         ) : (
           <div className="relative">
             {isFetching && !isLoading && (
-              <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-5 pointer-events-none">
-                <div className="flex items-center gap-2 text-gray-600">
+              <div className="absolute inset-0 bg-white/60 dark:bg-gray-800/60 flex items-center justify-center z-5 pointer-events-none">
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                   <Loader2 className="animate-spin w-5 h-5" />
                   {t('syncingUsers')}
                 </div>

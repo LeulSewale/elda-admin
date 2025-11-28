@@ -254,8 +254,8 @@ export default function DocumentsPageClient() {
   // Folder-like UI component for document threads
   const DocumentThreadFolder = ({ thread }: { thread: DocThread }) => {
     const statusColors: Record<string, string> = {
-      open: "bg-emerald-100 text-emerald-800 border-emerald-200",
-      closed: "bg-gray-100 text-gray-800 border-gray-200",
+      open: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+      closed: "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600",
     };
 
     const getFolderIcon = () => {
@@ -306,7 +306,7 @@ export default function DocumentsPageClient() {
           
           {/* Status Badge */}
           <div className="absolute top-2 right-2">
-            <div className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[thread.status] || "bg-gray-100 text-gray-800"}`}>
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[thread.status] || "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"}`}>
               {thread.status}
             </div>
           </div>
@@ -315,13 +315,13 @@ export default function DocumentsPageClient() {
         
         {/* Folder Label */}
         <div className="mt-2 text-center">
-          <h3 className="text-sm font-medium text-gray-900 truncate max-w-32" title={thread.subject}>
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-32" title={thread.subject}>
             {thread.subject}
           </h3>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
             {thread.user_name}
           </p>
-          <div className="flex items-center justify-center mt-1 text-xs text-gray-400">
+          <div className="flex items-center justify-center mt-1 text-xs text-gray-400 dark:text-gray-500">
             <Clock className="h-3 w-3 mr-1" />
             {new Date(thread.last_document_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
           </div>
@@ -333,11 +333,11 @@ export default function DocumentsPageClient() {
   return (
     <DashboardLayout title={t('title')} isFetching={isFetching}>
       <div className="p-0">       
-        <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
            <div className="flex justify-between items-center px-2 py-2">
           <div>
-             <h1 className="text-xl font-semibold">{t('pageTitle')}</h1>
-            <p className="text-sm text-gray-400">{t('pageSubtitle')}</p>
+             <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('pageTitle')}</h1>
+            <p className="text-sm text-gray-400 dark:text-gray-500">{t('pageSubtitle')}</p>
           </div>
           <div className="flex items-center gap-4">
             <DateRangeFilter onDateRangeChange={handleDateRangeChange} />

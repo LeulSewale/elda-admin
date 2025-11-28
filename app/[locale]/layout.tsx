@@ -7,6 +7,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from 'next-intl/server'
 import { locales } from '@/lib/i18n'
 import { LanguageInitializer } from '@/components/LanguageInitializer'
+import { ThemeInitializer } from '@/components/ThemeInitializer'
 
 export default async function LocaleLayout({ 
   children,
@@ -36,6 +37,7 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider messages={messages}>
       <LanguageInitializer />
+      <ThemeInitializer />
       <Providers>
         <AuthGate>
           <SidebarProvider>

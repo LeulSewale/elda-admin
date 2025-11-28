@@ -320,14 +320,14 @@ export function EmployeesPageClient() {
       accessorKey: "user_name",
       header: "Full Name",
       cell: ({ row }: any) => (
-        <div className="font-medium text-gray-900">{row.original.user_name}</div>
+        <div className="font-medium text-gray-900 dark:text-gray-100">{row.original.user_name}</div>
       ),
     },
     {
       accessorKey: "user_phone",
       header: "Phone",
       cell: ({ row }: any) => (
-        <div className="text-gray-600 max-w-xs truncate" title={row.original.user_phone || "No phone"}>
+        <div className="text-gray-600 dark:text-gray-300 max-w-xs truncate" title={row.original.user_phone || "No phone"}>
           {row.original.user_phone || "N/A"}
         </div>
       ),
@@ -336,21 +336,21 @@ export function EmployeesPageClient() {
       accessorKey: "user_email",
       header: "Email",
       cell: ({ row }: any) => (
-        <div className="text-gray-600">{row.original.user_email}</div>
+        <div className="text-gray-600 dark:text-gray-300">{row.original.user_email}</div>
       ),
     },
     {
       accessorKey: "job_title",
       header: "Job Title",
       cell: ({ row }: any) => (
-        <div className="text-gray-600">{row.original.job_title}</div>
+        <div className="text-gray-600 dark:text-gray-300">{row.original.job_title}</div>
       ),
     },
     {
       accessorKey: "department",
       header: "Department",
       cell: ({ row }: any) => (
-        <Badge className="bg-blue-100 text-blue-800 border border-blue-200">
+        <Badge className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700">
           {row.original.department}
         </Badge>
       ),
@@ -359,7 +359,7 @@ export function EmployeesPageClient() {
       accessorKey: "salary",
       header: "Salary (Birr)",
       cell: ({ row }: any) => (
-        <Badge className="bg-green-100 text-green-800 border border-green-200">
+        <Badge className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-700">
           {parseFloat(row.original.salary).toLocaleString()} Br
         </Badge>
       ),
@@ -368,7 +368,7 @@ export function EmployeesPageClient() {
       accessorKey: "district",
       header: "District",
       cell: ({ row }: any) => (
-        <div className="text-gray-600">{row.original.district}</div>
+        <div className="text-gray-600 dark:text-gray-300">{row.original.district}</div>
       ),
     },
     {
@@ -377,14 +377,14 @@ export function EmployeesPageClient() {
       cell: ({ row }: any) => {
         const type = row.original.employment_type;
         const typeColors: Record<string, string> = {
-          full_time: "bg-emerald-50 text-emerald-700 border border-emerald-200",
-          part_time: "bg-blue-50 text-blue-700 border border-blue-200",
-          contractual: "bg-rose-50 text-rose-700 border border-rose-200",
+          full_time: "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700",
+          part_time: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700",
+          contractual: "bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-700",
         };
     
         return (
           <Badge
-            className={`${typeColors[type] || "bg-gray-50 text-gray-700 border border-gray-200"} 
+            className={`${typeColors[type] || "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"} 
               px-3 py-1 rounded-full text-xs font-medium`}
           >
             {type.replace('_', ' ').toUpperCase()}
@@ -398,14 +398,14 @@ export function EmployeesPageClient() {
       cell: ({ row }: any) => {
         const status = row.original.status;
         const statusColors: Record<string, string> = {
-          active: "bg-green-50 text-green-700 border border-green-200",
-          inactive: "bg-red-50 text-red-700 border border-red-200",
-          terminated: "bg-gray-50 text-gray-700 border border-gray-200",
+          active: "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-700",
+          inactive: "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-700",
+          terminated: "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600",
         };
     
         return (
           <Badge
-            className={`${statusColors[status] || "bg-gray-50 text-gray-700 border border-gray-200"} 
+            className={`${statusColors[status] || "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"} 
               px-3 py-1 rounded-full text-xs font-medium`}
           >
             {status.toUpperCase()}
@@ -417,7 +417,7 @@ export function EmployeesPageClient() {
       accessorKey: "hired_at",
       header: "Hired At", 
       cell: ({ row }: any) => (
-       <div className="text-gray-600">
+       <div className="text-gray-600 dark:text-gray-300">
          {new Date(row.original.hired_at).toLocaleDateString("en-US", {
            month: "short",
            day: "numeric",
@@ -441,7 +441,7 @@ export function EmployeesPageClient() {
                 setSelectedEmployee(employee);
                 setDetailModalOpen(true);
               }}
-              className="p-2 hover:bg-purple-50 hover:text-purple-600 rounded-md transition-colors cursor-pointer"
+              className="p-2 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 rounded-md transition-colors cursor-pointer"
               title="View details"
               type="button"
               style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
@@ -455,7 +455,7 @@ export function EmployeesPageClient() {
                 setSelectedEmployee(employee);
                 setEditEmployeeModalOpen(true);
               }}
-              className="p-2 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors cursor-pointer"
+              className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 rounded-md transition-colors cursor-pointer"
               title="Edit employee"
               type="button"
               style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
@@ -469,7 +469,7 @@ export function EmployeesPageClient() {
                 setSelectedEmployee(employee);
                 setUploadFilesModalOpen(true);
               }}
-              className="p-2 hover:bg-green-50 hover:text-green-600 rounded-md transition-colors cursor-pointer"
+              className="p-2 hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 rounded-md transition-colors cursor-pointer"
               title="Upload files"
               type="button"
               style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
@@ -483,7 +483,7 @@ export function EmployeesPageClient() {
                 setSelectedEmployee(employee);
                 setDeleteEmployeeModalOpen(true);
               }}
-              className="p-2 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors cursor-pointer"
+              className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 rounded-md transition-colors cursor-pointer"
               title="Delete employee"
               type="button"
               style={{ pointerEvents: 'auto', zIndex: 100, position: 'relative' }}
@@ -500,7 +500,7 @@ export function EmployeesPageClient() {
   if (role !== "admin" && role !== "HR-manager") {
     return (
       <DashboardLayout title="Packages">
-        <div className="text-center py-10 text-gray-500">
+        <div className="text-center py-10 text-gray-500 dark:text-gray-400">
           You don't have permission to access this page.
         </div>
       </DashboardLayout>
@@ -510,11 +510,11 @@ export function EmployeesPageClient() {
   return (
     <DashboardLayout title={t('title')} isFetching={isFetching}>
       <div className="p-0">
-      <div className="bg-white rounded-lg p-2 border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <div className="flex justify-between items-center px-2 py-2">
             <div>
-              <h1 className="text-xl font-semibold">{t('pageTitle')}</h1>
-              <p className="text-sm text-gray-400">{t('pageSubtitle')}</p>
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('pageTitle')}</h1>
+              <p className="text-sm text-gray-400 dark:text-gray-500">{t('pageSubtitle')}</p>
             </div>
             <div className="flex gap-2">
                 {/* Create Employee - Primary */}
@@ -559,8 +559,8 @@ export function EmployeesPageClient() {
         {/* Employees Table */}
         {error ? (
           <div className="text-center py-10">
-            <div className="text-red-500 mb-2">Failed to load employees</div>
-            <div className="text-sm text-gray-500">Check console for details</div>
+            <div className="text-red-500 dark:text-red-400 mb-2">Failed to load employees</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Check console for details</div>
             <Button
               onClick={() => refetch()}
               className="mt-4"
@@ -572,8 +572,8 @@ export function EmployeesPageClient() {
         ) : (
           <div className="relative">
             {isFetching && !isLoading && (
-              <div data-employees-overlay className="absolute inset-0 bg-white/60 flex items-center justify-center z-[5] pointer-events-none">
-                <div className="flex items-center gap-2 text-gray-600">
+              <div data-employees-overlay className="absolute inset-0 bg-white/60 dark:bg-gray-800/60 flex items-center justify-center z-[5] pointer-events-none">
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                   <PackageIcon className="animate-spin w-5 h-5" />
                   Syncing employees...
                 </div>

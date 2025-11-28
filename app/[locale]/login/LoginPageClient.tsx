@@ -13,6 +13,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Logo } from "@/components/ui/logo"
 import { useTranslations } from 'next-intl'
 import { LanguageSwitcher } from '@/components/language-switcher'
+import { AppearanceSettings } from '@/components/settings/appearance-settings'
 import { Phone, Eye, EyeOff } from "lucide-react"
 import { usePathname } from 'next/navigation'
 import { getCurrentLocaleFromPath } from '@/lib/language-utils'
@@ -56,9 +57,10 @@ export default function LoginPage() {
   }
   
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        {/* Language Switcher - Top Right */}
-        <div className="absolute top-4 right-4 z-10">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
+        {/* Settings and Language Switcher - Top Right */}
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          <AppearanceSettings />
           <LanguageSwitcher />
         </div>
         
@@ -82,7 +84,7 @@ export default function LoginPage() {
   
           {/* Right form panel */}
           <div className="w-full max-w-md mx-auto">
-            <Card className="bg-gradient-to-br from-white via-[#f6ffe8] to-[#e8f7d4] shadow-md rounded-2xl border-0 transition-transform duration-300 hover:scale-[1.02] animate-fade-in">
+            <Card className="bg-gradient-to-br from-white dark:from-gray-800 via-[#f6ffe8] dark:via-gray-800 to-[#e8f7d4] dark:to-gray-800 shadow-md rounded-2xl border-0 dark:border-gray-700 transition-transform duration-300 hover:scale-[1.02] animate-fade-in">
               <CardHeader className="text-center lg:hidden">
                 <div className="inline-flex items-center justify-center mb-4">
                   <Logo
@@ -95,7 +97,7 @@ export default function LoginPage() {
                   />
                 </div>
                 <CardTitle className="text-2xl text-[#4082ea] font-extrabold tracking-tight">ELDA SYSTEM</CardTitle>
-                <div className="mt-2 text-gray-500 text-sm font-medium">Admin/Company Login</div>
+                <div className="mt-2 text-gray-500 dark:text-gray-400 text-sm font-medium">Admin/Company Login</div>
               </CardHeader>
               <div className="border-b border-gray-200 mx-6 mb-4" />
               <CardContent className="space-y-6">
@@ -174,7 +176,7 @@ export default function LoginPage() {
                   </form>
                 </Form>
                 {/* Sign up link */}
-                <div className="text-center text-sm text-gray-600">
+                <div className="text-center text-sm text-gray-600 dark:text-gray-400">
                   {t('dontHaveAccount')}{" "}
                   <Link href={`/${currentLocale}/signup`} className="text-blue-500 hover:underline font-semibold">
                     {tCommon('signup')}

@@ -105,7 +105,8 @@
     "viewAndManage": "የጥያቄ አያያዝን ይመልከቱ እና ያያዩ",
     "refreshDashboard": "የዳሽቦርድ ዳታን አድስ",
     "refreshing": "በመደስ ላይ...",
-    "noRecentActivity": "የቅርብ እንቅስቃሴ የለም"
+    "noRecentActivity": "የቅርብ እንቅስቃሴ የለም",
+    "totalVolume": "ጠቅላላ መጠን"
   },
   "requests": {
     "title": "የጥያቄ አያያዝ",
@@ -210,6 +211,12 @@
     "urgent": "አስቸኳይ",
     "remarks": "አስተያየቶች",
     "addRemarksAboutAssignment": "ስለዚህ መመደብ ማንኛውንም አስተያየት ይጨምሩ...",
+    "currentStatus": "አሁኑ ሁኔታ",
+    "newStatus": "አዲስ ሁኔታ",
+    "selectNewStatus": "አዲስ ሁኔታ ይምረጡ",
+    "pleaseSelectStatus": "እባክዎ ሁኔታ ይምረጡ።",
+    "failedToChangeStatus": "ሁኔታ መቀየር አልተሳካም። እባክዎ እንደገና ይሞክሩ።",
+    "addRemarksAboutStatusChange": "ስለዚህ የሁኔታ ለውጥ ማንኛውንም አስተያየት ይጨምሩ...",
     "selectDateRange": "የቀን ክልል ይምረጡ",
     "selectEndDate": "የመጨረሻ ቀን ይምረጡ",
     "requestFor": "ጥያቄ ለ",

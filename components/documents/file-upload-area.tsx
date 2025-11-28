@@ -134,10 +134,10 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
   }
 
   return (
-    <div className="bg-white border-t border-gray-200 p-4">
+    <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
       <div className="space-y-3">
         {/* File Selection */}
-        <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+        <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
           <div className="relative">
             <input
               type="file"
@@ -152,7 +152,7 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="p-2 border-blue-300 hover:bg-blue-100" 
+                className="p-2 border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/30" 
                 disabled={disabled || isUploading || selectedFiles.length >= 5}
                 asChild
               >
@@ -165,10 +165,10 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
           </div>
           
           <div className="flex-1">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 dark:text-gray-300">
               📁 {t('chooseUpTo5Files')}
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
               {selectedFiles.length}/5 {t('filesSelected')} • {t('max40MBPerFile')}
             </div>
           </div>
@@ -177,20 +177,20 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
         {/* File List with Metadata */}
         {selectedFiles.length > 0 && (
           <div className="space-y-3">
-            <div className="text-sm font-medium text-gray-700 mb-2">
+            <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               📝 {t('addTitlesAndMetadata')}
             </div>
             {selectedFiles.map((item, index) => (
-              <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div key={index} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 {/* File Info Row */}
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-2xl">{getFileIcon(item.file)}</span>
                   
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-gray-900 truncate">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                       {item.file.name}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
                       {formatFileSize(item.file.size)}
                     </div>
                   </div>
@@ -198,7 +198,7 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                    className="h-8 w-8 p-0 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
                     onClick={() => handleRemoveFile(index)}
                     disabled={isUploading}
                   >
@@ -210,17 +210,17 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
                 <div className="space-y-3">
                   {/* Title Input */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                       {t('documentTitleOptional')}
                     </label>
                     <Input
                       placeholder={`${t('enterTitleFor')} ${item.file.name.split('.')[0]}...`}
                       value={item.title}
                       onChange={(e) => handleTitleChange(index, e.target.value)}
-                      className="w-full h-9 text-sm"
+                      className="w-full h-9 text-sm dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
                       disabled={isUploading}
                     />
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       {t('leaveEmptyToUseFilename')}
                     </div>
                   </div>
@@ -237,7 +237,7 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
                     />
                     <label 
                       htmlFor={`confidential-${index}`}
-                      className="text-sm text-gray-700 cursor-pointer"
+                      className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer"
                     >
                       🔒 {t('markAsConfidential')}
                     </label>
@@ -250,10 +250,10 @@ export function FileUploadArea({ onUpload, isUploading = false, disabled = false
 
         {/* Upload Button */}
         {selectedFiles.length > 0 && (
-          <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
-            <div className="text-sm text-gray-700">
+          <div className="flex justify-between items-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+            <div className="text-sm text-gray-700 dark:text-gray-300">
               <div className="font-medium">{t('readyToUpload')} {selectedFiles.length} {t('file')}{selectedFiles.length > 1 ? 's' : ''}</div>
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 dark:text-gray-400">
                 {selectedFiles.filter(f => f.title.trim()).length} {t('withCustomTitles')} • 
                 {selectedFiles.filter(f => f.is_confidential).length} {t('markedConfidential')}
               </div>
