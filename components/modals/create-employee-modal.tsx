@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useForm as useReactHookForm, Controller } from "react-hook-form"
+import { useForm as useReactHookForm } from "react-hook-form"
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form"
 import { GlobalModal } from "./global-modal"
 import { useEffect } from "react"
@@ -89,27 +89,7 @@ function PersonalInfoFields({ control, isLoading }: { control: any; isLoading?: 
               District
             </FormLabel>
               <FormControl>
-                <Controller
-                  control={control}
-                  name="district"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange} disabled={isLoading}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select district" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Addis Ababa">Addis Ababa</SelectItem>
-                        <SelectItem value="Dire Dawa">Dire Dawa</SelectItem>
-                        <SelectItem value="Harar">Harar</SelectItem>
-                        <SelectItem value="Bahir Dar">Bahir Dar</SelectItem>
-                        <SelectItem value="Mekelle">Mekelle</SelectItem>
-                        <SelectItem value="Hawassa">Hawassa</SelectItem>
-                        <SelectItem value="Gondar">Gondar</SelectItem>
-                        <SelectItem value="Dessie">Dessie</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
+                <Input {...field} disabled={isLoading} placeholder="Enter district" className="dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600" />
               </FormControl>
               <FormMessage />
             </FormItem>

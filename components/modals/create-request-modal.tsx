@@ -102,12 +102,11 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
       return (
         formData.serviceType.trim() !== "" &&
         formData.issueDescription.trim() !== "" &&
-        nationalIdFile !== null &&
-        disabilityCardFile !== null
+        nationalIdFile !== null
       )
     }
     return true // Step 3 has no required fields for now
-  }, [formData, requestFor, nationalIdFile, disabilityCardFile])
+  }, [formData, requestFor, nationalIdFile])
 
   const handleNext = useCallback(() => {
     if (currentStep < steps.length && isStepValid(currentStep)) {
@@ -285,18 +284,8 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
       isSubmittingRef.current = false
       setIsSubmitting(false)
       toast({
-        title: t('nationalIdRequired') || "National ID Required",
-        description: "Please upload your National ID document.",
-        variant: "destructive",
-      })
-      return;
-    }
-    if (!disabilityCardFile) {
-      isSubmittingRef.current = false
-      setIsSubmitting(false)
-      toast({
-        title: t('disabilityCardRequired') || "Disability Card Required",
-        description: "Please upload your Disability Card document.",
+        title: t('nationalIdRequired') || "Government issued identification is required",
+        description: "Please upload your government issued identification document.",
         variant: "destructive",
       })
       return;
@@ -344,7 +333,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
     // Note: isSubmitting will be reset when modal closes via resetForm
     onSubmit?.({ data: apiData, files: filesArray, titles: titlesArray })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSubmitting, isStepValid, currentStep, formData, requestFor, nationalIdFile, disabilityCardFile, otherFile, onSubmit, t])
+  }, [isSubmitting, isStepValid, currentStep, formData, requestFor, nationalIdFile, otherFile, onSubmit, t])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -523,11 +512,11 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                         />
                       </div>
                       <div>
-                        <Label>{t('kebele') || "Kebele"} *</Label>
+                        <Label>{t('kebeleWoredaZone') || "Kebele/Woreda/Zone"} *</Label>
                         <Input
                           value={formData.selfKebele}
                           onChange={(e) => setFormData({ ...formData, selfKebele: e.target.value })}
-                          placeholder={t('enterKebele') || "Enter kebele"}
+                          placeholder={t('enterKebeleWoredaZone') || "Enter kebele/woreda/zone"}
                         />
                       </div>
                     </div>
@@ -607,11 +596,11 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                         />
                       </div>
                       <div>
-                        <Label>{t('kebele') || "Kebele"} *</Label>
+                        <Label>{t('kebeleWoredaZone') || "Kebele/Woreda/Zone"} *</Label>
                         <Input
                           value={formData.kebele}
                           onChange={(e) => setFormData({ ...formData, kebele: e.target.value })}
-                          placeholder={t('enterKebele') || "Enter kebele"}
+                          placeholder={t('enterKebeleWoredaZone') || "Enter kebele/woreda/zone"}
                         />
                       </div>
                       <div>
@@ -721,7 +710,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                 {/* Disability Card Upload */}
                 <div className="space-y-2">
                   <Label className="text-sm font-medium">
-                    {t('disabilityCard')} *
+                    {t('disabilityCard')} <span className="text-gray-400 text-xs">({tCommon('optional')})</span>
                   </Label>
                   <div 
                     className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-[#e7eeff] border-[#4082ea]/50 transition-colors"
