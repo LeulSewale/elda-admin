@@ -194,13 +194,8 @@ export default function AllTicketsClientPage() {
       return res.data.data;
     },
     onSuccess: (newTicket) => {
-      queryClient.setQueryData(["tickets", userRole], (old: any) => {
-        if (!old) return { data: [newTicket], paging: {} };
-        return {
-          ...old,
-          data: [...old.data, newTicket]
-        };
-      })
+      // Invalidate and refetch tickets queries to update the UI dynamically
+      queryClient.invalidateQueries({ queryKey: ["tickets"] })
       toast({ title: "Success", description: `"${newTicket.subject}" has been created successfully.`, variant: "default" });
       setCreateTicketModalOpen(false);
     },
@@ -545,9 +540,9 @@ export default function AllTicketsClientPage() {
         </div>
         {/* Ticket Details Modal */}
         <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] overflow-y-auto sm:w-full">
             <DialogHeader>
-              <DialogTitle className="text-xl">{t('ticketDetails')} & {t('replies')}</DialogTitle>
+              <DialogTitle className="text-lg sm:text-xl text-gray-900 dark:text-gray-100 break-words">{t('ticketDetails')} & {t('replies')}</DialogTitle>
             </DialogHeader>
             
             {selectedCompany && (
@@ -559,31 +554,31 @@ export default function AllTicketsClientPage() {
                                   selectedCompany.priority === 'medium' ? '#eab308' : '#6b7280'
                 }}>
                   <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{selectedCompany.subject}</h3>
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 break-words">{selectedCompany.subject}</h3>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600 dark:text-gray-400">
                           <span className="flex items-center gap-1">
-                            <User className="w-4 h-4" />
-                            {selectedCompany.user}
+                            <User className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">{selectedCompany.user}</span>
                           </span>
                           <span className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            {new Date(selectedCompany.date).toLocaleDateString("en-US", {
+                            <Clock className="w-4 h-4 flex-shrink-0" />
+                            <span className="whitespace-nowrap">{new Date(selectedCompany.date).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
                               year: "numeric",
                               hour: "2-digit",
                               minute: "2-digit"
-                            })}
+                            })}</span>
                           </span>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Badge className={`${getPriorityColor(selectedCompany.priority)}`}>
+                      <div className="flex gap-2 flex-shrink-0">
+                        <Badge className={`${getPriorityColor(selectedCompany.priority)} whitespace-nowrap`}>
                           {selectedCompany.priority.charAt(0).toUpperCase() + selectedCompany.priority.slice(1)}
                         </Badge>
-                        <Badge className={`${getStatusColor(selectedCompany.status)}`}>
+                        <Badge className={`${getStatusColor(selectedCompany.status)} whitespace-nowrap`}>
                           {selectedCompany.status.replace('_', ' ').charAt(0).toUpperCase() + selectedCompany.status.replace('_', ' ').slice(1)}
                         </Badge>
                       </div>
@@ -593,7 +588,7 @@ export default function AllTicketsClientPage() {
                   <CardContent className="space-y-4">
                     <div>
                       <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('description')}</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                      <p className="text-sm text-gray-600 dark:text-gray-300 whitespace-pre-wrap break-words">
                         {selectedCompany.description || t('noDescription')}
                       </p>
                 </div>
@@ -613,18 +608,18 @@ export default function AllTicketsClientPage() {
 
                     {/* Assignee Information */}
                     {selectedCompany.assignee_name && (
-                      <div className="border-t border-gray-200 pt-4">
+                      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                         <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{t('assignment')}</h4>
-                        <div className="flex items-center gap-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                          <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white text-sm font-semibold shadow-md">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
+                          <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white text-sm font-semibold shadow-md flex-shrink-0">
                             {selectedCompany.assignee_name.charAt(0).toUpperCase()}
                           </div>
-                          <div className="flex-1">
+                          <div className="flex-1 min-w-0">
                             <p className="text-xs text-gray-600 dark:text-gray-400">{t('assignedTo')}</p>
-                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{selectedCompany.assignee_name}</p>
-                            <p className="text-xs text-gray-500">{selectedCompany.assignee_email}</p>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{selectedCompany.assignee_name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{selectedCompany.assignee_email}</p>
                           </div>
-                          <Badge variant="secondary" className="bg-purple-100 text-purple-900 border-purple-200">
+                          <Badge variant="secondary" className="bg-purple-100 dark:bg-purple-900/30 text-purple-900 dark:text-purple-300 border-purple-200 dark:border-purple-800 whitespace-nowrap flex-shrink-0">
                             {t('assigned')}
                           </Badge>
                         </div>
@@ -636,9 +631,9 @@ export default function AllTicketsClientPage() {
                 {/* Comments/Replies Section */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      {t('replies')} & {t('comments')} {comments.length > 0 && `(${comments.length})`}
+                    <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2 break-words">
+                      <FileText className="w-4 h-4 flex-shrink-0" />
+                      <span>{t('replies')} & {t('comments')} {comments.length > 0 && `(${comments.length})`}</span>
                     </h4>
                   </div>
 
@@ -646,55 +641,55 @@ export default function AllTicketsClientPage() {
                   {comments.length > 0 ? (
                     <div className="space-y-3 max-h-64 overflow-y-auto">
                       {comments.map((comment: any, idx: number) => (
-                        <Card key={idx} className={`${comment.is_internal ? 'bg-amber-50 border-amber-200' : 'bg-gray-50'}`}>
+                        <Card key={idx} className={`${comment.is_internal ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800' : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'}`}>
                           <CardContent className="p-4">
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-semibold">
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
                                   {comment.author_name?.charAt(0).toUpperCase() || 'U'}
                                 </div>
-                                <div>
-                                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{comment.author_name || 'Unknown'}</p>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{comment.author_name || 'Unknown'}</p>
                                   <p className="text-xs text-gray-500 dark:text-gray-400">
                                     {new Date(comment.created_at).toLocaleString()}
                                   </p>
                                 </div>
                               </div>
                               {comment.is_internal && (
-                                <Badge variant="secondary" className="text-xs bg-amber-200 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300">
+                                <Badge variant="secondary" className="text-xs bg-amber-200 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-800 whitespace-nowrap flex-shrink-0">
                                   {t('internal')}
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{comment.body}</p>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">{comment.body}</p>
                           </CardContent>
                         </Card>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
-                      <FileText className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                      <p className="text-sm text-gray-500">{t('noRepliesYet')}</p>
+                    <div className="text-center py-8 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <FileText className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('noRepliesYet')}</p>
               </div>
             )}
 
                   {/* Reply Input Section for Admins/Lawyers */}
                   {(userRole === "admin" || userRole === "lawyer") && (
-                    <Card className="border-blue-200 bg-blue-50/30">
-                      <CardContent className="p-4 space-y-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <h5 className="text-sm font-semibold text-gray-900">{t('addReply')}</h5>
+                    <Card className="border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-900/20">
+                      <CardContent className="p-3 sm:p-4 space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                          <h5 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{t('addReply')}</h5>
                           <div className="flex items-center gap-2">
                             <input
                               type="checkbox"
                               id="internal-comment"
                               checked={isInternalComment}
                               onChange={(e) => setIsInternalComment(e.target.checked)}
-                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                              className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 flex-shrink-0"
                             />
-                            <label htmlFor="internal-comment" className="text-xs text-gray-600 cursor-pointer flex items-center gap-1">
-                              <AlertTriangle className="w-3 h-3" />
-                              {t('internalNote')}
+                            <label htmlFor="internal-comment" className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3 flex-shrink-0" />
+                              <span>{t('internalNote')}</span>
                             </label>
                           </div>
                         </div>
@@ -702,9 +697,9 @@ export default function AllTicketsClientPage() {
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
                           placeholder={t('typeReplyHere')}
-                          className="w-full min-h-[100px] resize-none"
+                          className="w-full min-h-[100px] resize-none bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600"
                         />
-                        <div className="flex justify-end gap-2">
+                        <div className="flex flex-col sm:flex-row justify-end gap-2">
                           <Button
                             variant="outline"
                             size="sm"
@@ -713,6 +708,7 @@ export default function AllTicketsClientPage() {
                               setIsInternalComment(false);
                             }}
                             disabled={!replyText.trim() || addCommentMutation.isPending}
+                            className="w-full sm:w-auto"
                           >
                             {tCommon('clear')}
                           </Button>
@@ -728,7 +724,7 @@ export default function AllTicketsClientPage() {
                               }
                             }}
                             disabled={!replyText.trim() || addCommentMutation.isPending}
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                            className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
                           >
                             {addCommentMutation.isPending ? (
                               <>
@@ -750,8 +746,8 @@ export default function AllTicketsClientPage() {
               </div>
             )}
             
-            <DialogFooter className="gap-2">
-              <Button variant="outline" onClick={() => setModalOpen(false)} disabled={addCommentMutation.isPending}>
+            <DialogFooter className="gap-2 flex-col sm:flex-row">
+              <Button variant="outline" onClick={() => setModalOpen(false)} disabled={addCommentMutation.isPending} className="w-full sm:w-auto">
                 {tCommon('close')}
                 </Button>
             </DialogFooter>
@@ -787,19 +783,19 @@ export default function AllTicketsClientPage() {
         <Dialog open={changeStatusModalOpen} onOpenChange={setChangeStatusModalOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-xl">{t('changeStatus')} & {t('priority')}</DialogTitle>
+              <DialogTitle className="text-xl text-gray-900 dark:text-gray-100">{t('changeStatus')} & {t('priority')}</DialogTitle>
             </DialogHeader>
             
             {selectedTicketForStatusChange && (
               <div className="space-y-4 py-4">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">{selectedTicketForStatusChange.subject}</h3>
-                  <p className="text-xs text-gray-600">{t('ticketId')}: {selectedTicketForStatusChange.id}</p>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">{selectedTicketForStatusChange.subject}</h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">{t('ticketId')}: {selectedTicketForStatusChange.id}</p>
                 </div>
 
                 {/* Status Selection */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">{t('status')}</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('status')}</label>
                   <Select value={newStatus} onValueChange={setNewStatus}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder={t('selectStatus')} />
@@ -829,7 +825,7 @@ export default function AllTicketsClientPage() {
 
                 {/* Priority Selection */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">{t('priority')}</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('priority')}</label>
                   <Select value={newPriority} onValueChange={setNewPriority}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder={t('selectPriority')} />

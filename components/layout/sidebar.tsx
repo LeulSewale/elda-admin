@@ -181,7 +181,7 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
         {collapsed && (
           <div className="flex flex-col items-center gap-2">
             <AppearanceSettings />
-            <LanguageSwitcher />
+        <LanguageSwitcher />
           </div>
         )}
       </div>

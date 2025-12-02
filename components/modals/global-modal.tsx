@@ -29,11 +29,11 @@ export function GlobalModal({ open, onOpenChange, title, description, children, 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
       <DialogContent 
-        className={`${maxWidthClasses[maxWidth]} w-full max-h-[90vh] overflow-y-auto p-0 rounded-xl shadow-xl bg-white dark:bg-gray-800`}
+        className={`${maxWidthClasses[maxWidth]} w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto overflow-x-hidden p-0 rounded-xl shadow-xl bg-white dark:bg-gray-800`}
         aria-describedby={description ? "modal-description" : undefined}
       >
-        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-800 rounded-t-xl">
-          <DialogTitle className="text-lg font-semibold text-gray-800 dark:text-gray-100">{title}</DialogTitle>
+        <div className="flex items-center justify-between px-3 sm:px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-800 rounded-t-xl">
+          <DialogTitle className="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 break-words pr-2">{title}</DialogTitle>
           {description ? (
             <DialogDescription id="modal-description" className="sr-only">{description}</DialogDescription>
           ) : (
@@ -41,10 +41,10 @@ export function GlobalModal({ open, onOpenChange, title, description, children, 
           )}
         </div>
 
-        <div className="px-2 py-4 w-full flex-1 text-sm text-gray-700 dark:text-gray-300">{children}</div>
+        <div className="px-2 sm:px-4 py-4 w-full flex-1 text-sm text-gray-700 dark:text-gray-300 min-w-0 overflow-x-hidden">{children}</div>
 
         {actions && (
-          <DialogFooter className="px-2 py-2 border-t border-gray-100 dark:border-gray-700">
+          <DialogFooter className="px-2 sm:px-4 py-2 border-t border-gray-100 dark:border-gray-700">
             {actions}
           </DialogFooter>
         )}

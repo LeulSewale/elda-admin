@@ -45,25 +45,25 @@ const TicketDetails = ({ ticket, onClose }: { ticket: Ticket | null, onClose: ()
   if (!ticket) return null
   
   return (
-    <div className="space-y-14">
-      <div className="border-b pb-4">
-        <h3 className="text-lg font-semibold text-gray-900">{ticket.subject}</h3>
-        <p className="text-sm text-gray-500">
+    <div className="space-y-6 sm:space-y-14 min-w-0 w-full overflow-x-hidden">
+      <div className="border-b border-gray-200 dark:border-gray-700 pb-4 min-w-0">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 break-words">{ticket.subject}</h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Created on {new Date(ticket.created_at).toLocaleDateString()}
         </p>
-        <div className="flex gap-2 mt-2">
-          <Badge className={`text-xs ${
-            ticket.status === "open" ? "bg-blue-100 text-blue-800" :
-            ticket.status === "closed" ? "bg-green-100 text-green-800" :
-            ticket.status === "in_progress" ? "bg-yellow-100 text-yellow-800" :
+        <div className="flex flex-wrap gap-2 mt-2">
+          <Badge className={`text-xs whitespace-nowrap ${
+            ticket.status === "open" ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300" :
+            ticket.status === "closed" ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300" :
+            ticket.status === "in_progress" ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300" :
             "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
           }`}>
             {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
           </Badge>
-          <Badge className={`text-xs ${
-            ticket.priority === "urgent" ? "bg-red-100 text-red-800" :
-            ticket.priority === "high" ? "bg-orange-100 text-orange-800" :
-            ticket.priority === "medium" ? "bg-yellow-100 text-yellow-800" :
+          <Badge className={`text-xs whitespace-nowrap ${
+            ticket.priority === "urgent" ? "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300" :
+            ticket.priority === "high" ? "bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300" :
+            ticket.priority === "medium" ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300" :
             "bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
           }`}>
             {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}
@@ -71,19 +71,21 @@ const TicketDetails = ({ ticket, onClose }: { ticket: Ticket | null, onClose: ()
         </div>
       </div>
       
-      <div className="space-y-2">
+      <div className="space-y-2 min-w-0">
         <h4 className="font-medium text-gray-700 dark:text-gray-300">Description</h4>
-        <p className="text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-          {ticket.description}
-        </p>
+        <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg min-w-0 overflow-x-hidden max-w-full">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 break-words whitespace-pre-wrap max-w-full" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+            {ticket.description}
+          </p>
+        </div>
       </div>
       
       {ticket.tags && ticket.tags.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-2 min-w-0">
           <h4 className="font-medium text-gray-700 dark:text-gray-300">Tags</h4>
           <div className="flex flex-wrap gap-1">
             {ticket.tags.map((tag: string, index: number) => (
-              <Badge key={index} variant="secondary" className="text-xs">
+              <Badge key={index} variant="secondary" className="text-xs break-words">
                 {tag}
               </Badge>
             ))}
@@ -92,7 +94,7 @@ const TicketDetails = ({ ticket, onClose }: { ticket: Ticket | null, onClose: ()
       )}
       
       <div className="flex justify-end pt-4">
-        <Button onClick={onClose} variant="outline">
+        <Button onClick={onClose} variant="outline" className="w-full sm:w-auto">
           Close
         </Button>
       </div>
@@ -141,13 +143,8 @@ export default function MyTicketsClientPage() {
       return res.data.data;
     },
     onSuccess: (newTicket) => {
-      queryClient.setQueryData(["tickets", userRole], (old: any) => {
-        if (!old) return { data: [newTicket], paging: {} };
-        return {
-          ...old,
-          data: [...old.data, newTicket]
-        };
-      })
+      // Invalidate and refetch tickets queries to update the UI dynamically
+      queryClient.invalidateQueries({ queryKey: ["tickets"] })
       toast({
         title: "Ticket created successfully",
         description: `"${newTicket.subject}" has been added to open tickets.`,
