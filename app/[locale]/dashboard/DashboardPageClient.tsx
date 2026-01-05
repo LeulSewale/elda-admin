@@ -293,8 +293,8 @@ export default function DashboardPageClient() {
       const formatServiceType = (type: string) => {
         const types: Record<string, string> = {
           inperson_conusltation: tRequests('inpersonConsultation'),
-          phone: tRequests('phoneService'),
-          court_apperance: tRequests('courtAppearance'),
+          phone: tRequests('phoneConsultation') || tRequests('phoneService'),
+          court_apperance: tRequests('courtAppearanceRepresentation') || tRequests('courtAppearance'),
           hotline: tRequests('hotline'),
           other: tRequests('other'),
         }

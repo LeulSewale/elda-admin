@@ -30,7 +30,7 @@ export function CreateUserModal({ open, onOpenChange, onCreateUser, isLoading }:
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (formData.name && formData.email && formData.password) {
+    if (formData.name && formData.password) {
       onCreateUser(formData)
     }
   }
@@ -58,14 +58,13 @@ export function CreateUserModal({ open, onOpenChange, onCreateUser, isLoading }:
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="email">{tCommon('email')}</Label>
+            <Label htmlFor="email">{tCommon('email')} <span className="text-gray-400 text-xs">({tCommon('optional')})</span></Label>
             <Input
               id="email"
               type="email"
               placeholder={t('enterEmail')}
               value={formData.email}
               onChange={(e) => handleInputChange("email", e.target.value)}
-              required
             />
           </div>
           

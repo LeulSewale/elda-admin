@@ -64,11 +64,13 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
   const [formData, setFormData] = useState(initialFormData)
   const [nationalIdFile, setNationalIdFile] = useState<File | null>(null)
   const [disabilityCardFile, setDisabilityCardFile] = useState<File | null>(null)
+  const [disabilityAuthFile, setDisabilityAuthFile] = useState<File | null>(null)
   const [otherFile, setOtherFile] = useState<File | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const isSubmittingRef = useRef(false) // Ref to prevent double submission
   const nationalIdInputRef = useRef<HTMLInputElement>(null)
   const disabilityCardInputRef = useRef<HTMLInputElement>(null)
+  const disabilityAuthInputRef = useRef<HTMLInputElement>(null)
   const otherFileInputRef = useRef<HTMLInputElement>(null)
 
   // ✅ Step Validation Logic - Memoized for performance
@@ -148,12 +150,14 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
     })
     setNationalIdFile(null)
     setDisabilityCardFile(null)
+    setDisabilityAuthFile(null)
     setOtherFile(null)
     setIsSubmitting(false) // Reset submitting state
     isSubmittingRef.current = false // Reset ref
     // Reset file inputs
     if (nationalIdInputRef.current) nationalIdInputRef.current.value = ''
     if (disabilityCardInputRef.current) disabilityCardInputRef.current.value = ''
+    if (disabilityAuthInputRef.current) disabilityAuthInputRef.current.value = ''
     if (otherFileInputRef.current) otherFileInputRef.current.value = ''
   }, [])
 
@@ -165,7 +169,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]) // Only depend on 'open' to avoid infinite loops
 
-  const handleFileChange = useCallback((type: 'nationalId' | 'disabilityCard' | 'other', e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback((type: 'nationalId' | 'disabilityCard' | 'disabilityAuth' | 'other', e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0]
       
@@ -183,19 +187,24 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
         setNationalIdFile(file)
       } else if (type === 'disabilityCard') {
         setDisabilityCardFile(file)
+      } else if (type === 'disabilityAuth') {
+        setDisabilityAuthFile(file)
       } else if (type === 'other') {
         setOtherFile(file)
       }
     }
   }, [t])
 
-  const removeFile = useCallback((type: 'nationalId' | 'disabilityCard' | 'other') => {
+  const removeFile = useCallback((type: 'nationalId' | 'disabilityCard' | 'disabilityAuth' | 'other') => {
     if (type === 'nationalId') {
       setNationalIdFile(null)
       if (nationalIdInputRef.current) nationalIdInputRef.current.value = ''
     } else if (type === 'disabilityCard') {
       setDisabilityCardFile(null)
       if (disabilityCardInputRef.current) disabilityCardInputRef.current.value = ''
+    } else if (type === 'disabilityAuth') {
+      setDisabilityAuthFile(null)
+      if (disabilityAuthInputRef.current) disabilityAuthInputRef.current.value = ''
     } else if (type === 'other') {
       setOtherFile(null)
       if (otherFileInputRef.current) otherFileInputRef.current.value = ''
@@ -317,6 +326,10 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
       filesArray.push(disabilityCardFile)
       titlesArray.push('Disability_Card') // API requires exact format with underscore
     }
+    if (disabilityAuthFile) {
+      filesArray.push(disabilityAuthFile)
+      titlesArray.push('Disability_Authentication') // API requires exact format with underscore
+    }
     if (otherFile) {
       filesArray.push(otherFile)
       titlesArray.push('Others') // API expects "Others" for the third file
@@ -333,7 +346,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
     // Note: isSubmitting will be reset when modal closes via resetForm
     onSubmit?.({ data: apiData, files: filesArray, titles: titlesArray })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSubmitting, isStepValid, currentStep, formData, requestFor, nationalIdFile, otherFile, onSubmit, t])
+  }, [isSubmitting, isStepValid, currentStep, formData, requestFor, nationalIdFile, disabilityAuthFile, otherFile, onSubmit, t])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -507,16 +520,28 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                         <Label>{t('subCity') || "Sub City"} *</Label>
                         <Input
                           value={formData.selfSubCity}
-                          onChange={(e) => setFormData({ ...formData, selfSubCity: e.target.value })}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            // Reject pure numbers, but allow text with letters (including Amharic) and spaces
+                            if (value === '' || !/^\d+$/.test(value)) {
+                              setFormData({ ...formData, selfSubCity: value })
+                            }
+                          }}
                           placeholder={t('enterSubCity') || "Enter sub city"}
                         />
                       </div>
                       <div>
-                        <Label>{t('kebeleWoredaZone') || "Kebele/Woreda/Zone"} *</Label>
+                        <Label>{t('kebeleWoredaZone') || "Sub City/Zone"} *</Label>
                         <Input
                           value={formData.selfKebele}
-                          onChange={(e) => setFormData({ ...formData, selfKebele: e.target.value })}
-                          placeholder={t('enterKebeleWoredaZone') || "Enter kebele/woreda/zone"}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            // Reject pure numbers, but allow text with letters (including Amharic) and spaces
+                            if (value === '' || !/^\d+$/.test(value)) {
+                              setFormData({ ...formData, selfKebele: value })
+                            }
+                          }}
+                          placeholder={t('enterKebeleWoredaZone') || "Enter sub city/zone"}
                         />
                       </div>
                     </div>
@@ -591,16 +616,28 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                         <Label>{t('subCity') || "Sub City"} *</Label>
                         <Input
                           value={formData.subCity}
-                          onChange={(e) => setFormData({ ...formData, subCity: e.target.value })}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            // Reject pure numbers, but allow text with letters (including Amharic) and spaces
+                            if (value === '' || !/^\d+$/.test(value)) {
+                              setFormData({ ...formData, subCity: value })
+                            }
+                          }}
                           placeholder={t('enterSubCity') || "Enter sub city"}
                         />
                       </div>
                       <div>
-                        <Label>{t('kebeleWoredaZone') || "Kebele/Woreda/Zone"} *</Label>
+                        <Label>{t('kebeleWoredaZone') || "Sub City/Zone"} *</Label>
                         <Input
                           value={formData.kebele}
-                          onChange={(e) => setFormData({ ...formData, kebele: e.target.value })}
-                          placeholder={t('enterKebeleWoredaZone') || "Enter kebele/woreda/zone"}
+                          onChange={(e) => {
+                            const value = e.target.value
+                            // Reject pure numbers, but allow text with letters (including Amharic) and spaces
+                            if (value === '' || !/^\d+$/.test(value)) {
+                              setFormData({ ...formData, kebele: value })
+                            }
+                          }}
+                          placeholder={t('enterKebeleWoredaZone') || "Enter sub city/zone"}
                         />
                       </div>
                       <div>
@@ -644,8 +681,8 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="inperson_conusltation">{t('inpersonConsultation')}</SelectItem>
-                      <SelectItem value="phone">{t('phoneService')}</SelectItem>
-                      <SelectItem value="court_apperance">{t('courtAppearance')}</SelectItem>
+                      <SelectItem value="phone">{t('phoneConsultation') || t('phoneService')}</SelectItem>
+                      <SelectItem value="court_apperance">{t('courtAppearanceRepresentation') || t('courtAppearance')}</SelectItem>
                       <SelectItem value="hotline">{t('hotline')}</SelectItem>
                       <SelectItem value="other">{t('other')}</SelectItem>
                     </SelectContent>
@@ -749,6 +786,55 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                       <>
                         <Upload className="mx-auto mb-2 text-[#4082ea]" size={24} />
                         <p className="text-sm text-gray-600">{t('uploadDisabilityCard')}</p>
+                        <p className="text-xs text-gray-400 mt-1">Max 40MB</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Disability Authentication Upload */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">
+                    {t('disabilityAuthentication')} <span className="text-gray-400 text-xs">({tCommon('optional')})</span>
+                  </Label>
+                  <div 
+                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-[#e7eeff] border-[#4082ea]/50 transition-colors"
+                    onClick={() => disabilityAuthInputRef.current?.click()}
+                  >
+                    <input
+                      type="file"
+                      ref={disabilityAuthInputRef}
+                      className="hidden"
+                      onChange={(e) => handleFileChange('disabilityAuth', e)}
+                      accept="*/*"
+                    />
+                    {disabilityAuthFile ? (
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center min-w-0 flex-1">
+                          <span className="mr-2 flex-shrink-0">{getFileIcon(disabilityAuthFile)}</span>
+                          <div className="min-w-0 flex-1 text-left">
+                            <p className="text-sm font-medium text-gray-900 truncate">{disabilityAuthFile.name}</p>
+                            <p className="text-xs text-gray-500">{formatFileSize(disabilityAuthFile.size)}</p>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-gray-500 hover:text-red-500 flex-shrink-0 ml-2"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            removeFile('disabilityAuth')
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="mx-auto mb-2 text-[#4082ea]" size={24} />
+                        <p className="text-sm text-gray-600">{t('uploadDisabilityAuthentication')}</p>
+                        <p className="text-xs text-gray-400 mt-1">{t('disabilityAuthenticationDescription')}</p>
                         <p className="text-xs text-gray-400 mt-1">Max 40MB</p>
                       </>
                     )}

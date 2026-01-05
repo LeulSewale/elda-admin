@@ -165,7 +165,6 @@ export function EditUserModal({ open, onOpenChange, user, onSave, isLoading = fa
               control={form.control}
         name="email"
               rules={{ 
-                required: "Email is required",
                 pattern: {
                   value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                   message: "Invalid email address"
@@ -175,7 +174,7 @@ export function EditUserModal({ open, onOpenChange, user, onSave, isLoading = fa
           <FormItem>
                   <FormLabel className="flex items-center gap-2 text-gray-700 font-medium">
                     <Mail className="w-4 h-4" />
-                    Email Address
+                    Email Address <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                   </FormLabel>
             <FormControl>
                     <Input 

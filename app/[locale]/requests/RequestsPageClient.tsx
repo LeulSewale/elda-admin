@@ -301,8 +301,8 @@ export default function RequestsPageClient() {
         const formatServiceType = (type: string) => {
           const types: Record<string, string> = {
             inperson_conusltation: t('inpersonConsultation'),
-            phone: t('phoneService'),
-            court_apperance: t('courtAppearance'),
+            phone: t('phoneConsultation') || t('phoneService'),
+            court_apperance: t('courtAppearanceRepresentation') || t('courtAppearance'),
             hotline: t('hotline'),
             other: t('other'),
           }
