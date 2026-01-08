@@ -94,7 +94,7 @@
     "title": "Dashboard Overview",
     "overview": "Overview",
     "daily": "Daily",
-    "weekly": "Weekly", 
+    "weekly": "Weekly",
     "monthly": "Monthly",
     "yearly": "Yearly",
     "totalRequests": "Total Requests",
@@ -476,7 +476,10 @@
     "attachments": "Attachments",
     "selectFiles": "Select Files",
     "uploadFiles": "Upload Files",
-    "existingAttachments": "Existing Attachments"
+    "existingAttachments": "Existing Attachments",
+    "full_time": "Full Time",
+    "part_time": "Part Time",
+    "contractual": "Contractual"
   },
   "notifications": {
     "title": "Notifications",

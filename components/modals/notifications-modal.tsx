@@ -35,7 +35,7 @@ const getNotificationIcon = (type: string) => {
     case 'request_rejected':
       return <AlertCircle className="w-4 h-4 text-red-600" />
     default:
-  return <Info className="w-4 h-4 text-blue-600" />
+      return <Info className="w-4 h-4 text-blue-600" />
   }
 }
 
@@ -44,18 +44,44 @@ const getNotificationBadgeColor = (type: string) => {
     case 'ticket_assigned':
     case 'ticket_created':
     case 'ticket_updated':
-      return "bg-blue-100 text-blue-800"
+      return "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800"
     case 'ticket_completed':
     case 'request_approved':
-      return "bg-green-100 text-green-800"
+      return "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800"
     case 'ticket_urgent':
     case 'deadline_approaching':
-      return "bg-yellow-100 text-yellow-800"
+      return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800"
     case 'ticket_rejected':
     case 'request_rejected':
-      return "bg-red-100 text-red-800"
+      return "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800"
     default:
-  return "bg-gray-100 text-gray-800"
+      return "bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-700"
+  }
+}
+
+const getNotificationStyles = (type: string, isRead: boolean) => {
+  const baseStyles = "p-4 border rounded-lg transition-colors cursor-pointer"
+
+  if (isRead) {
+    return cn(baseStyles, "bg-white hover:bg-gray-50 border-gray-200 dark:bg-gray-950 dark:border-gray-800 dark:hover:bg-gray-900")
+  }
+
+  switch (type) {
+    case 'ticket_assigned':
+    case 'ticket_created':
+    case 'ticket_updated':
+      return cn(baseStyles, "bg-blue-50 border-blue-200 hover:bg-blue-100/50 dark:bg-blue-900/10 dark:border-blue-900/30 dark:hover:bg-blue-900/20")
+    case 'ticket_completed':
+    case 'request_approved':
+      return cn(baseStyles, "bg-green-50 border-green-200 hover:bg-green-100/50 dark:bg-green-900/10 dark:border-green-900/30 dark:hover:bg-green-900/20")
+    case 'ticket_urgent':
+    case 'deadline_approaching':
+      return cn(baseStyles, "bg-yellow-50 border-yellow-200 hover:bg-yellow-100/50 dark:bg-yellow-900/10 dark:border-yellow-900/30 dark:hover:bg-yellow-900/20")
+    case 'ticket_rejected':
+    case 'request_rejected':
+      return cn(baseStyles, "bg-red-50 border-red-200 hover:bg-red-100/50 dark:bg-red-900/10 dark:border-red-900/30 dark:hover:bg-red-900/20")
+    default:
+      return cn(baseStyles, "bg-gray-50 border-gray-200 hover:bg-gray-100 dark:bg-gray-900/50 dark:border-gray-800 dark:hover:bg-gray-900")
   }
 }
 
@@ -75,7 +101,7 @@ function getTimeAgo(dateString: string): string {
   if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
   if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
   if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)}d ago`
-  
+
   return date.toLocaleDateString()
 }
 
@@ -90,14 +116,14 @@ export function NotificationsDropdown({
   const [error, setError] = useState<string | null>(null)
   const [offset, setOffset] = useState(0)
   const [hasMore, setHasMore] = useState(true)
-  
+
   const { toast } = useToast()
   const router = useRouter()
-  const { 
-    unreadCount, 
-    notifications, 
-    refreshNotifications, 
-    markAsRead: contextMarkAsRead, 
+  const {
+    unreadCount,
+    notifications,
+    refreshNotifications,
+    markAsRead: contextMarkAsRead,
     markAllAsRead: contextMarkAllAsRead,
     isConnected
   } = useNotifications()
@@ -118,21 +144,21 @@ export function NotificationsDropdown({
         setLoadingMore(true)
       }
       setError(null)
-      
+
       const currentOffset = appendMode ? offset : 0
       const response = await notificationsApi.getNotifications(20, currentOffset)
-      
+
       const newNotifications = response.data?.data || []
       const paging = response.data?.paging || { hasNextPage: false }
-      
+
       // Update state through context instead of local state
       if (!appendMode) {
         await refreshNotifications()
       }
-      
+
       setHasMore(paging.hasNextPage || false)
       setOffset(currentOffset + newNotifications.length)
-      
+
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to fetch notifications")
       toast({
@@ -153,10 +179,10 @@ export function NotificationsDropdown({
 
   const markAsRead = async (notification: Notification) => {
     if (notification.is_read) return
-    
+
     try {
       await contextMarkAsRead(notification.id)
-      
+
       // Navigate to the link if available
       if (notification.link) {
         router.push(notification.link)
@@ -202,7 +228,7 @@ export function NotificationsDropdown({
     const target = event.currentTarget
     const { scrollTop, scrollHeight, clientHeight } = target
     const isNearBottom = scrollTop + clientHeight >= scrollHeight - 50
-    
+
     if (isNearBottom && !loadingMore && hasMore) {
       loadMoreNotifications()
     }
@@ -214,14 +240,14 @@ export function NotificationsDropdown({
       <PopoverContent
         align="end"
         side="bottom"
-        className="w-[440px] max-h-[70vh] p-0 shadow-xl border rounded-xl bg-white flex flex-col overflow-hidden"
+        className="w-[440px] max-h-[70vh] p-0 shadow-xl border rounded-xl bg-white dark:bg-gray-950 dark:border-gray-800 flex flex-col overflow-hidden"
         style={{ marginTop: 8 }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b">
+        <div className="flex items-center justify-between px-4 py-3 border-b dark:border-gray-800">
           <div className="flex items-center gap-2">
-            <Bell className="w-5 h-5" />
-            <span className="font-semibold">Notifications</span>
+            <Bell className="w-5 h-5 dark:text-gray-100" />
+            <span className="font-semibold dark:text-gray-100">Notifications</span>
             {unreadCount > 0 && (
               <Badge variant="secondary" className="ml-1 bg-blue-500 text-white">
                 {unreadCount}
@@ -240,15 +266,15 @@ export function NotificationsDropdown({
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
               <Button variant="outline" size="sm" onClick={markAllAsRead} disabled={loading}>
-              <Check className="w-4 h-4 mr-1" />
-              Mark All Read
-            </Button>
+                <Check className="w-4 h-4 mr-1" />
+                Mark All Read
+              </Button>
             )}
           </div>
         </div>
-        
+
         {/* Search */}
-        <div className="px-4 py-3 border-b">
+        <div className="px-4 py-3 border-b dark:border-gray-800">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
@@ -259,9 +285,9 @@ export function NotificationsDropdown({
             />
           </div>
         </div>
-        
+
         {/* Scrollable Notifications */}
-        <div 
+        <div
           className="flex-1 px-4 py-2 overflow-y-auto max-h-[400px]"
           onScroll={handleScroll}
         >
@@ -274,7 +300,7 @@ export function NotificationsDropdown({
             <div className="text-center py-8 text-red-500">
               <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>{error}</p>
-              <Button variant="outline" size="sm" onClick={() => fetchNotifications(false)} className="mt-2"> 
+              <Button variant="outline" size="sm" onClick={() => fetchNotifications(false)} className="mt-2">
                 Retry
               </Button>
             </div>
@@ -290,27 +316,24 @@ export function NotificationsDropdown({
                   key={notification.id}
                   data-notification-item
                   onClick={() => handleNotificationClick(notification)}
-                  className={cn(
-                    "p-4 border rounded-lg transition-colors hover:bg-gray-50 cursor-pointer",
-                    !notification.is_read && "border-l-4 border-l-blue-500 bg-blue-50/30",
-                  )}
+                  className={getNotificationStyles(notification.type, notification.is_read)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-3 flex-1">
                       {getNotificationIcon(notification.type)}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium text-sm">{notification.title}</h4>
+                          <h4 className="font-medium text-sm dark:text-gray-100">{notification.title}</h4>
                           {!notification.is_read && <div className="w-2 h-2 bg-blue-500 rounded-full"></div>}
                         </div>
-                        <p className="text-sm text-gray-600 mb-2">{notification.body}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{notification.body}</p>
                         <div className="flex items-center gap-2">
-                          <span 
+                          <span
                             className={cn("px-2 py-0.5 rounded text-xs font-medium", getNotificationBadgeColor(notification.type))}
                           >
                             {formatNotificationType(notification.type)}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 dark:text-gray-500">
                             {getTimeAgo(notification.created_at)}
                           </span>
                         </div>
@@ -328,9 +351,9 @@ export function NotificationsDropdown({
             </div>
           )}
         </div>
-        
+
         {/* Footer */}
-        <div className="flex justify-center items-center px-4 py-2 border-t">
+        <div className="flex justify-center items-center px-4 py-2 border-t dark:border-gray-800">
           <span className="text-sm text-gray-500">
             {filteredNotifications.length} notification{filteredNotifications.length !== 1 ? "s" : ""}
           </span>

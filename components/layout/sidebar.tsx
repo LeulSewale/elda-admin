@@ -6,14 +6,14 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
-  LayoutDashboard ,
-  Ticket ,
+  LayoutDashboard,
+  Ticket,
   FileText,
-  BookText ,
+  BookText,
   Menu,
-  Users, 
+  Users,
   LogOut,
-  User ,
+  User,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -30,26 +30,26 @@ const navigation = [
   {
     name: "MAIN_MENU",
     items: [
-      { name: "dashboard", href: "/dashboard", icon: LayoutDashboard , roles: ["admin", "user","lawyer"] },
-      { name: "requestManagement", href: "/requests", icon: FileText, roles: ["admin","user","lawyer"] },
-      { name: "ticketManagement", href: "/tickets", icon: Ticket , roles: ["admin","user"] },  
-      { name: "documentManagement", href: "/documents", icon: BookText , roles: ["admin","user","lawyer"] },   
+      { name: "dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["admin", "user", "lawyer"] },
+      { name: "requestManagement", href: "/requests", icon: FileText, roles: ["admin", "user", "lawyer"] },
+      { name: "ticketManagement", href: "/tickets", icon: Ticket, roles: ["admin", "user"] },
+      { name: "documentManagement", href: "/documents", icon: BookText, roles: ["admin", "user", "lawyer"] },
     ],
   },
   {
     name: "ADMINISTRATION",
     items: [
       { name: "userManagement", href: "/users", icon: User, roles: ["admin"] },
-      { name: "employeeManagement", href: "/employees", icon: Users , roles: ["admin", "HR-manager"] },
+      { name: "employeeManagement", href: "/employees", icon: Users, roles: ["admin", "HR-manager"] },
     ],
   },
   {
     name: "HR_MENU",
     items: [
-      { name: "employeeManagement", href: "/employees", icon: Users , roles: ["HR-manager"] },
+      { name: "employeeManagement", href: "/employees", icon: Users, roles: ["HR-manager"] },
     ],
   },
- 
+
 ]
 
 const SidebarContext = createContext<{
@@ -57,7 +57,7 @@ const SidebarContext = createContext<{
   setCollapsed: (collapsed: boolean) => void
 }>({
   collapsed: false,
-  setCollapsed: () => {},
+  setCollapsed: () => { },
 })
 
 export const useSidebar = () => useContext(SidebarContext)
@@ -67,10 +67,10 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
   const { role, isLoading, logout } = useAuth();
   const t = useTranslations('navigation');
   const tCommon = useTranslations('common');
-  
+
   // Get current locale to construct proper links
   const currentLocale = getCurrentLocaleFromPath(pathname)
-  
+
   if (isLoading) return null;
 
   return (
@@ -80,9 +80,9 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
         collapsed ? "w-16" : "w-64",
       )}
     >
-      <div className={cn("p-6 border-b border-gray-200", collapsed && "p-4")}> 
+      <div className={cn("p-6 border-b border-gray-200", collapsed && "p-4")}>
         <Link href={`/${currentLocale}/dashboard`} className="flex items-center space-x-2">
-          <Logo 
+          <Logo
             width={40}
             height={40}
             className="drop-shadow-md"
@@ -107,10 +107,10 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
                     // For others: filter by role as normal
                     return !item.roles || !role || item.roles.includes(role)
                   })
-                  
+
                   // Only show section if it has visible items
                   if (visibleItems.length === 0) return null
-                  
+
                   // Show section header
                   return (
                     <>
@@ -121,45 +121,45 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
                       )}
                       <div className="space-y-1">
                         {visibleItems.map((item) => {
-                      const computedHref = item.name === "ticketManagement" ? (role === "admin" ? "/tickets/admin" : "/tickets") : item.href
-                      // Add locale prefix to href
-                      const localizedHref = `/${currentLocale}${computedHref}`
-                      // Enhanced active state detection - check if current pathname starts with the item's href
-                      const isActive = pathname === localizedHref || pathname.startsWith(localizedHref + "/")
-                      const linkContent = (
-                        <Link
-                          href={localizedHref}
-                          className={cn(
-                            "group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 border",
-                            collapsed ? "justify-center" : "",
-                            isActive
-                              ? "bg-[#4082ea] text-white border-[#4082ea] shadow-md font-semibold"
-                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 border-transparent hover:border-gray-200 dark:hover:border-gray-700",
-                          )}
-                        >
-                          <item.icon
-                            className={cn(
-                              "h-5 w-5 flex-shrink-0 transition-colors",
-                              collapsed ? "mr-0" : "mr-3",
-                              isActive ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300",
-                            )}
-                          />
-                          {!collapsed && t(item.name)}
-                        </Link>
-                      )
+                          const computedHref = item.name === "ticketManagement" ? (role === "admin" ? "/tickets/admin" : "/tickets") : item.href
+                          // Add locale prefix to href
+                          const localizedHref = `/${currentLocale}${computedHref}`
+                          // Enhanced active state detection - check if current pathname starts with the item's href
+                          const isActive = pathname === localizedHref || pathname.startsWith(localizedHref + "/")
+                          const linkContent = (
+                            <Link
+                              href={localizedHref}
+                              className={cn(
+                                "group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 border",
+                                collapsed ? "justify-center" : "",
+                                isActive
+                                  ? "bg-[#4082ea] text-white border-[#4082ea] shadow-md font-semibold"
+                                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 border-transparent hover:border-gray-200 dark:hover:border-gray-700",
+                              )}
+                            >
+                              <item.icon
+                                className={cn(
+                                  "h-5 w-5 flex-shrink-0 transition-colors",
+                                  collapsed ? "mr-0" : "mr-3",
+                                  isActive ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-300",
+                                )}
+                              />
+                              {!collapsed && t(item.name)}
+                            </Link>
+                          )
 
-                      if (collapsed) {
-                        return (
-                          <Tooltip key={item.name}>
-                            <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                            <TooltipContent side="right">
-                              <p>{t(item.name)}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )
-                      }
+                          if (collapsed) {
+                            return (
+                              <Tooltip key={item.name}>
+                                <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
+                                <TooltipContent side="right">
+                                  <p>{t(item.name)}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )
+                          }
 
-                      return <div key={item.name}>{linkContent}</div>
+                          return <div key={item.name}>{linkContent}</div>
                         })}
                       </div>
                     </>
@@ -169,41 +169,33 @@ function SidebarContent({ collapsed }: { collapsed: boolean }) {
             ))}
         </TooltipProvider>
       </nav>
-      
+
       {/* Settings and Language Switcher */}
       <div className={cn("px-4 pb-2 space-y-2", collapsed && "px-2")}>
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <AppearanceSettings />
-            <LanguageSwitcher />
-          </div>
-        )}
-        {collapsed && (
-          <div className="flex flex-col items-center gap-2">
-            <AppearanceSettings />
-        <LanguageSwitcher />
-          </div>
-        )}
+        <div className={cn("flex gap-2", collapsed ? "flex-col items-center" : "items-center")}>
+          <AppearanceSettings />
+          <LanguageSwitcher />
+        </div>
       </div>
-      
+
       {/* Log Out at the bottom */}
       <div className={cn("px-4 pb-6", collapsed && "px-2")}
-           style={{ marginTop: "auto" }}>
-       <TooltipProvider>
-         <Tooltip>
-           <TooltipTrigger asChild>
-             <Button
-               variant="destructive"
-               className={cn("flex items-center gap-2 w-full justify-start bg-red-500 hover:bg-red-600 text-white border-0", collapsed && "justify-center px-0")}
-               onClick={() => logout()}
-             >
-               <LogOut className="w-5 h-5" />
-               {!collapsed && <span>{tCommon('logout')}</span>}
-             </Button>
-           </TooltipTrigger>
-           {collapsed && <TooltipContent side="right">{tCommon('logout')}</TooltipContent>}
-         </Tooltip>
-       </TooltipProvider>
+        style={{ marginTop: "auto" }}>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="destructive"
+                className={cn("flex items-center gap-2 w-full justify-start bg-red-500 hover:bg-red-600 text-white border-0", collapsed && "justify-center px-0")}
+                onClick={() => logout()}
+              >
+                <LogOut className="w-5 h-5" />
+                {!collapsed && <span>{tCommon('logout')}</span>}
+              </Button>
+            </TooltipTrigger>
+            {collapsed && <TooltipContent side="right">{tCommon('logout')}</TooltipContent>}
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   )

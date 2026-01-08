@@ -29,12 +29,12 @@ export function EmployeesPageClient() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(0);
-  
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { role, user, isAuthenticated } = useAuth();
   const { isVisible, lastActivity } = useTabVisibility();
-  
+
   // Translation hooks
   const t = useTranslations('employees');
   const tCommon = useTranslations('common');
@@ -51,7 +51,7 @@ export function EmployeesPageClient() {
   });
 
 
-  
+
 
   // Fetch employees with performance optimizations
   const {
@@ -63,7 +63,7 @@ export function EmployeesPageClient() {
   } = useQuery({
     queryKey: ["employees"],
     queryFn: async () => {
-      console.debug("[Employees] Fetch start", { 
+      console.debug("[Employees] Fetch start", {
         params: { limit: 20 },
         isVisible,
         role,
@@ -71,7 +71,7 @@ export function EmployeesPageClient() {
       });
       try {
         const res = await employeesApi.getEmployees({ limit: 20 });
-        console.debug("[Employees] Fetch success", { 
+        console.debug("[Employees] Fetch success", {
           status: res.status,
           dataLength: res.data?.data?.length || 0,
           paging: res.data?.paging
@@ -93,7 +93,7 @@ export function EmployeesPageClient() {
           stack: e?.stack,
           name: e?.name
         });
-        
+
         // Don't throw error to prevent logout - return empty array instead
         console.warn("[Employees] API failed, returning empty array to prevent logout");
         return [];
@@ -147,10 +147,10 @@ export function EmployeesPageClient() {
       console.error("[Update Employee] Error status:", err?.response?.status);
       console.error("[Update Employee] Error details:", err?.response?.data?.error?.details);
       console.error("[Update Employee] Full error data:", JSON.stringify(err?.response?.data, null, 2));
-      
+
       const errorTitle = getErrorTitle(err, tErrors);
       let errorMessage = getErrorMessage(err, tErrors);
-      
+
       // Try to extract detailed error message from response
       const errorData = err?.response?.data;
       if (errorData) {
@@ -165,7 +165,7 @@ export function EmployeesPageClient() {
           errorMessage = errorData;
         }
       }
-      
+
       toast({
         title: errorTitle,
         description: errorMessage,
@@ -195,10 +195,10 @@ export function EmployeesPageClient() {
       console.error("[Delete Employee] Error:", err);
       console.error("[Delete Employee] Error response:", err?.response?.data);
       console.error("[Delete Employee] Error details:", err?.response?.data?.error?.details);
-      
+
       const errorTitle = getErrorTitle(err, tErrors);
       const errorMessage = getErrorMessage(err, tErrors);
-      
+
       toast({
         title: errorTitle,
         description: errorMessage,
@@ -229,10 +229,10 @@ export function EmployeesPageClient() {
       console.error("[Create Employee] Error status:", err?.response?.status);
       console.error("[Create Employee] Error details:", err?.response?.data?.error?.details);
       console.error("[Create Employee] Full error data:", JSON.stringify(err?.response?.data, null, 2));
-      
+
       const errorTitle = getErrorTitle(err, tErrors);
       let errorMessage = getErrorMessage(err, tErrors);
-      
+
       // Try to extract detailed error message from response
       const errorData = err?.response?.data;
       if (errorData) {
@@ -247,7 +247,7 @@ export function EmployeesPageClient() {
           errorMessage = errorData;
         }
       }
-      
+
       toast({
         title: errorTitle,
         description: errorMessage,
@@ -261,18 +261,18 @@ export function EmployeesPageClient() {
     const now = Date.now();
     const timeSinceLastRefresh = now - lastRefresh;
     const timeSinceLastActivity = now - lastActivity;
-    
+
     if (timeSinceLastRefresh < 2000) {
       return;
     }
-    
+
     const shouldRefresh = timeSinceLastActivity > 5 * 60 * 1000 || timeSinceLastRefresh > 30 * 1000;
-    
+
     if (!shouldRefresh && !isRefreshing) {
       console.log('Refresh blocked: Data is fresh');
       return;
     }
-    
+
     try {
       setIsRefreshing(true);
       setLastRefresh(now);
@@ -284,7 +284,7 @@ export function EmployeesPageClient() {
     }
   }, [lastRefresh, lastActivity, refetch, isRefreshing]);
 
-  
+
   const handleEditEmployee = (employee: Employee) => {
     console.log('[Edit Employee] Button clicked, employee:', employee);
     setSelectedEmployee(employee);
@@ -381,13 +381,21 @@ export function EmployeesPageClient() {
           part_time: "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700",
           contractual: "bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-700",
         };
-    
+
+        const normalizedType = String(type).toLowerCase().trim();
+        const knownTypes = ['full_time', 'part_time', 'contractual'];
+
+        // Try to translate if known, otherwise fallback
+        const label = knownTypes.includes(normalizedType)
+          ? t(normalizedType)
+          : type.replace('_', ' ').toUpperCase();
+
         return (
           <Badge
-            className={`${typeColors[type] || "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"} 
+            className={`${typeColors[normalizedType] || "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"} 
               px-3 py-1 rounded-full text-xs font-medium`}
           >
-            {type.replace('_', ' ').toUpperCase()}
+            {label}
           </Badge>
         );
       },
@@ -402,36 +410,41 @@ export function EmployeesPageClient() {
           inactive: "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-700",
           terminated: "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600",
         };
-    
+
+        // Try to translate, fallback to original formatted
+        const label = status === 'active' || status === 'inactive'
+          ? t(status)
+          : status.toUpperCase();
+
         return (
           <Badge
             className={`${statusColors[status] || "bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600"} 
               px-3 py-1 rounded-full text-xs font-medium`}
           >
-            {status.toUpperCase()}
+            {label}
           </Badge>
         );
       },
     },
-    { 
+    {
       accessorKey: "hired_at",
-      header: "Hired At", 
+      header: "Hired At",
       cell: ({ row }: any) => (
-       <div className="text-gray-600 dark:text-gray-300">
-         {new Date(row.original.hired_at).toLocaleDateString("en-US", {
-           month: "short",
-           day: "numeric",
-           year: "numeric",
-         })}
-       </div>
-     ),
-    },   
+        <div className="text-gray-600 dark:text-gray-300">
+          {new Date(row.original.hired_at).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })}
+        </div>
+      ),
+    },
     {
       id: "actions",
       header: "Actions",
       cell: ({ row }: any) => {
         const employee = row.original as Employee;
-        
+
         return (
           <div className="flex items-center space-x-2">
             <button
@@ -510,124 +523,124 @@ export function EmployeesPageClient() {
   return (
     <DashboardLayout title={t('title')} isFetching={isFetching}>
       <div className="p-0">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-lg p-2 border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
           <div className="flex justify-between items-center px-2 py-2">
             <div>
               <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('pageTitle')}</h1>
               <p className="text-sm text-gray-400 dark:text-gray-500">{t('pageSubtitle')}</p>
             </div>
             <div className="flex gap-2">
-                {/* Create Employee - Primary */}
-                <Button
-                  className="bg-[#4082ea] hover:bg-[#4082ea] text-white transition-colors shadow-sm"
-                  onClick={() => setCreateEmployeeModalOpen(true)}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  {t('createEmployee')}
-                </Button>
+              {/* Create Employee - Primary */}
+              <Button
+                className="bg-[#4082ea] hover:bg-[#4082ea] text-white transition-colors shadow-sm"
+                onClick={() => setCreateEmployeeModalOpen(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                {t('createEmployee')}
+              </Button>
 
-                {/* Employee Documents - Blue */}
-                {/* <Button
+              {/* Employee Documents - Blue */}
+              {/* <Button
                   className="bg-[#3B82F6] hover:bg-[#2563EB] text-white transition-colors shadow-sm"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Employee Documents
                 </Button> */}
 
-                {/* Attendance Tracking - Green */}
-                {/* <Button
+              {/* Attendance Tracking - Green */}
+              {/* <Button
                   className="bg-[#10B981] hover:bg-[#059669] text-white transition-colors shadow-sm"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Attendance Tracking
                 </Button> */}
 
-                {/* Employee Profile - Amber */}
-                {/* <Button
+              {/* Employee Profile - Amber */}
+              {/* <Button
                   className="bg-[#F59E0B] hover:bg-[#D97706] text-white transition-colors shadow-sm"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Employee Profile
                 </Button> */}
-              </div>
+            </div>
 
 
 
           </div>
           <hr></hr>
 
-        {/* Employees Table */}
-        {error ? (
-          <div className="text-center py-10">
-            <div className="text-red-500 dark:text-red-400 mb-2">Failed to load employees</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Check console for details</div>
-            <Button
-              onClick={() => refetch()}
-              className="mt-4"
-              variant="outline"
-            >
-              Retry
-            </Button>
-          </div>
-        ) : (
-          <div className="relative">
-            {isFetching && !isLoading && (
-              <div data-employees-overlay className="absolute inset-0 bg-white/60 dark:bg-gray-800/60 flex items-center justify-center z-[5] pointer-events-none">
-                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                  <PackageIcon className="animate-spin w-5 h-5" />
-                  Syncing employees...
-                </div>
-              </div>
-            )}
-            <div className="relative z-[10]">
-            <DataTable 
-              columns={columns} 
-              data={Array.isArray(employees) ? employees : []} 
-              searchKey="user_name" 
-              quickFilterKey="employment_type"
-                quickFilterLabel="Employment Type"
-              searchPlaceholder="Search Employees by name..." 
-            />
+          {/* Employees Table */}
+          {error ? (
+            <div className="text-center py-10">
+              <div className="text-red-500 dark:text-red-400 mb-2">Failed to load employees</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">Check console for details</div>
+              <Button
+                onClick={() => refetch()}
+                className="mt-4"
+                variant="outline"
+              >
+                Retry
+              </Button>
             </div>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="relative">
+              {isFetching && !isLoading && (
+                <div data-employees-overlay className="absolute inset-0 bg-white/60 dark:bg-gray-800/60 flex items-center justify-center z-[5] pointer-events-none">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                    <PackageIcon className="animate-spin w-5 h-5" />
+                    Syncing employees...
+                  </div>
+                </div>
+              )}
+              <div className="relative z-[10]">
+                <DataTable
+                  columns={columns}
+                  data={Array.isArray(employees) ? employees : []}
+                  searchKey="user_name"
+                  quickFilterKey="employment_type"
+                  quickFilterLabel="Employment Type"
+                  searchPlaceholder="Search Employees by name..."
+                />
+              </div>
+            </div>
+          )}
+        </div>
 
-      <CreateEmployeeModal
-        open={createEmployeeModalOpen}
-        onOpenChange={setCreateEmployeeModalOpen}
-        onCreateEmployee={(employeeData) => createEmployeeMutation.mutate(employeeData)}
-        isLoading={createEmployeeMutation.isPending}
-      />
+        <CreateEmployeeModal
+          open={createEmployeeModalOpen}
+          onOpenChange={setCreateEmployeeModalOpen}
+          onCreateEmployee={(employeeData) => createEmployeeMutation.mutate(employeeData)}
+          isLoading={createEmployeeMutation.isPending}
+        />
 
-      <EditEmployeeModal
-        open={editEmployeeModalOpen}
-        onOpenChange={setEditEmployeeModalOpen}
-        onUpdateEmployee={handleUpdateEmployee}
-        employee={selectedEmployee}
-        isLoading={updateEmployeeMutation.isPending}
-      />
+        <EditEmployeeModal
+          open={editEmployeeModalOpen}
+          onOpenChange={setEditEmployeeModalOpen}
+          onUpdateEmployee={handleUpdateEmployee}
+          employee={selectedEmployee}
+          isLoading={updateEmployeeMutation.isPending}
+        />
 
-      <UploadEmployeeFilesModal
-        open={uploadFilesModalOpen}
-        onOpenChange={setUploadFilesModalOpen}
-        employee={selectedEmployee}
-      />
+        <UploadEmployeeFilesModal
+          open={uploadFilesModalOpen}
+          onOpenChange={setUploadFilesModalOpen}
+          employee={selectedEmployee}
+        />
 
-      <EmployeeDetailModal
-        open={detailModalOpen}
-        onOpenChange={setDetailModalOpen}
-        employee={selectedEmployee}
-      />
+        <EmployeeDetailModal
+          open={detailModalOpen}
+          onOpenChange={setDetailModalOpen}
+          employee={selectedEmployee}
+        />
 
-      <DeleteModal
-        open={deleteEmployeeModalOpen}
-        onOpenChange={setDeleteEmployeeModalOpen}
-        onConfirm={handleConfirmDelete}
-        title="Delete Employee"
-        description={`Are you sure you want to delete ${selectedEmployee?.user_name}? This action cannot be undone.`}
-        isLoading={deleteEmployeeMutation.isPending}
-      />
+        <DeleteModal
+          open={deleteEmployeeModalOpen}
+          onOpenChange={setDeleteEmployeeModalOpen}
+          onConfirm={handleConfirmDelete}
+          title="Delete Employee"
+          description={`Are you sure you want to delete ${selectedEmployee?.user_name}? This action cannot be undone.`}
+          isLoading={deleteEmployeeMutation.isPending}
+        />
       </div>
     </DashboardLayout>
   );

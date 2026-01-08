@@ -23,7 +23,7 @@ type CreateRequestModalProps = {
 export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateRequestModalProps) {
   const t = useTranslations('requests');
   const tCommon = useTranslations('common');
-  
+
   // Memoize steps to avoid recreation on every render
   const steps = useMemo(() => [
     { id: 1, name: t('personalInformation') },
@@ -58,7 +58,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
     phoneNumber1: "",
     phoneNumber2: ""
   }), [])
-  
+
   const [currentStep, setCurrentStep] = useState(1)
   const [requestFor, setRequestFor] = useState<"self" | "other">("self")
   const [formData, setFormData] = useState(initialFormData)
@@ -172,7 +172,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
   const handleFileChange = useCallback((type: 'nationalId' | 'disabilityCard' | 'disabilityAuth' | 'other', e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0]
-      
+
       // Validate file size (max 40MB per file)
       if (file.size > 40 * 1024 * 1024) {
         toast({
@@ -182,7 +182,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
         })
         return;
       }
-      
+
       if (type === 'nationalId') {
         setNationalIdFile(file)
       } else if (type === 'disabilityCard') {
@@ -241,15 +241,15 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
     if (isSubmittingRef.current || isSubmitting) {
       return
     }
-    
+
     if (!isStepValid(currentStep)) {
       return
     }
-    
+
     // Set both state and ref to prevent double submission
     isSubmittingRef.current = true
     setIsSubmitting(true)
-    
+
     // Transform form data to match API structure
     const apiData: any = {
       priority: formData.urgency,
@@ -261,7 +261,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
       is_confidential: false,
       request_for: requestFor
     }
-    
+
     // Add self details if request is for self
     if (requestFor === "self") {
       apiData.sex = formData.selfSex
@@ -271,7 +271,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
       apiData.kebele = formData.selfKebele
       apiData.age = formData.selfAge ? parseInt(formData.selfAge) : null
     }
-    
+
     // Add other person details if request is for other person
     if (requestFor === "other") {
       // Combine first name and last name into other_name
@@ -283,11 +283,11 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
       apiData.other_kebele = formData.kebele
       apiData.other_age = formData.age ? parseInt(formData.age) : null
       // Use phone_number_1 as other_phone, or combine both if phone_number_2 exists
-      apiData.other_phone = formData.phoneNumber2 
+      apiData.other_phone = formData.phoneNumber2
         ? `${formData.phoneNumber1}, ${formData.phoneNumber2}`.trim()
         : formData.phoneNumber1
     }
-    
+
     // Validate required files
     if (!nationalIdFile) {
       isSubmittingRef.current = false
@@ -299,7 +299,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
       })
       return;
     }
-    
+
     // Validate that required fields are not empty
     if (!formData.disability || !formData.serviceType || !formData.issueDescription) {
       isSubmittingRef.current = false
@@ -311,13 +311,13 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
       })
       return;
     }
-    
+
     // Combine files in order: National ID, Disability Card, Other (if exists)
     // Titles must match the order of files exactly (first file = first title)
     // API expects: "ID_Card" for first file, "Disability_Card" for second, "Others" for third
     const filesArray: File[] = []
     const titlesArray: string[] = []
-    
+
     if (nationalIdFile) {
       filesArray.push(nationalIdFile)
       titlesArray.push('ID_Card') // API requires exact format with underscore
@@ -334,14 +334,14 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
       filesArray.push(otherFile)
       titlesArray.push('Others') // API expects "Others" for the third file
     }
-    
+
     // Only log in development
     if (process.env.NODE_ENV === 'development') {
       console.debug("[Create Request] Submitting data:", apiData)
       console.debug("[Create Request] Files:", filesArray)
       console.debug("[Create Request] Titles:", titlesArray)
     }
-    
+
     // Pass both data, files, and titles to the parent component
     // Note: isSubmitting will be reset when modal closes via resetForm
     onSubmit?.({ data: apiData, files: filesArray, titles: titlesArray })
@@ -350,16 +350,16 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-3xl bg-white dark:bg-gray-900 dark:border-gray-800">
         <DialogHeader>
-          <DialogTitle className="text-[#4082ea] font-semibold">{t('requestProcess')}</DialogTitle>
+          <DialogTitle className="text-[#4082ea] dark:text-blue-400 font-semibold">{t('requestProcess')}</DialogTitle>
           <DialogDescription className="sr-only">
             {t('requestProcessDescription') || "Create a new request by filling out the form"}
           </DialogDescription>
         </DialogHeader>
 
         {/* Stepper */}
-        <div className="flex items-center justify-between px-6 py-3 bg-[#e7eeff] rounded-lg">
+        <div className="flex items-center justify-between px-6 py-3 bg-[#e7eeff] dark:bg-gray-800 rounded-lg">
           {steps.map((step, index) => (
             <div key={step.id} className="flex-1 flex items-center">
               <div
@@ -367,7 +367,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                   "flex items-center justify-center w-8 h-8 rounded-full border font-medium",
                   currentStep === step.id && "bg-[#4082ea] text-white border-[#4082ea]",
                   currentStep > step.id && "bg-[#4082ea] text-white border-[#4082ea]",
-                  currentStep < step.id && "bg-white text-gray-500 border-gray-300"
+                  currentStep < step.id && "bg-white dark:bg-gray-700 text-gray-500 dark:text-gray-400 border-gray-300 dark:border-gray-600"
                 )}
               >
                 {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
@@ -375,13 +375,13 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
               <span
                 className={cn(
                   "ml-2 text-sm",
-                  currentStep >= step.id ? "text-[#4082ea]" : "text-gray-500"
+                  currentStep >= step.id ? "text-[#4082ea] dark:text-blue-400" : "text-gray-500 dark:text-gray-400"
                 )}
               >
                 {step.name}
               </span>
               {index < steps.length - 1 && (
-                <div className="flex-1 h-0.5 mx-2 bg-gray-300" />
+                <div className="flex-1 h-0.5 mx-2 bg-gray-300 dark:bg-gray-700" />
               )}
             </div>
           ))}
@@ -391,13 +391,13 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
         <div className="mt-6">
           {/* Step 1 */}
           {currentStep === 1 && (
-            <Card className="shadow-md">
+            <Card className="shadow-md bg-white dark:bg-gray-800 dark:border-gray-700">
               <CardContent className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
-                <h3 className="font-semibold text-[#4082ea]">{t('personalInformation')}</h3>
-                
+                <h3 className="font-semibold text-[#4082ea] dark:text-blue-400">{t('personalInformation')}</h3>
+
                 {/* Request For Selection */}
                 <div>
-                  <Label className="text-base font-medium mb-3 block">{t('requestFor') || "Request For"}</Label>
+                  <Label className="text-base font-medium mb-3 block dark:text-gray-200">{t('requestFor') || "Request For"}</Label>
                   <RadioGroup
                     value={requestFor}
                     onValueChange={(value) => {
@@ -433,13 +433,13 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="self" id="self" />
-                      <Label htmlFor="self" className="font-normal cursor-pointer">
+                      <Label htmlFor="self" className="font-normal cursor-pointer dark:text-gray-300">
                         {t('forSelf') || "For Myself"}
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="other" id="other" />
-                      <Label htmlFor="other" className="font-normal cursor-pointer">
+                      <Label htmlFor="other" className="font-normal cursor-pointer dark:text-gray-300">
                         {t('forOther') || "For Other Person"}
                       </Label>
                     </div>
@@ -448,7 +448,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
 
                 <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <Label>{t('typeOfDisability')} *</Label>
+                    <Label className="dark:text-gray-300">{t('typeOfDisability')} *</Label>
                     <Select
                       value={formData.disability}
                       onValueChange={(value) => setFormData({ ...formData, disability: value })}
@@ -470,8 +470,8 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
 
                 {/* Self Details - Conditional Fields */}
                 {requestFor === "self" && (
-                  <div className="space-y-4 pt-4 border-t border-gray-200">
-                    <h4 className="font-semibold text-gray-700 text-sm">{t('personalDetails') || "Personal Details"}</h4>
+                  <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h4 className="font-semibold text-gray-700 dark:text-gray-300 text-sm">{t('personalDetails') || "Personal Details"}</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label>{t('sex') || "Sex"} *</Label>
@@ -550,8 +550,8 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
 
                 {/* Other Person Details - Conditional Fields */}
                 {requestFor === "other" && (
-                  <div className="space-y-4 pt-4 border-t border-gray-200">
-                    <h4 className="font-semibold text-gray-700 text-sm">{t('otherPersonDetails') || "Other Person Details"}</h4>
+                  <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h4 className="font-semibold text-gray-700 dark:text-gray-300 text-sm">{t('otherPersonDetails') || "Other Person Details"}</h4>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label>{t('firstName') || "First Name"} *</Label>
@@ -667,11 +667,11 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
 
           {/* Step 2 */}
           {currentStep === 2 && (
-            <Card className="shadow-md">
+            <Card className="shadow-md bg-white dark:bg-gray-800 dark:border-gray-700">
               <CardContent className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
-                <h3 className="font-semibold text-[#4082ea]">{t('serviceDetails')}</h3>
+                <h3 className="font-semibold text-[#4082ea] dark:text-blue-400">{t('serviceDetails')}</h3>
                 <div>
-                  <Label>{t('serviceType')} *</Label>
+                  <Label className="dark:text-gray-300">{t('serviceType')} *</Label>
                   <Select
                     value={formData.serviceType}
                     onValueChange={(value) => setFormData({ ...formData, serviceType: value })}
@@ -698,11 +698,11 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                 </div>
                 {/* National ID Upload */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">
+                  <Label className="text-sm font-medium dark:text-gray-300">
                     {t('nationalId')} *
                   </Label>
-                  <div 
-                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-[#e7eeff] border-[#4082ea]/50 transition-colors"
+                  <div
+                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-[#e7eeff] dark:hover:bg-blue-900/20 border-[#4082ea]/50 dark:border-blue-500/50 transition-colors"
                     onClick={() => nationalIdInputRef.current?.click()}
                   >
                     <input
@@ -717,8 +717,8 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                         <div className="flex items-center min-w-0 flex-1">
                           <span className="mr-2 flex-shrink-0">{getFileIcon(nationalIdFile)}</span>
                           <div className="min-w-0 flex-1 text-left">
-                            <p className="text-sm font-medium text-gray-900 truncate">{nationalIdFile.name}</p>
-                            <p className="text-xs text-gray-500">{formatFileSize(nationalIdFile.size)}</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{nationalIdFile.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(nationalIdFile.size)}</p>
                           </div>
                         </div>
                         <Button
@@ -736,9 +736,9 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                       </div>
                     ) : (
                       <>
-                        <Upload className="mx-auto mb-2 text-[#4082ea]" size={24} />
-                        <p className="text-sm text-gray-600">{t('uploadNationalId')}</p>
-                        <p className="text-xs text-gray-400 mt-1">Max 40MB</p>
+                        <Upload className="mx-auto mb-2 text-[#4082ea] dark:text-blue-400" size={24} />
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{t('uploadNationalId')}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Max 40MB</p>
                       </>
                     )}
                   </div>
@@ -746,11 +746,11 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
 
                 {/* Disability Card Upload */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">
-                    {t('disabilityCard')} <span className="text-gray-400 text-xs">({tCommon('optional')})</span>
+                  <Label className="text-sm font-medium dark:text-gray-300">
+                    {t('disabilityCard')} <span className="text-gray-400 dark:text-gray-500 text-xs">({tCommon('optional')})</span>
                   </Label>
-                  <div 
-                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-[#e7eeff] border-[#4082ea]/50 transition-colors"
+                  <div
+                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-[#e7eeff] dark:hover:bg-blue-900/20 border-[#4082ea]/50 dark:border-blue-500/50 transition-colors"
                     onClick={() => disabilityCardInputRef.current?.click()}
                   >
                     <input
@@ -765,8 +765,8 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                         <div className="flex items-center min-w-0 flex-1">
                           <span className="mr-2 flex-shrink-0">{getFileIcon(disabilityCardFile)}</span>
                           <div className="min-w-0 flex-1 text-left">
-                            <p className="text-sm font-medium text-gray-900 truncate">{disabilityCardFile.name}</p>
-                            <p className="text-xs text-gray-500">{formatFileSize(disabilityCardFile.size)}</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{disabilityCardFile.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(disabilityCardFile.size)}</p>
                           </div>
                         </div>
                         <Button
@@ -784,9 +784,9 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                       </div>
                     ) : (
                       <>
-                        <Upload className="mx-auto mb-2 text-[#4082ea]" size={24} />
-                        <p className="text-sm text-gray-600">{t('uploadDisabilityCard')}</p>
-                        <p className="text-xs text-gray-400 mt-1">Max 40MB</p>
+                        <Upload className="mx-auto mb-2 text-[#4082ea] dark:text-blue-400" size={24} />
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{t('uploadDisabilityCard')}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Max 40MB</p>
                       </>
                     )}
                   </div>
@@ -797,7 +797,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                   <Label className="text-sm font-medium">
                     {t('disabilityAuthentication')} <span className="text-gray-400 text-xs">({tCommon('optional')})</span>
                   </Label>
-                  <div 
+                  <div
                     className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-[#e7eeff] border-[#4082ea]/50 transition-colors"
                     onClick={() => disabilityAuthInputRef.current?.click()}
                   >
@@ -843,11 +843,11 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
 
                 {/* Other Document Upload (Optional) */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-600">
-                    {t('otherDocument')} <span className="text-gray-400 text-xs">({tCommon('optional')})</span>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    {t('otherDocument')} <span className="text-gray-400 dark:text-gray-500 text-xs">({tCommon('optional')})</span>
                   </Label>
-                  <div 
-                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-[#e7eeff] border-gray-300 transition-colors"
+                  <div
+                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-[#e7eeff] dark:hover:bg-blue-900/20 border-gray-300 dark:border-gray-600 transition-colors"
                     onClick={() => otherFileInputRef.current?.click()}
                   >
                     <input
@@ -862,8 +862,8 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                         <div className="flex items-center min-w-0 flex-1">
                           <span className="mr-2 flex-shrink-0">{getFileIcon(otherFile)}</span>
                           <div className="min-w-0 flex-1 text-left">
-                            <p className="text-sm font-medium text-gray-900 truncate">{otherFile.name}</p>
-                            <p className="text-xs text-gray-500">{formatFileSize(otherFile.size)}</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{otherFile.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(otherFile.size)}</p>
                           </div>
                         </div>
                         <Button
@@ -881,9 +881,9 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                       </div>
                     ) : (
                       <>
-                        <Upload className="mx-auto mb-2 text-gray-400" size={24} />
-                        <p className="text-sm text-gray-600">{t('uploadOtherDocument')}</p>
-                        <p className="text-xs text-gray-400 mt-1">Max 40MB</p>
+                        <Upload className="mx-auto mb-2 text-gray-400 dark:text-gray-500" size={24} />
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{t('uploadOtherDocument')}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Max 40MB</p>
                       </>
                     )}
                   </div>
@@ -894,12 +894,12 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
 
           {/* Step 3 */}
           {currentStep === 3 && (
-            <Card className="shadow-md">
+            <Card className="shadow-md bg-white dark:bg-gray-800 dark:border-gray-700">
               <CardContent className="p-6 space-y-6">
-                <h3 className="font-semibold text-[#4082ea] mb-4">{t('additionalInformation')}</h3>
-                
+                <h3 className="font-semibold text-[#4082ea] dark:text-blue-400 mb-4">{t('additionalInformation')}</h3>
+
                 <div>
-                  <Label>{t('urgencyLevel')}</Label>
+                  <Label className="dark:text-gray-300">{t('urgencyLevel')}</Label>
                   <Select
                     value={formData.urgency}
                     onValueChange={(value) => setFormData({ ...formData, urgency: value })}
@@ -917,7 +917,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                 </div>
 
                 <div>
-                  <Label>{t('preferredContactMethod')}</Label>
+                  <Label className="dark:text-gray-300">{t('preferredContactMethod')}</Label>
                   <Select
                     value={formData.preferredContact}
                     onValueChange={(value) => setFormData({ ...formData, preferredContact: value })}
@@ -942,7 +942,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                 </div>
 
                 <div>
-                  <Label>{t('additionalNotes')}</Label>
+                  <Label className="dark:text-gray-300">{t('additionalNotes')}</Label>
                   <Textarea
                     placeholder={t('otherInformationHelpful')}
                     value={formData.additionalNotes}
@@ -963,10 +963,10 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
                       />
                     </div>
                     <div className="ml-3 text-sm">
-                      <label htmlFor="terms" className="font-medium text-gray-700">
+                      <label htmlFor="terms" className="font-medium text-gray-700 dark:text-gray-300">
                         {t('confirmInformationAccurate')}
                       </label>
-                      <p className="text-gray-500">
+                      <p className="text-gray-500 dark:text-gray-400">
                         {t('informationConfidential')}
                       </p>
                     </div>
@@ -983,14 +983,14 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
             <Button
               variant="outline"
               onClick={handlePrevious}
-              className="border-[#4082ea] text-[#4082ea]"
+              className="border-[#4082ea] text-[#4082ea] hover:bg-[#4082ea]/10 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-400/10"
             >
               {tCommon('previous')}
             </Button>
           )}
           {currentStep < steps.length ? (
             <Button
-              className="bg-[#4082ea] hover:bg-[#306ad1]"
+              className="bg-[#4082ea] hover:bg-[#306ad1] dark:bg-blue-600 dark:hover:bg-blue-700"
               onClick={handleNext}
               disabled={!isStepValid(currentStep)}
             >
@@ -998,7 +998,7 @@ export function CreateRequestModal({ open, onOpenChange, onSubmit }: CreateReque
             </Button>
           ) : (
             <Button
-              className="bg-[#4082ea] hover:bg-[#306ad1]"
+              className="bg-[#4082ea] hover:bg-[#306ad1] dark:bg-blue-600 dark:hover:bg-blue-700"
               onClick={handleSubmit}
               disabled={!isStepValid(currentStep) || isSubmitting}
             >

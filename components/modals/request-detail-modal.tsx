@@ -101,17 +101,17 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
 
   const handleDownloadDocument = async (doc: RequestDocument, index: number) => {
     if (!request) return
-    
+
     const docId = doc.publicId || (doc as any).id || `${request.id}-${index}`
     setDownloadingDocs(prev => new Set(prev).add(docId))
-    
+
     try {
       // Try using the document ID with the API endpoint
       const documentId = doc.publicId || doc.id
       if (documentId) {
         const response = await requestsApi.downloadDocument(request.id, documentId)
         const blob = response.data
-        
+
         // Determine file extension from document type or name
         const fileName = doc.name || `document-${index + 1}`
         const url = window.URL.createObjectURL(blob)
@@ -122,7 +122,7 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
         link.click()
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
-        
+
         toast({
           title: tCommon('success') || "Success",
           description: t('documentDownloaded') || "Document downloaded successfully",
@@ -133,9 +133,9 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
           method: 'GET',
           credentials: 'include',
         })
-        
+
         if (!response.ok) throw new Error('Failed to download document')
-        
+
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
@@ -145,7 +145,7 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
         link.click()
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
-        
+
         toast({
           title: tCommon('success') || "Success",
           description: t('documentDownloaded') || "Document downloaded successfully",
@@ -163,7 +163,7 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
           link.click()
           document.body.removeChild(link)
           window.URL.revokeObjectURL(url)
-          
+
           toast({
             title: tCommon('success') || "Success",
             description: t('documentDownloaded') || "Document downloaded successfully",
@@ -203,16 +203,16 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
       })
       return
     }
-    
+
     const attachmentId = `attachment-${request.rep_attachment_id}`
     setDownloadingDocs(prev => new Set(prev).add(attachmentId))
-    
+
     try {
-      console.debug("[Request Detail] Downloading representative attachment:", { 
+      console.debug("[Request Detail] Downloading representative attachment:", {
         attachmentId: request.rep_attachment_id,
-        requestId: request.id 
+        requestId: request.id
       })
-      
+
       const response = await requestsApi.downloadAttachment(request.rep_attachment_id)
       const blob = response.data
       const url = window.URL.createObjectURL(blob)
@@ -223,12 +223,12 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
-      
+
       // Save the download location (safe because we checked above)
       const repAttachmentId = request.rep_attachment_id as string
       const downloadLocation = `Downloads/client-document-${repAttachmentId}`
       setDownloadedFiles(prev => new Map(prev).set(repAttachmentId, downloadLocation))
-      
+
       toast({
         title: tCommon('success') || "Success",
         description: t('documentDownloaded') || `Document downloaded successfully. Location: ${downloadLocation}`,
@@ -242,15 +242,15 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
         attachmentId: request.rep_attachment_id,
         requestId: request.id
       })
-      
+
       const errorTitle = getErrorTitle(error, tErrors)
       let errorMessage = getErrorMessage(error, tErrors)
-      
+
       // Add more helpful error message for 404
       if (error?.response?.status === 404) {
         errorMessage = `File not found. The attachment may have been deleted or the ID is invalid. (ID: ${request.rep_attachment_id})`
       }
-      
+
       toast({
         title: errorTitle,
         description: errorMessage,
@@ -267,7 +267,7 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
 
   const handleDownloadAttachmentByPath = async (attachmentId: string, downloadPath: string, originalName: string) => {
     const docId = `attachment-${attachmentId}`
-    
+
     // Check if file was already downloaded
     if (downloadedFiles.has(attachmentId)) {
       const savedLocation = downloadedFiles.get(attachmentId)
@@ -277,26 +277,26 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
       })
       return
     }
-    
+
     setDownloadingDocs(prev => new Set(prev).add(docId))
-    
+
     try {
-      console.debug("[Request Detail] Downloading attachment:", { 
-        attachmentId, 
-        downloadPath, 
+      console.debug("[Request Detail] Downloading attachment:", {
+        attachmentId,
+        downloadPath,
         originalName,
-        requestId: request?.id 
+        requestId: request?.id
       })
-      
+
       // Validate download path
       if (!downloadPath || downloadPath === 'null' || downloadPath === 'undefined') {
         console.warn("[Request Detail] Invalid download_path, trying fallback method")
-        
+
         // Fallback: Try direct attachment download by ID
         console.debug("[Request Detail] Using fallback: /requests/attachments/:attachmentId/download")
         const response = await requestsApi.downloadAttachment(attachmentId)
         const blob = response.data
-        
+
         // Create download link
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
@@ -306,21 +306,21 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
         link.click()
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
-        
+
         // Save the download location
         const downloadLocation = `Downloads/${originalName}`
         setDownloadedFiles(prev => new Map(prev).set(attachmentId, downloadLocation))
-        
+
         toast({
           title: tCommon('success') || "Success",
           description: `Document downloaded successfully. Location: ${downloadLocation}`,
         })
         return
       }
-      
+
       let response
       let usedFallback = false
-      
+
       try {
         console.debug("[Request Detail] Attempting download with provided path:", downloadPath)
         response = await requestsApi.downloadAttachmentByPath(downloadPath)
@@ -342,9 +342,9 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
           throw pathError
         }
       }
-      
+
       const blob = response.data
-      
+
       // Create download link
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -354,14 +354,14 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
-      
+
       // Save the download location (typically browser's default download folder)
       const downloadLocation = `Downloads/${originalName}`
       setDownloadedFiles(prev => new Map(prev).set(attachmentId, downloadLocation))
-      
+
       toast({
         title: tCommon('success') || "Success",
-        description: usedFallback 
+        description: usedFallback
           ? `Document downloaded successfully using fallback method. Location: ${downloadLocation}`
           : `Document downloaded successfully. Location: ${downloadLocation}`,
       })
@@ -376,15 +376,15 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
         attachmentId,
         requestId: request?.id
       })
-      
+
       const errorTitle = getErrorTitle(error, tErrors)
       let errorMessage = getErrorMessage(error, tErrors)
-      
+
       // Add more helpful error message for 404
       if (error?.response?.status === 404) {
         errorMessage = `File not found. The attachment may have been deleted or does not exist. (ID: ${attachmentId})`
       }
-      
+
       toast({
         title: errorTitle,
         description: errorMessage,
@@ -418,27 +418,27 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="pb-4 border-b">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 dark:border-gray-800">
+        <DialogHeader className="pb-4 border-b dark:border-gray-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-[#4082ea]/10 rounded-lg">
                 <FileText className="w-5 h-5 text-[#4082ea]" />
               </div>
               <div>
-                <DialogTitle className="text-2xl font-bold text-gray-900">
+                <DialogTitle className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {t('requestDetails') || "Request Details"}
-            </DialogTitle>
-                <p className="text-sm text-gray-500 mt-1">ID: {request.id.slice(0, 8)}...</p>
+                </DialogTitle>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">ID: {request.id.slice(0, 8)}...</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-            {request.is_confidential && (
+              {request.is_confidential && (
                 <Badge className="bg-purple-100 text-purple-800 border-purple-200 px-3 py-1.5">
                   <Shield className="w-3.5 h-3.5 mr-1.5" />
-                Confidential
-              </Badge>
-            )}
+                  Confidential
+                </Badge>
+              )}
               <Badge className={`${getStatusColor(request.status)} px-3 py-1.5 font-semibold`}>
                 {request.status.replace("_", " ").toUpperCase()}
               </Badge>
@@ -449,57 +449,57 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
         <div className="space-y-6 pt-4">
           {/* Quick Info Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-l-4 border-l-[#4082ea]">
+            <Card className="border-l-4 border-l-[#4082ea] bg-white dark:bg-gray-800 dark:border-gray-700">
               <CardContent className="pt-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <AlertCircle className="w-4 h-4 text-blue-600" />
-              </div>
+                  </div>
                   <div>
                     <p className="text-xs text-gray-500 font-medium">Priority</p>
                     <Badge className={`${getPriorityColor(request.priority)} mt-1 px-2 py-0.5 text-xs font-semibold`}>
-                  {request.priority.toUpperCase()}
-                </Badge>
-              </div>
-            </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="border-l-4 border-l-green-500">
-              <CardContent className="pt-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <FileText className="w-4 h-4 text-green-600" />
-          </div>
-            <div>
-                    <p className="text-xs text-gray-500 font-medium">Service Type</p>
-                    <p className="text-sm font-semibold text-gray-900 mt-1">
-                      {formatServiceType(request.service_type)}
-                    </p>
-              </div>
+                      {request.priority.toUpperCase()}
+                    </Badge>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-orange-500">
+            <Card className="border-l-4 border-l-green-500 bg-white dark:bg-gray-800 dark:border-gray-700">
+              <CardContent className="pt-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <FileText className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">Service Type</p>
+                    <p className="text-sm font-semibold text-gray-900 mt-1">
+                      {formatServiceType(request.service_type)}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-orange-500 bg-white dark:bg-gray-800 dark:border-gray-700">
               <CardContent className="pt-4">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-orange-100 rounded-lg">
                     <Info className="w-4 h-4 text-orange-600" />
-            </div>
-            <div>
+                  </div>
+                  <div>
                     <p className="text-xs text-gray-500 font-medium">Disability Type</p>
                     <p className="text-sm font-semibold text-gray-900 mt-1">
                       {formatDisabilityType(request.disability_type)}
                     </p>
-              </div>
-            </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Description Section */}
-          <Card>
+          <Card className="bg-white dark:bg-gray-800 dark:border-gray-700">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[#4082ea]" />
@@ -507,17 +507,17 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+              <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
                   {request.description}
                 </p>
-            </div>
+              </div>
             </CardContent>
           </Card>
 
           {/* Remarks */}
           {request.remarks && (
-            <Card className="border-blue-200 bg-blue-50/30">
+            <Card className="border-blue-200 bg-blue-50/30 dark:bg-blue-900/10 dark:border-blue-800">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-semibold flex items-center gap-2 text-blue-900">
                   <Info className="w-4 h-4 text-blue-600" />
@@ -525,8 +525,8 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="p-4 bg-white rounded-lg border border-blue-200">
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                <div className="p-4 bg-white dark:bg-gray-900/50 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
                     {request.remarks}
                   </p>
                 </div>
@@ -535,11 +535,11 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
           )}
 
           {/* Person Information (Self or Other) */}
-          <Card>
+          <Card className="bg-white dark:bg-gray-800 dark:border-gray-700">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <UserCircle className="w-4 h-4 text-[#4082ea]" />
-                {request.is_for_other 
+                {request.is_for_other
                   ? (t('requestForOtherPerson') || "Request for Other Person")
                   : (t('requestForSelf') || "Request for Self")
                 }
@@ -549,77 +549,77 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
               {request.is_for_other ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {request.other_name && (
-                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Name</label>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Name</label>
                       <div className="mt-1.5 flex items-center gap-2">
-                        <User className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-900">{request.other_name}</span>
+                        <User className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{request.other_name}</span>
                       </div>
                     </div>
                   )}
                   {request.other_sex && (
-                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Sex</label>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Sex</label>
                       <div className="mt-1.5">
-                        <span className="text-sm font-medium text-gray-900 capitalize">{request.other_sex}</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100 capitalize">{request.other_sex}</span>
                       </div>
                     </div>
                   )}
                   {request.other_age !== null && request.other_age !== undefined && (
-                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Age</label>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Age</label>
                       <div className="mt-1.5">
-                        <span className="text-sm font-medium text-gray-900">{request.other_age} years</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{request.other_age} years</span>
                       </div>
                     </div>
                   )}
                   {request.other_phone_1 && (
-                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Phone 1</label>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Phone 1</label>
                       <div className="mt-1.5 flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-900">{request.other_phone_1}</span>
+                        <Phone className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{request.other_phone_1}</span>
                       </div>
                     </div>
                   )}
                   {request.other_phone_2 && (
-                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Phone 2</label>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Phone 2</label>
                       <div className="mt-1.5 flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-900">{request.other_phone_2}</span>
+                        <Phone className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{request.other_phone_2}</span>
                       </div>
                     </div>
                   )}
                   {(request.other_region || request.other_city || request.other_subcity || request.other_kebele) && (
-                    <div className="md:col-span-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 block flex items-center gap-1">
+                    <div className="md:col-span-2 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 block flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
                         Location
                       </label>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
                         {request.other_region && (
                           <div>
-                            <p className="text-xs text-gray-500">Region</p>
-                            <p className="text-sm font-medium text-gray-900 mt-0.5">{request.other_region}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Region</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{request.other_region}</p>
                           </div>
                         )}
                         {request.other_city && (
                           <div>
-                            <p className="text-xs text-gray-500">City</p>
-                            <p className="text-sm font-medium text-gray-900 mt-0.5">{request.other_city}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">City</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{request.other_city}</p>
                           </div>
                         )}
                         {request.other_subcity && (
                           <div>
-                            <p className="text-xs text-gray-500">Sub City</p>
-                            <p className="text-sm font-medium text-gray-900 mt-0.5">{request.other_subcity}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Sub City</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{request.other_subcity}</p>
                           </div>
                         )}
                         {request.other_kebele && (
-            <div>
-                            <p className="text-xs text-gray-500">Kebele</p>
-                            <p className="text-sm font-medium text-gray-900 mt-0.5">{request.other_kebele}</p>
+                          <div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Kebele</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{request.other_kebele}</p>
                           </div>
                         )}
                       </div>
@@ -629,63 +629,63 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {request.sex && (
-                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Sex</label>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Sex</label>
                       <div className="mt-1.5">
-                        <span className="text-sm font-medium text-gray-900 capitalize">{request.sex}</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100 capitalize">{request.sex}</span>
                       </div>
                     </div>
                   )}
                   {request.age !== null && request.age !== undefined && (
-                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Age</label>
+                    <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Age</label>
                       <div className="mt-1.5">
-                        <span className="text-sm font-medium text-gray-900">{request.age} years</span>
-              </div>
-            </div>
-          )}
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{request.age} years</span>
+                      </div>
+                    </div>
+                  )}
                   {(request.region || request.city || request.sub_city || request.kebele) && (
-                    <div className="md:col-span-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 block flex items-center gap-1">
+                    <div className="md:col-span-2 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                      <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 block flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
                         Location
                       </label>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
                         {request.region && (
                           <div>
-                            <p className="text-xs text-gray-500">Region</p>
-                            <p className="text-sm font-medium text-gray-900 mt-0.5">{request.region}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Region</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{request.region}</p>
                           </div>
                         )}
                         {request.city && (
                           <div>
-                            <p className="text-xs text-gray-500">City</p>
-                            <p className="text-sm font-medium text-gray-900 mt-0.5">{request.city}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">City</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{request.city}</p>
                           </div>
                         )}
                         {request.sub_city && (
-          <div>
+                          <div>
                             <p className="text-xs text-gray-500">Sub City</p>
                             <p className="text-sm font-medium text-gray-900 mt-0.5">{request.sub_city}</p>
-              </div>
+                          </div>
                         )}
                         {request.kebele && (
                           <div>
-                            <p className="text-xs text-gray-500">Kebele</p>
-                            <p className="text-sm font-medium text-gray-900 mt-0.5">{request.kebele}</p>
-              </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Kebele</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mt-0.5">{request.kebele}</p>
+                          </div>
                         )}
-              </div>
-            </div>
+                      </div>
+                    </div>
                   )}
-          </div>
+                </div>
               )}
             </CardContent>
           </Card>
 
           {/* Contact & Assignment Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 dark:border-gray-700">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <User className="w-4 h-4 text-[#4082ea]" />
@@ -693,37 +693,37 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                  <div className="p-1.5 bg-blue-100 rounded-lg">
-                    <User className="w-4 h-4 text-blue-600" />
+                <div className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                  <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500">Name</p>
-                    <p className="text-sm font-semibold text-gray-900 truncate">{request.created_by_name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Name</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{request.created_by_name}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                  <div className="p-1.5 bg-green-100 rounded-lg">
-                    <Mail className="w-4 h-4 text-green-600" />
+                <div className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                  <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                    <Mail className="w-4 h-4 text-green-600 dark:text-green-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500">Email</p>
-                    <p className="text-sm font-semibold text-gray-900 truncate">{request.created_by_email}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{request.created_by_email}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                  <div className="p-1.5 bg-purple-100 rounded-lg">
-                    <Phone className="w-4 h-4 text-purple-600" />
+                <div className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                  <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                    <Phone className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500">Preferred Contact</p>
-                    <p className="text-sm font-semibold text-gray-900">{request.contact_method.toUpperCase()}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Preferred Contact</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{request.contact_method.toUpperCase()}</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 dark:border-gray-700">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <Building2 className="w-4 h-4 text-[#4082ea]" />
@@ -733,50 +733,50 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
               <CardContent>
                 {request.assigned_to_name ? (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                      <div className="p-1.5 bg-blue-100 rounded-lg">
-                        <User className="w-4 h-4 text-blue-600" />
+                    <div className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                      <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                        <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-gray-500">Assigned to</p>
-                        <p className="text-sm font-semibold text-gray-900 truncate">{request.assigned_to_name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Assigned to</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{request.assigned_to_name}</p>
                       </div>
                     </div>
                     {request.assigned_to_email && (
-                      <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                        <div className="p-1.5 bg-green-100 rounded-lg">
-                          <Mail className="w-4 h-4 text-green-600" />
+                      <div className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                        <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                          <Mail className="w-4 h-4 text-green-600 dark:text-green-400" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500">Email</p>
-                          <p className="text-sm font-semibold text-gray-900 truncate">{request.assigned_to_email}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Email</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{request.assigned_to_email}</p>
                         </div>
                       </div>
                     )}
                     {request.assigned_at && (
-                      <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                        <div className="p-1.5 bg-orange-100 rounded-lg">
-                          <Calendar className="w-4 h-4 text-orange-600" />
+                      <div className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                        <div className="p-1.5 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                          <Calendar className="w-4 h-4 text-orange-600 dark:text-orange-400" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-500">Assigned at</p>
-                          <p className="text-sm font-semibold text-gray-900">{formatDate(request.assigned_at)}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Assigned at</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatDate(request.assigned_at)}</p>
                         </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                    <p className="text-sm text-gray-500 italic">Not assigned yet</p>
                   </div>
                 )}
-              </div>
-            ) : (
-                  <div className="p-4 text-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-              <p className="text-sm text-gray-500 italic">Not assigned yet</p>
-                  </div>
-            )}
               </CardContent>
             </Card>
           </div>
 
           {/* Timestamps & Attachments */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
+            <Card className="bg-white dark:bg-gray-800 dark:border-gray-700">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <Clock className="w-4 h-4 text-[#4082ea]" />
@@ -784,23 +784,23 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                  <div className="p-1.5 bg-blue-100 rounded-lg">
-                    <Calendar className="w-4 h-4 text-blue-600" />
+                <div className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                  <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                    <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-500">Created At</p>
-                    <p className="text-sm font-semibold text-gray-900">{formatDate(request.created_at)}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Created At</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatDate(request.created_at)}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                  <div className="p-1.5 bg-green-100 rounded-lg">
-                    <Calendar className="w-4 h-4 text-green-600" />
+                <div className="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                  <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                    <Calendar className="w-4 h-4 text-green-600 dark:text-green-400" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-gray-500">Last Updated</p>
-                    <p className="text-sm font-semibold text-gray-900">{formatDate(request.updated_at)}</p>
-              </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Last Updated</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{formatDate(request.updated_at)}</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -814,24 +814,24 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <FileText className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-                      <p className="text-2xl font-bold text-gray-900">{request.attachment_count}</p>
-                      <p className="text-xs text-gray-500">
+                  <div className="flex items-center gap-3 p-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                      <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{request.attachment_count}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {Number(request.attachment_count) === 1 ? 'attachment' : 'attachments'}
                       </p>
-              </div>
-            </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             )}
           </div>
 
           {/* Attachments Section */}
-          <Card>
+          <Card className="bg-white dark:bg-gray-800 dark:border-gray-700">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <FileText className="w-4 h-4 text-[#4082ea]" />
@@ -856,10 +856,10 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
                     const downloadLocation = downloadedFiles.get(attachment.id)
                     const fileIcon = getFileIcon(attachment.mime_type)
                     const fileSize = formatFileSize(attachment.size)
-                    
+
                     return (
-                      <div 
-                        key={attachment.id} 
+                      <div
+                        key={attachment.id}
                         className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 hover:border-[#4082ea] transition-colors"
                       >
                         <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -909,8 +909,8 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
                               size="sm"
                               onClick={() => {
                                 const baseUrl = config.api.host || config.api.baseUrl || ''
-                                const fullUrl = attachment.preview_path!.startsWith('http') 
-                                  ? attachment.preview_path! 
+                                const fullUrl = attachment.preview_path!.startsWith('http')
+                                  ? attachment.preview_path!
                                   : `${baseUrl}${attachment.preview_path}`
                                 window.open(fullUrl, '_blank')
                               }}
@@ -929,8 +929,8 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
                               attachment.original_name
                             )}
                             disabled={isDownloading}
-                            className={isDownloaded 
-                              ? "border-green-500 text-green-700 hover:bg-green-50" 
+                            className={isDownloaded
+                              ? "border-green-500 text-green-700 hover:bg-green-50"
                               : "border-[#4082ea] text-[#4082ea] hover:bg-[#4082ea] hover:text-white"
                             }
                             title={isDownloaded ? `File location: ${downloadLocation}` : "Download file"}
@@ -962,10 +962,10 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
                   const isDownloading = downloadingDocs.has(`attachment-${request.rep_attachment_id}`)
                   const isDownloaded = downloadedFiles.has(request.rep_attachment_id)
                   const downloadLocation = downloadedFiles.get(request.rep_attachment_id)
-                  
+
                   return (
                     <div className="space-y-3">
-                      <div 
+                      <div
                         className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200 hover:border-[#4082ea] transition-colors"
                       >
                         <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -1004,8 +1004,8 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
                             size="sm"
                             onClick={handleDownloadAttachment}
                             disabled={isDownloading}
-                            className={isDownloaded 
-                              ? "border-green-500 text-green-700 hover:bg-green-50" 
+                            className={isDownloaded
+                              ? "border-green-500 text-green-700 hover:bg-green-50"
                               : "border-[#4082ea] text-[#4082ea] hover:bg-[#4082ea] hover:text-white"
                             }
                             title={isDownloaded ? `File location: ${downloadLocation}` : "Download file"}
@@ -1041,7 +1041,7 @@ export function RequestDetailModal({ open, onOpenChange, request }: RequestDetai
             </CardContent>
           </Card>
 
-        
+
         </div>
       </DialogContent>
     </Dialog>
